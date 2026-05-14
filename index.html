@@ -162,10 +162,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="chart-card"><h3>&#128200; Revenue by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="revBarChart"></canvas></div></div>
 <div class="chart-card"><h3>&#9679; Payment Status</h3><div class="chart-wrap"><canvas id="revDoughnutChart"></canvas></div></div>
 </div>
-<div class="section-header">
-<div class="section-title"><div class="icon-circle">&#128200;</div> Weekly Revenue Records</div>
-<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addRevModal').classList.add('open')">+ Add Record</button></div>
-</div>
+<div class="section-header"><div class="section-title"><div class="icon-circle">&#128200;</div> Weekly Revenue Records</div><div class="action-bar"><button class="btn-add" onclick="document.getElementById('addRevModal').classList.add('open')">+ Add Record</button></div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
 <div class="fg"><label>Status</label><select id="rev-status-f" onchange="applyRevFilters()"><option value="">All Status</option><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
@@ -270,10 +267,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="fmd-s-count">0</div><div class="sc-sub">Entries</div></div>
 <div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="fmd-s-rate">0%</div><div class="sc-sub">Received / Total</div></div>
 </div>
-<div class="section-header">
-<div class="section-title"><div class="icon-circle">&#9203;</div> Five Minute Daily Records</div>
-<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addFMDModal').classList.add('open')">+ Add Record</button></div>
-</div>
+<div class="section-header"><div class="section-title"><div class="icon-circle">&#9203;</div> Five Minute Daily Records</div><div class="action-bar"><button class="btn-add" onclick="document.getElementById('addFMDModal').classList.add('open')">+ Add Record</button></div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="fmd-search" type="search" placeholder="Search..." oninput="applyFMDFilters()"></div>
 <div class="fg"><label>Month</label><select id="fmd-month-f" onchange="applyFMDFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
@@ -302,7 +296,7 @@ function showTab(t){document.querySelectorAll('.tab-content').forEach(e=>e.class
 function $m(v){return'$'+(parseFloat(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function parseD(s){if(!s)return null;try{const d=new Date(s);return isNaN(d.getTime())?null:d;}catch(e){return null;}}
 function statusOpts(c){return['Paid','Partially Paid','Unpaid','Pending'].map(o=>'<option'+(o===c?' selected':'')+'>'+o+'</option>').join('');}
-function parseAmt(v){return parseFloat((v||'0').replace(/[$,]/g,''))||0;}
+function parseAmt(v){return parseFloat((v||'0').replace(/[\$,]/g,''))||0;}
 function isFMD(a){const s=(a||'').toLowerCase();return s.includes('five minute daily')||s.includes('fmd')||s.includes('5 minute daily');}
 function getWeekLabel(ds){if(!ds)return null;const d=new Date(ds);if(isNaN(d.getTime()))return null;const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];return mn+' Week '+Math.ceil(d.getDate()/7)+', '+d.getFullYear();}
 function getDR(p){const f=document.getElementById(p+'-date-from'),t=document.getElementById(p+'-date-to');return{from:f&&f.value?new Date(f.value):null,to:t&&t.value?new Date(t.value+'T23:59:59'):null};}
@@ -339,15 +333,15 @@ const av=Object.values(r).map(v=>(v||'').toString());const rs=av.join(' ').toUpp
 if(rs.includes('ETC BALANCE'))r._isSummary=true;
 if(rs.includes('PAYMENT RCVD')||rs.includes('PAYMENT RECEIVED'))r._isSummary=true;
 if(rs.includes('GROSS REVENUE')||rs.includes('EXPECTED REVENUE'))r._isSummary=true;
-if(rs.includes('EXPECTED EXPENSES'))r._isSummary=true;
+if(rs.includes('EXPENSES'))r._isSummary=true;
 if(rs.includes('NET PROFIT')||rs.includes('EXPECTED PROFIT'))r._isSummary=true;
 if(rs.includes('FMD REVENUE')||rs.includes('FMD COST'))r._isSummary=true;
 if(rs.includes('PAYMENT RCVD')||rs.includes('PAYMENT RECEIVED')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.paymentRcvd=n[0];}
 if(rs.includes('TOTAL EXPECTED GROSS')||rs.includes('GROSS REVENUE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.grossRevenue=n[0];}
 if(rs.includes('TOTAL EXPECTED REVENUE')&&!rs.includes('GROSS')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.grossRevenue)sum.grossRevenue=n[0];}
-if(rs.includes('EXPECTED EXPENSES')&&!rs.includes('GROSS')&&!rs.includes('NET')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.totalExpenses)sum.totalExpenses=n[0];}
+if(rs.includes('EXPENSES')&&!rs.includes('GROSS REVENUE')&&!rs.includes('NET PROFIT')&&!rs.includes('EXPECTED PROFIT')&&!rs.includes('ADS')&&!rs.includes('BEEHIV')&&!rs.includes('FIVE MINUTE')&&!rs.includes('FMD')&&!rs.includes('GOBOT')&&!rs.includes('BEEHIIV')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.totalExpenses)sum.totalExpenses=n[0];}
 if(rs.match(/SALARY/)&&!rs.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.salary)sum.salary=n[0];}
-if((rs.includes('ADS (')||rs.includes('ADS/LEADS')||rs.includes('ADS/L'))&&!rs.includes('BEEHIV')&&!rs.includes('FIVE MINUTE')&&!rs.includes('REVENUE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.ads)sum.ads=n[0];}
+if((rs.includes('ADS (')||rs.includes('ADS/LEADS')||rs.includes('ADS/L'))&&!rs.includes('BEEHIV')&&!rs.includes('FIVE MINUTE')&&!rs.includes('REVENUE')&&!rs.includes('FMD')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.ads)sum.ads=n[0];}
 if((rs.includes('NET PROFIT')||rs.includes('EXPECTED PROFIT'))&&rs.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.netProfit=n[0];}
 if(rs.includes('ETC BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>=0&&v!==Infinity);sum.balance=n.length?n[0]:0;}
 });
