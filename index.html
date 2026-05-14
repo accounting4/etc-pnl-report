@@ -351,11 +351,13 @@ async function fetchAllData(){
       if(rs.includes('ETC BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>=0&&v!==Infinity);sum.balance=n.length?n[0]:0;}
     });
     pnlSummaries[m]=sum;
+    const EXPENSE_KEYS=['ETC BALANCE','PAYMENT RCVD','TOTAL EXPECTED','NET PROFIT','GROSS REVENUE','SALARY','ADS (NEM','ADS/LEADS','ADS (',ICLUDED'];
     const inv=rows.filter(r=>{
       if(r._isSummary)return false;
-      if(!r.affiliate&&!r.displayAmt)return false;
-      const a=(r.affiliate||'').toUpperCase();
-      if(a.includes('ETC BALANCE')||a.includes('PAYMENT RCVD')||a.includes('TOTAL EXPECTED')||a.includes('NET PROFIT'))return false;
+      if(!r.affiliate&&!r.displayAmt&&!r.rcvd)return false;
+      const a=(r.affiliate||'').toUpperCase().trim();
+      if(EXPENSE_KEYS.some(k=>a.includes(k)))return false;
+      if(a==='SALARY'||a==='TOTAL EXPENSES'||a==='EXPENSES')return false;
       const rv=Object.values(r).map(v=>(v||'').toString().toUpperCase());
       if(rv.some(v=>v==='ETC BALANCE'||v.includes('GROSS REVENUE')||v.includes('TOTAL EXPECTED')||v.includes('NET PROFIT')))return false;
       return true;
