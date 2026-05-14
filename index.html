@@ -14,7 +14,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .load-title{color:#fff;font-size:1.25rem;font-weight:700}
 #loadingStatus{color:rgba(245,166,35,.85);font-size:.9rem}
 .header{background:var(--navy);padding:0 28px;height:68px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 16px rgba(0,0,0,.18);position:sticky;top:0;z-index:100}
-.logo-wrap{background:#fff;border-radius:var(--radius-sm);padding:5px 10px;flex-shrink:0}
+.logo-wrap{background:#fff;border-radius:var(--radius-sm);padding:4px 10px;flex-shrink:0}
 .logo-wrap img{height:40px;display:block}
 .header-info{flex:1}
 .header-info h1{font-size:1.15rem;font-weight:700;color:#fff;line-height:1.2}
@@ -50,7 +50,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .fg input[type=date]{min-width:142px}
 .btn-clear{background:var(--surface2);border:1.5px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:.82rem;font-weight:600;transition:all .18s;align-self:flex-end}
 .btn-clear:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
-.date-hint{font-size:.74rem;color:var(--accent2);font-weight:600;font-style:italic;align-self:flex-end;padding-bottom:9px}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
 .section-title{font-size:1rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px}
 .icon-circle{width:30px;height:30px;border-radius:var(--radius-sm);background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
@@ -98,26 +97,43 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .btn-cancel:hover{border-color:var(--navy);color:var(--navy)}
 .btn-del{background:#fee2e2;border:1px solid #fecaca;color:#b91c1c;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.76rem;font-weight:600}
 .btn-del:hover{background:#b91c1c;color:#fff}
-.summary-banner{background:linear-gradient(135deg,var(--navy),var(--navy3));border-radius:var(--radius);padding:18px 24px;margin-bottom:22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:var(--shadow-lg)}
+.summary-banner{background:linear-gradient(135deg,var(--navy),var(--navy3));border-radius:var(--radius);padding:18px 24px;margin-bottom:22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow-lg)}
 .sb-item{text-align:center;min-width:90px}
-.sb-lbl{font-size:.68rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-.sb-val{font-size:1.35rem;font-weight:800;color:#fff;margin-top:3px}
+.sb-lbl{font-size:.65rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.sb-val{font-size:1.2rem;font-weight:800;color:#fff;margin-top:3px}
 .sb-val.gold{color:var(--accent)}
+.sb-val.green{color:#4ade80}
+.sb-val.red{color:#f87171}
 .sb-divider{width:1px;height:44px;background:rgba(255,255,255,.15);flex-shrink:0}
 .forecast-section{margin-top:30px;padding-top:24px;border-top:2px solid var(--border)}
+.weekly-section{margin-top:30px;padding-top:24px;border-top:2px solid var(--border)}
+.pnl-summary-banner{background:linear-gradient(135deg,var(--navy),var(--navy3));border-radius:var(--radius);padding:20px 24px;margin-bottom:24px;box-shadow:var(--shadow-lg)}
+.psb-title{font-size:.7rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:14px}
+.psb-row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.psb-group{background:rgba(255,255,255,.07);border-radius:8px;padding:12px 16px;flex:1;min-width:160px}
+.psb-group-title{font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px}
+.psb-line{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:4px}
+.psb-line:last-child{margin-bottom:0}
+.psb-key{font-size:.76rem;color:rgba(255,255,255,.75)}
+.psb-value{font-size:.82rem;font-weight:700;color:#fff;white-space:nowrap}
+.psb-value.gold{color:var(--accent)}
+.psb-value.green{color:#4ade80}
+.psb-value.red{color:#f87171}
+.month-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.month-btn{background:var(--surface2);border:1.5px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .15s}
+.month-btn:hover{border-color:var(--navy);color:var(--navy)}
+.month-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 </style>
 </head>
 <body>
 <div id="loadingOverlay"><div class="spinner"></div><div class="load-title">Loading ETC Dashboard</div><div id="loadingStatus">Connecting to Google Sheets...</div></div>
-
 <!-- MODALS -->
 <div class="modal-overlay" id="addPNLModal"><div class="modal">
 <h2>+ Add PNL Invoice Record</h2>
 <div class="form-row"><label>Invoice ID</label><input id="f-invId" placeholder="e.g. INV-001"></div>
 <div class="form-row"><label>Date</label><input id="f-invDate" type="date"></div>
-<div class="form-row"><label>Company</label><input id="f-company" placeholder="Company name"></div>
 <div class="form-row"><label>Month</label><select id="f-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
-<div class="form-row"><label>Affiliate</label><input id="f-affiliate" placeholder="Affiliate name"></div>
+<div class="form-row"><label>Affiliate Name</label><input id="f-affiliate" placeholder="Affiliate name"></div>
 <div class="form-row"><label>Invoice Amount</label><input id="f-invAmt" type="number" step="0.01" placeholder="0.00"></div>
 <div class="form-row"><label>Amount Received</label><input id="f-rcvd" type="number" step="0.01" placeholder="0.00"></div>
 <div class="form-row"><label>Status</label><select id="f-status"><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
@@ -127,7 +143,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 </div></div>
 
 <div class="modal-overlay" id="addRevModal"><div class="modal">
-<h2>+ Add Daily Revenue Record</h2>
+<h2>+ Add Weekly Revenue Record</h2>
 <div class="form-row"><label>Date</label><input id="fr-date" type="date"></div>
 <div class="form-row"><label>Affiliate / Partner</label><input id="fr-affiliate" placeholder="Affiliate name"></div>
 <div class="form-row"><label>Amount</label><input id="fr-amt" type="number" step="0.01" placeholder="0.00"></div>
@@ -136,150 +152,198 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addRevModal').classList.remove('open')">Cancel</button><button class="btn-save" onclick="saveRevRecord()">Save</button></div>
 </div></div>
 
+<div class="modal-overlay" id="addFMDModal"><div class="modal">
+<h2>+ Add Five Minute Daily Record</h2>
+<div class="form-row"><label>Date</label><input id="fm-date" type="date"></div>
+<div class="form-row"><label>Month</label><select id="fm-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
+<div class="form-row"><label>Affiliate / Partner</label><input id="fm-affiliate" placeholder="Affiliate name"></div>
+<div class="form-row"><label>Invoice Amount</label><input id="fm-invAmt" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Amount Received</label><input id="fm-rcvd" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Status</label><select id="fm-status"><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
+<div class="form-row"><label>Remarks</label><textarea id="fm-remarks" placeholder="Notes..."></textarea></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addFMDModal').classList.remove('open')">Cancel</button><button class="btn-save" onclick="saveFMDRecord()">Save</button></div>
+</div></div>
+
 <!-- HEADER -->
 <div class="header">
-  <div class="logo-wrap"><img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/2f0a7f16-8131-4842-af34-1cbd8fd2a43c/ETC_logo__1_.png" alt="ETC" onerror="this.style.display='none'"></div>
-  <div class="header-info"><h1>ETC PNL Report Dashboard</h1><p>EliteTrade Club &mdash; Financial Performance &amp; Revenue Intelligence</p><div id="currentDate"></div></div>
-  <div class="header-badge">LIVE DATA</div>
+<div class="logo-wrap"><img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/2f0a7f16-8131-4842-af34-1cbd8fd2a43c/ETC_logo__1_.png" alt="ETC" onerror="this.style.display='none'"></div>
+<div class="header-info"><h1>ETC PNL Report Dashboard</h1><p>EliteTrade Club &mdash; Financial Performance &amp; Revenue Intelligence</p><div id="currentDate"></div></div>
+<div class="header-badge">LIVE DATA</div>
 </div>
 
 <!-- NAV -->
 <div class="nav-tabs">
-  <button class="nav-tab active" onclick="showTab('revenue')" id="btn-revenue">&#128200; Daily Revenue</button>
-  <button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
-  <button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; CTO Reports</button>
+<button class="nav-tab active" onclick="showTab('revenue')" id="btn-revenue">&#128200; Weekly Revenue</button>
+<button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
+<button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; CTO Reports</button>
+<button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
 </div>
 
-<!-- ===== DAILY REVENUE TAB ===== -->
+<!-- ===== WEEKLY REVENUE TAB ===== -->
 <div id="tab-revenue" class="tab-content active">
-  <div class="stats-row">
-    <div class="stat-card gold"><div class="sc-label">Total Revenue</div><div class="sc-value" id="rev-s-total">$0</div><div class="sc-sub">All entries</div></div>
-    <div class="stat-card green"><div class="sc-label">Total Paid</div><div class="sc-value" id="rev-s-paid">$0</div><div class="sc-sub">Collected</div></div>
-    <div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="rev-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
-    <div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="rev-s-count">0</div><div class="sc-sub">Entries</div></div>
-    <div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="rev-s-rate">0%</div><div class="sc-sub">Paid / Total</div></div>
-  </div>
-  <div class="two-col">
-    <div class="chart-card"><h3>&#128200; Revenue by Affiliate</h3><div class="chart-wrap"><canvas id="revBarChart"></canvas></div></div>
-    <div class="chart-card"><h3>&#9679; Payment Status</h3><div class="chart-wrap"><canvas id="revDoughnutChart"></canvas></div></div>
-  </div>
-  <div class="section-header">
-    <div class="section-title"><div class="icon-circle">&#128200;</div> Daily Revenue Records</div>
-    <div class="action-bar"><button class="btn-add" onclick="document.getElementById('addRevModal').classList.add('open')">+ Add Record</button></div>
-  </div>
-  <div class="filter-bar">
-    <div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
-    <div class="fg"><label>Status</label><select id="rev-status-f" onchange="applyRevFilters()"><option value="">All Status</option><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
-    <div class="fg"><label>Date From</label><input id="rev-date-from" type="date" onchange="applyRevFilters()"></div>
-    <div class="fg"><label>Date To</label><input id="rev-date-to" type="date" onchange="applyRevFilters()"></div>
-    <div class="fg"><label>Show</label><select id="rev-entries" onchange="applyRevFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-    <button class="btn-clear" onclick="clearRevFilters()">Clear</button>
-    <span class="date-hint" id="rev-date-hint"></span>
-  </div>
-  <div class="table-card">
-    <table><thead><tr><th onclick="sortRev('date')">Date</th><th onclick="sortRev('affiliate')">Affiliate / Partner</th><th onclick="sortRev('amount')">Amount</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead>
-    <tbody id="rev-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody></table>
-    <div class="pagination" id="rev-pagination"></div>
-  </div>
-
-  <!-- FORECAST SECTION -->
-  <div class="forecast-section">
-    <div class="stats-row">
-      <div class="stat-card gold"><div class="sc-label">Forecast Total</div><div class="sc-value" id="fc-s-total">$0</div><div class="sc-sub">Expected</div></div>
-      <div class="stat-card"><div class="sc-label">Partners Listed</div><div class="sc-value" id="fc-s-count">0</div><div class="sc-sub">All periods</div></div>
-      <div class="stat-card green"><div class="sc-label">With Amounts</div><div class="sc-value" id="fc-s-filled">0</div><div class="sc-sub">Have values</div></div>
-      <div class="stat-card purple"><div class="sc-label">Current Period</div><div class="sc-value" id="fc-s-period" style="font-size:1rem">All</div><div class="sc-sub">Selected</div></div>
-    </div>
-    <div class="two-col">
-      <div class="chart-card"><h3>&#127919; Forecast by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="fcBarChart"></canvas></div></div>
-      <div class="chart-card"><h3>&#128218; Period Comparison</h3><div class="chart-wrap"><canvas id="fcPeriodChart"></canvas></div></div>
-    </div>
-    <div class="section-header">
-      <div class="section-title"><div class="icon-circle">&#127919;</div> Daily Forecast</div>
-    </div>
-    <div class="filter-bar">
-      <div class="fg"><label>Search Affiliate</label><input id="fc-search" type="search" placeholder="Search..." oninput="applyFcFilters()"></div>
-      <div class="fg"><label>Period</label><select id="fc-period-f" onchange="applyFcFilters()"><option value="">All Periods</option></select></div>
-      <div class="fg"><label>Show</label><select id="fc-entries" onchange="applyFcFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-      <button class="btn-clear" onclick="clearFcFilters()">Clear</button>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th onclick="sortFc('date')">Inv. Date</th><th onclick="sortFc('_period')">Period</th><th onclick="sortFc('affiliate')">Affiliate / Partner</th><th onclick="sortFc('amount')">Forecast Amount</th></tr></thead>
-      <tbody id="fc-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody></table>
-      <div class="pagination" id="fc-pagination"></div>
-    </div>
-  </div>
+<div class="stats-row">
+<div class="stat-card gold"><div class="sc-label">Total Revenue</div><div class="sc-value" id="rev-s-total">$0</div><div class="sc-sub">All entries</div></div>
+<div class="stat-card green"><div class="sc-label">Total Paid</div><div class="sc-value" id="rev-s-paid">$0</div><div class="sc-sub">Collected</div></div>
+<div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="rev-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
+<div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="rev-s-count">0</div><div class="sc-sub">Entries</div></div>
+<div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="rev-s-rate">0%</div><div class="sc-sub">Paid / Total</div></div>
+</div>
+<div class="two-col">
+<div class="chart-card"><h3>&#128200; Revenue by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="revBarChart"></canvas></div></div>
+<div class="chart-card"><h3>&#9679; Payment Status</h3><div class="chart-wrap"><canvas id="revDoughnutChart"></canvas></div></div>
+</div>
+<div class="section-header">
+<div class="section-title"><div class="icon-circle">&#128200;</div> Weekly Revenue Records</div>
+<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addRevModal').classList.add('open')">+ Add Record</button></div>
+</div>
+<div class="filter-bar">
+<div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
+<div class="fg"><label>Status</label><select id="rev-status-f" onchange="applyRevFilters()"><option value="">All Status</option><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
+<div class="fg"><label>Month</label><select id="rev-month-f" onchange="applyRevFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
+<div class="fg"><label>Date From</label><input id="rev-date-from" type="date" onchange="applyRevFilters()"></div>
+<div class="fg"><label>Date To</label><input id="rev-date-to" type="date" onchange="applyRevFilters()"></div>
+<div class="fg"><label>Show</label><select id="rev-entries" onchange="applyRevFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+<button class="btn-clear" onclick="clearRevFilters()">Clear</button>
+</div>
+<div class="table-card">
+<table><thead><tr><th onclick="sortRev('date')">Date</th><th onclick="sortRev('_week')">Week</th><th onclick="sortRev('affiliate')">Affiliate / Partner</th><th onclick="sortRev('amount')">Amount</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead>
+<tbody id="rev-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody></table>
+<div class="pagination" id="rev-pagination"></div>
 </div>
 
+<!-- WEEKLY FORECAST SECTION -->
+<div class="weekly-section">
+<div class="stats-row">
+<div class="stat-card gold"><div class="sc-label">Forecast Total</div><div class="sc-value" id="fc-s-total">$0</div><div class="sc-sub">Expected</div></div>
+<div class="stat-card"><div class="sc-label">Partners Listed</div><div class="sc-value" id="fc-s-count">0</div><div class="sc-sub">All periods</div></div>
+<div class="stat-card green"><div class="sc-label">With Amounts</div><div class="sc-value" id="fc-s-filled">0</div><div class="sc-sub">Have values</div></div>
+<div class="stat-card purple"><div class="sc-label">Current Period</div><div class="sc-value" id="fc-s-period" style="font-size:1rem">All</div><div class="sc-sub">Selected</div></div>
+</div>
+<div class="two-col">
+<div class="chart-card"><h3>&#127919; Forecast by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="fcBarChart"></canvas></div></div>
+<div class="chart-card"><h3>&#128218; Weekly Period Comparison</h3><div class="chart-wrap"><canvas id="fcPeriodChart"></canvas></div></div>
+</div>
+<div class="section-header">
+<div class="section-title"><div class="icon-circle">&#127919;</div> Weekly Forecast</div>
+</div>
+<div class="filter-bar">
+<div class="fg"><label>Search Affiliate</label><input id="fc-search" type="search" placeholder="Search..." oninput="applyFcFilters()"></div>
+<div class="fg"><label>Period</label><select id="fc-period-f" onchange="applyFcFilters()"><option value="">All Periods</option></select></div>
+<div class="fg"><label>Show</label><select id="fc-entries" onchange="applyFcFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+<button class="btn-clear" onclick="clearFcFilters()">Clear</button>
+</div>
+<div class="table-card">
+<table><thead><tr><th onclick="sortFc('date')">Inv. Date</th><th onclick="sortFc('_period')">Period</th><th onclick="sortFc('affiliate')">Affiliate / Partner</th><th onclick="sortFc('amount')">Forecast Amount</th></tr></thead>
+<tbody id="fc-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody></table>
+<div class="pagination" id="fc-pagination"></div>
+</div>
+</div>
+</div>
 <!-- ===== PNL TAB ===== -->
 <div id="tab-pnl" class="tab-content">
-  <div class="stats-row">
-    <div class="stat-card gold"><div class="sc-label">Total Paid</div><div class="sc-value" id="pnl-s-paid">$0</div><div class="sc-sub">Collected</div></div>
-    <div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="pnl-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
-    <div class="stat-card"><div class="sc-label">Total Invoiced</div><div class="sc-value" id="pnl-s-total">$0</div><div class="sc-sub">All amounts</div></div>
-    <div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="pnl-s-count">0</div><div class="sc-sub">Invoices</div></div>
-    <div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="pnl-s-rate">0%</div><div class="sc-sub">Paid / Total</div></div>
-  </div>
-  <div class="two-col">
-    <div class="chart-card"><h3>&#128181; Invoice Amounts by Month</h3><div class="chart-wrap"><canvas id="pnlBarChart"></canvas></div></div>
-    <div class="chart-card"><h3>&#9679; Payment Status Breakdown</h3><div class="chart-wrap"><canvas id="pnlDoughnutChart"></canvas></div></div>
-  </div>
-  <div class="section-header">
-    <div class="section-title"><div class="icon-circle">&#128181;</div> Profit and Loss Report</div>
-    <div class="action-bar"><button class="btn-add" onclick="document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
-  </div>
-  <div class="filter-bar">
-    <div class="fg"><label>Search</label><input id="pnl-search" type="search" placeholder="Search..." oninput="applyPNLFilters()"></div>
-    <div class="fg"><label>Month</label><select id="pnl-month-f" onchange="applyPNLFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
-    <div class="fg"><label>Status</label><select id="pnl-status-f" onchange="applyPNLFilters()"><option value="">All Status</option><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
-    <div class="fg"><label>Date From</label><input id="pnl-date-from" type="date" onchange="applyPNLFilters()"></div>
-    <div class="fg"><label>Date To</label><input id="pnl-date-to" type="date" onchange="applyPNLFilters()"></div>
-    <div class="fg"><label>Show</label><select id="pnl-entries" onchange="applyPNLFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-    <button class="btn-clear" onclick="clearPNLFilters()">Clear</button>
-    <span class="date-hint" id="pnl-date-hint"></span>
-  </div>
-  <div class="table-card">
-    <table><thead><tr><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Month</th><th onclick="sortPNL('company')">Company</th><th onclick="sortPNL('affiliate')">Affiliate</th><th onclick="sortPNL('invAmt')">Inv. Amount</th><th onclick="sortPNL('rcvd')">Received</th><th>Status</th><th>Remarks</th><th>Doc</th><th>Action</th></tr></thead>
-    <tbody id="pnl-tbody"><tr><td colspan="11" class="empty-state">Loading...</td></tr></tbody></table>
-    <div class="pagination" id="pnl-pagination"></div>
-  </div>
+<div class="stats-row">
+<div class="stat-card gold"><div class="sc-label">Total Paid</div><div class="sc-value" id="pnl-s-paid">$0</div><div class="sc-sub">Collected</div></div>
+<div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="pnl-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
+<div class="stat-card"><div class="sc-label">Total Invoiced</div><div class="sc-value" id="pnl-s-total">$0</div><div class="sc-sub">All amounts</div></div>
+<div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="pnl-s-count">0</div><div class="sc-sub">Invoices</div></div>
+<div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="pnl-s-rate">0%</div><div class="sc-sub">Paid / Total</div></div>
+</div>
+<!-- PNL Financial Summary Banner -->
+<div id="pnl-summary-banner" class="pnl-summary-banner" style="display:none">
+<div class="psb-title">&#128181; Monthly Financial Summary</div>
+<div class="psb-row" id="pnl-summary-content"></div>
+</div>
+<div class="month-selector" id="pnl-month-buttons"></div>
+<div class="two-col">
+<div class="chart-card"><h3>&#128181; Invoice Amounts by Month</h3><div class="chart-wrap"><canvas id="pnlBarChart"></canvas></div></div>
+<div class="chart-card"><h3>&#9679; Payment Status Breakdown</h3><div class="chart-wrap"><canvas id="pnlDoughnutChart"></canvas></div></div>
+</div>
+<div class="section-header">
+<div class="section-title"><div class="icon-circle">&#128181;</div> Profit and Loss Report</div>
+<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
+</div>
+<div class="filter-bar">
+<div class="fg"><label>Search</label><input id="pnl-search" type="search" placeholder="Search..." oninput="applyPNLFilters()"></div>
+<div class="fg"><label>Month</label><select id="pnl-month-f" onchange="applyPNLFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
+<div class="fg"><label>Status</label><select id="pnl-status-f" onchange="applyPNLFilters()"><option value="">All Status</option><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
+<div class="fg"><label>Show</label><select id="pnl-entries" onchange="applyPNLFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+<button class="btn-clear" onclick="clearPNLFilters()">Clear</button>
+</div>
+<div class="table-card">
+<table><thead><tr><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Month</th><th onclick="sortPNL('affiliate')">Affiliate Name</th><th onclick="sortPNL('invAmt')">Inv. Amount</th><th onclick="sortPNL('rcvd')">Received</th><th>Status</th><th>Remarks</th><th>Doc</th><th>Action</th></tr></thead>
+<tbody id="pnl-tbody"><tr><td colspan="10" class="empty-state">Loading...</td></tr></tbody></table>
+<div class="pagination" id="pnl-pagination"></div>
+</div>
 </div>
 
 <!-- ===== CTO TAB ===== -->
 <div id="tab-cto" class="tab-content">
-  <div class="stats-row">
-    <div class="stat-card gold"><div class="sc-label">Total Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">CTO period</div></div>
-    <div class="stat-card green"><div class="sc-label">Total Paid</div><div class="sc-value" id="cto-s-paid">$0</div><div class="sc-sub">Collected</div></div>
-    <div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="cto-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
-    <div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="cto-s-count">0</div><div class="sc-sub">Entries</div></div>
-    <div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="cto-s-rate">0%</div><div class="sc-sub">Paid / Total</div></div>
-  </div>
-  <div class="section-header">
-    <div class="section-title"><div class="icon-circle">&#128202;</div> CTO Reports</div>
-  </div>
-  <div class="filter-bar">
-    <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
-    <div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option></select></div>
-    <div class="fg"><label>Date From</label><input id="cto-date-from" type="date" onchange="applyCTOFilters()"></div>
-    <div class="fg"><label>Date To</label><input id="cto-date-to" type="date" onchange="applyCTOFilters()"></div>
-    <div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-    <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
-    <span class="date-hint" id="cto-date-hint"></span>
-  </div>
-  <div class="table-card">
-    <table><thead><tr><th onclick="sortCTO('date')">Date</th><th onclick="sortCTO('_month')">Month</th><th onclick="sortCTO('name')">Name</th><th onclick="sortCTO('package')">Package</th><th onclick="sortCTO('amount')">Amount</th><th onclick="sortCTO('affiliate')">Affiliate</th><th>Notes</th></tr></thead>
-    <tbody id="cto-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody></table>
-    <div class="pagination" id="cto-pagination"></div>
-  </div>
+<div class="stats-row">
+<div class="stat-card gold"><div class="sc-label">Total Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">CTO period</div></div>
+<div class="stat-card green"><div class="sc-label">Total Paid</div><div class="sc-value" id="cto-s-paid">$0</div><div class="sc-sub">Collected</div></div>
+<div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="cto-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
+<div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="cto-s-count">0</div><div class="sc-sub">Entries</div></div>
+<div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="cto-s-rate">0%</div><div class="sc-sub">Paid / Total</div></div>
+</div>
+<div class="section-header">
+<div class="section-title"><div class="icon-circle">&#128202;</div> CTO Reports</div>
+</div>
+<div class="filter-bar">
+<div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
+<div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option></select></div>
+<div class="fg"><label>Date From</label><input id="cto-date-from" type="date" onchange="applyCTOFilters()"></div>
+<div class="fg"><label>Date To</label><input id="cto-date-to" type="date" onchange="applyCTOFilters()"></div>
+<div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+<button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
+</div>
+<div class="table-card">
+<table><thead><tr><th onclick="sortCTO('date')">Date</th><th onclick="sortCTO('_month')">Month</th><th onclick="sortCTO('name')">Name</th><th onclick="sortCTO('package')">Package</th><th onclick="sortCTO('amount')">Amount</th><th onclick="sortCTO('affiliate')">Affiliate</th><th>Notes</th></tr></thead>
+<tbody id="cto-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody></table>
+<div class="pagination" id="cto-pagination"></div>
+</div>
+</div>
+
+<!-- ===== FIVE MINUTE DAILY TAB ===== -->
+<div id="tab-fmd" class="tab-content">
+<div class="stats-row">
+<div class="stat-card gold"><div class="sc-label">Total Invoiced</div><div class="sc-value" id="fmd-s-total">$0</div><div class="sc-sub">All FMD invoices</div></div>
+<div class="stat-card green"><div class="sc-label">Total Paid</div><div class="sc-value" id="fmd-s-paid">$0</div><div class="sc-sub">Collected</div></div>
+<div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="fmd-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
+<div class="stat-card"><div class="sc-label">Total Records</div><div class="sc-value" id="fmd-s-count">0</div><div class="sc-sub">Entries</div></div>
+<div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="fmd-s-rate">0%</div><div class="sc-sub">Paid / Total</div></div>
+</div>
+<div class="section-header">
+<div class="section-title"><div class="icon-circle">&#9203;</div> Five Minute Daily Records</div>
+<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addFMDModal').classList.add('open')">+ Add Record</button></div>
+</div>
+<div class="filter-bar">
+<div class="fg"><label>Search</label><input id="fmd-search" type="search" placeholder="Search..." oninput="applyFMDFilters()"></div>
+<div class="fg"><label>Month</label><select id="fmd-month-f" onchange="applyFMDFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
+<div class="fg"><label>Status</label><select id="fmd-status-f" onchange="applyFMDFilters()"><option value="">All Status</option><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
+<div class="fg"><label>Date From</label><input id="fmd-date-from" type="date" onchange="applyFMDFilters()"></div>
+<div class="fg"><label>Date To</label><input id="fmd-date-to" type="date" onchange="applyFMDFilters()"></div>
+<div class="fg"><label>Show</label><select id="fmd-entries" onchange="applyFMDFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+<button class="btn-clear" onclick="clearFMDFilters()">Clear</button>
+</div>
+<div class="table-card">
+<table><thead><tr><th onclick="sortFMD('invId')">Invoice #</th><th onclick="sortFMD('date')">Date</th><th onclick="sortFMD('_month')">Month</th><th onclick="sortFMD('affiliate')">Affiliate Name</th><th onclick="sortFMD('invAmt')">Inv. Amount</th><th onclick="sortFMD('rcvd')">Received</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead>
+<tbody id="fmd-tbody"><tr><td colspan="9" class="empty-state">Loading...</td></tr></tbody></table>
+<div class="pagination" id="fmd-pagination"></div>
+</div>
 </div><script>
-const PNL_ID='1rrYVlV4-ITMt7BVG57wAgD0JA0OAC_btmCXhHF_g35E';const CTO_ID='1I7kWbN783mXY_qKe51PIsQjUKoMQGMdXz7zh5GmValo';const FCST_ID='1Ms692jnHxt1rJExssJUsWjjSH1fLscmhTbhGRwYH16s';
-let allPNL=[],allRev=[],allFC=[],allCTO=[];
+const PNL_ID='1rrYVlV4-ITMt7BVG57wAgD0JA0OAC_btmCXhHF_g35E';
+const CTO_ID='1I7kWbN783mXY_qKe51PIsQjUKoMQGMdXz7zh5GmValo';
+const FCST_ID='1Ms692jnHxt1rJExssJUsWjjSH1fLscmhTbhGRwYH16s';
+
+let allPNL=[],allRev=[],allFC=[],allCTO=[],allFMD=[];
+let pnlSummaries={};
 let userPNL=JSON.parse(localStorage.getItem('uPNL')||'[]');
 let userRev=JSON.parse(localStorage.getItem('uRev')||'[]');
+let userFMD=JSON.parse(localStorage.getItem('uFMD')||'[]');
 let uStatus=JSON.parse(localStorage.getItem('uStatus')||'{}');
 let uRemarks=JSON.parse(localStorage.getItem('uRemarks')||'{}');
-let revPage=1,pnlPage=1,ctoPage=1,fcPage=1;
-let revSort={c:'date',d:1},pnlSort={c:'date',d:1},ctoSort={c:'date',d:1},fcSort={c:'_period',d:1};
+let revPage=1,pnlPage=1,ctoPage=1,fcPage=1,fmdPage=1;
+let revSort={c:'date',d:1},pnlSort={c:'date',d:1},ctoSort={c:'date',d:1},fcSort={c:'_period',d:1},fmdSort={c:'date',d:1};
 let revChart1=null,revChart2=null,fcChart1=null,fcChart2=null,pnlChart1=null,pnlChart2=null;
 const NAVY='#1a2340',NAVY2='#2e3d6e',ACCENT='#f5a623',GREEN='#22c55e',RED='#ef4444',PURPLE='#7c3aed',YELLOW='#f59e0b';
 const CHART_COLORS=[ACCENT,'#3b82f6',GREEN,PURPLE,RED,'#06b6d4','#ec4899','#84cc16','#f97316','#8b5cf6','#10b981','#6366f1','#14b8a6','#e11d48','#0ea5e9'];
@@ -288,208 +352,683 @@ document.getElementById('currentDate').textContent=new Date().toLocaleDateString
 
 function showTab(t){document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.getElementById('btn-'+t).classList.add('active');}
 function $m(v){return'$'+(parseFloat(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function parseD(s){if(!s)return null;const d=new Date(s);return isNaN(d)?null:d;}
+function parseD(s){if(!s)return null;try{const d=new Date(s);return isNaN(d.getTime())?null:d;}catch(e){return null;}}
 function statusOpts(cur){return['Paid','Partially Paid','Unpaid','Pending'].map(o=>'<option'+(o===cur?' selected':'')+'>'+o+'</option>').join('');}
 function sBadge(s){const m={'paid':'bp','partially paid':'bpa','unpaid':'bu','pending':'bpe'};const cls=m[(s||'').toLowerCase()]||'bpe';return'<span class="badge '+cls+'">'+(s||'Pending')+'</span>';}
 
-async function fetchCSV(url){try{const r=await fetch(url);if(!r.ok)return[];const t=await r.text();const lines=t.split('\n').filter(l=>l.trim());if(lines.length<2)return[];const hdr=parseCSV(lines[0]);return lines.slice(1).map(l=>{const v=parseCSV(l);const o={};hdr.forEach((h,i)=>o[h.trim()]=(v[i]||'').trim());return o;}).filter(r=>Object.values(r).some(v=>v));}catch(e){return[];}}
-function parseCSV(l){const r=[];let c='',q=false;for(let i=0;i<l.length;i++){if(l[i]==='"')q=!q;else if(l[i]===','&&!q){r.push(c);c='';}else c+=l[i];}r.push(c);return r;}
+async function fetchCSV(url){
+  try{
+    const r=await fetch(url);
+    if(!r.ok)return[];
+    const t=await r.text();
+    const lines=t.split('\n').filter(l=>l.trim());
+    if(lines.length<2)return[];
+    const hdr=parseCSVLine(lines[0]);
+    return lines.slice(1).map(l=>{
+      const v=parseCSVLine(l);
+      const o={};
+      hdr.forEach((h,i)=>o[h.trim()]=(v[i]||'').trim());
+      return o;
+    }).filter(r=>Object.values(r).some(v=>v));
+  }catch(e){return[];}
+}
+function parseCSVLine(l){
+  const r=[];let c='',q=false;
+  for(let i=0;i<l.length;i++){
+    if(l[i]==='"'){q=!q;}
+    else if(l[i]===','&&!q){r.push(c);c='';}
+    else{c+=l[i];}
+  }
+  r.push(c);return r;
+}
 function gv(id,sheet){return'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(sheet);}
 function gvg(id,gid){return'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:csv&gid='+gid;}
 
-function getDR(pre){const f=document.getElementById(pre+'-date-from').value;const t=document.getElementById(pre+'-date-to').value;return{from:f?new Date(f):null,to:t?new Date(t+'T23:59:59'):null};}
-function inDR(ds,f,t){if(!f&&!t)return true;const d=parseD(ds);if(!d)return!f&&!t;if(f&&d<f)return false;if(t&&d>t)return false;return true;}
-function setHint(pre,f,t){const el=document.getElementById(pre+'-date-hint');if(!el)return;if(f||t){const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});el.textContent='Showing: '+(f?fmt(f):'Start')+' – '+(t?fmt(t):'Now');}else el.textContent='';}
-function calcS(recs,ak,pk){let paid=0,pend=0,tot=0;recs.forEach(r=>{const s=(r.status||'').toLowerCase();const a=parseFloat(r[ak])||0;const rc=pk?(parseFloat(r[pk])||0):a;tot+=a;if(s==='paid')paid+=a;else if(s.includes('partial')){paid+=rc;pend+=a-rc;}else pend+=a;});return{paid,pend,tot,n:recs.length,rate:tot>0?Math.round(paid/tot*100):0};}
+function parseAmt(v){return parseFloat((v||'0').replace(/[$,]/g,''))||0;}
+
+function getWeekLabel(dateStr){
+  const d=parseD(dateStr);
+  if(!d)return'Unknown';
+  const start=new Date(d);
+  start.setDate(d.getDate()-d.getDay());
+  const end=new Date(start);end.setDate(start.getDate()+6);
+  const fmt=x=>x.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return fmt(start)+' - '+fmt(end);
+}
+
+function getDR(pre){
+  const f=document.getElementById(pre+'-date-from');
+  const t=document.getElementById(pre+'-date-to');
+  return{from:f&&f.value?new Date(f.value):null,to:t&&t.value?new Date(t.value+'T23:59:59'):null};
+}
+function inDR(ds,f,t){
+  if(!f&&!t)return true;
+  const d=parseD(ds);if(!d)return true;
+  if(f&&d<f)return false;
+  if(t&&d>t)return false;
+  return true;
+}
+function calcS(recs,ak,pk){
+  let paid=0,pend=0,tot=0;
+  recs.forEach(r=>{
+    const s=(r.status||'').toLowerCase();
+    const a=parseFloat(r[ak])||0;
+    const rc=pk?(parseFloat(r[pk])||0):a;
+    tot+=a;
+    if(s==='paid')paid+=a;
+    else if(s.includes('partial')){paid+=rc;pend+=a-rc;}
+    else pend+=a;
+  });
+  return{paid,pend,tot,n:recs.length,rate:tot>0?Math.round(paid/tot*100):0};
+}
 function setStat(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
 
+// FMD detection
+function isFMD(aff){
+  const a=(aff||'').toLowerCase();
+  return a.includes('five minute daily')||a.includes('fmd')||a.includes('5 minute daily');
+}
 async function fetchAllData(){
-const ss=s=>{const e=document.getElementById('loadingStatus');if(e)e.textContent=s;};
-// PNL data (Jan-June)
-ss('Loading Profit & Loss data...');
-for(const m of['January','February','March','April','May','June']){
-  const rows=await fetchCSV(gv(PNL_ID,m));
-  rows.forEach(r=>{r._month=m;r._source='sheet';r.invId=r['Invoice ID']||r['Invoice #']||'';r.date=r['Inv Date']||r['Date']||'';r.company=r['Company']||'ETC';r.affiliate=r['Affiliate Name']||r['Affiliate']||'';r.invAmt=parseFloat((r['Invoice Amount']||'0').replace(/[$,]/g,''))||0;r.rcvd=parseFloat((r['Inv Amount rcvd']||r['Amount Received']||'0').replace(/[$,]/g,''))||0;r._key=m+'_'+(r.invId||r.date+'_'+r.affiliate);const ss2=r['STATUS']||r['Status']||'';r.status=uStatus[r._key]||ss2||(r.rcvd>=r.invAmt&&r.invAmt>0?'Paid':r.rcvd>0?'Partially Paid':'Unpaid');const sr=r['Remarks']||r['Notes']||'';r.remarks=uRemarks[r._key]!==undefined?uRemarks[r._key]:sr;});
-  allPNL.push(...rows.filter(r=>r.affiliate||r.invAmt));
-}
-allPNL.push(...userPNL);
+  const setStatus=s=>{const e=document.getElementById('loadingStatus');if(e)e.textContent=s;};
+  const months=['January','February','March','April','May','June'];
+  
+  // PNL data (Jan-June) - include ALL rows including summary rows
+  setStatus('Loading Profit & Loss data...');
+  for(const m of months){
+    const rows=await fetchCSV(gv(PNL_ID,m));
+    rows.forEach(r=>{
+      r._month=m;r._source='sheet';
+      r.invId=r['Invoice ID']||r['Invoice #']||'';
+      r.date=r['Inv Date']||r['Inv Data']||r['Date']||'';
+      r.affiliate=r['Affiliate Name']||r['Affiliate']||'';
+      r.invAmt=parseAmt(r['Invoice Amount']||'0');
+      r.rcvd=parseAmt(r['Inv Amount rcvd']||r['Amount Received']||'0');
+      r._key=m+'_'+(r.invId||r.date+'_'+r.affiliate);
+      const sheetStatus=r['STATUS']||r['Status']||'';
+      r.status=uStatus[r._key]||sheetStatus||(r.rcvd>=r.invAmt&&r.invAmt>0?'Paid':r.rcvd>0?'Partially Paid':'Unpaid');
+      const sheetRemarks=r['Remarks']||r['Notes']||r['Payment Notes']||'';
+      r.remarks=uRemarks[r._key]!==undefined?uRemarks[r._key]:sheetRemarks;
+      // Get remarks from last column (STATUS col onwards)
+      const keys=Object.keys(r);
+      const stIdx=keys.indexOf('STATUS');
+      if(stIdx===-1){const stIdx2=keys.indexOf('Status');if(stIdx2>-1&&keys[stIdx2+1]){r.remarks=uRemarks[r._key]!==undefined?uRemarks[r._key]:(r[keys[stIdx2+1]]||sheetRemarks);}}
+      else if(keys[stIdx+1]){r.remarks=uRemarks[r._key]!==undefined?uRemarks[r._key]:(r[keys[stIdx+1]]||sheetRemarks);}
+      
+      // Detect summary rows for financial data
+      const companyCol=r['Company']||'';
+      const rowLabel=(companyCol+' '+r.affiliate+' '+r.invId).toLowerCase();
+      if(rowLabel.includes('etc balance')||rowLabel.includes('payment rcvd')||
+         rowLabel.includes('gross revenue')||rowLabel.includes('expected expenses')||
+         rowLabel.includes('salary')||rowLabel.includes('ads')||rowLabel.includes('net profit')){
+        r._isSummary=true;
+      }
+    });
+    
+    // Parse financial summary from rows
+    const summaryData={};
+    rows.forEach(r=>{
+      const keys=Object.keys(r);
+      // Look for summary rows by checking affiliate/company fields
+      const label=(r['Affiliate Name']||r.affiliate||r['Company']||'').trim();
+      const val=r.invAmt||r.rcvd||0;
+      if(label.includes('ETC BALANCE'))summaryData.balance=val;
+      if(label.includes('PAYMENT RCVD'))summaryData.paymentRcvd=val;
+      if(label.includes('TOTAL EXPECTED GROSS REVENUE'))summaryData.grossRevenue=val;
+      if(label.includes('TOTAL EXPECTED EXPENSES')||label.includes('ETC TOTAL EXPECTED  EXPENSES'))summaryData.totalExpenses=val;
+      if(label.includes('SALARY'))summaryData.salary=val;
+      if(label.includes('Ads')||label.includes('ADS'))summaryData.ads=val;
+      if(label.includes('TOTAL EXPECTED NET PROFIT'))summaryData.netProfit=val;
+    });
+    
+    // Also check the raw row values for summary data
+    rows.forEach(r=>{
+      const allVals=Object.values(r).map(v=>(v||'').toString());
+      const rowStr=allVals.join(' ');
+      if(rowStr.includes('ETC BALANCE')){
+        const numVals=allVals.map(v=>parseAmt(v)).filter(v=>v>0);
+        if(numVals.length)summaryData.balance=numVals[0];
+      }
+      if(rowStr.includes('PAYMENT RCVD')){
+        const numVals=allVals.map(v=>parseAmt(v)).filter(v=>v>0);
+        if(numVals.length)summaryData.paymentRcvd=numVals[0];
+      }
+      if(rowStr.includes('TOTAL EXPECTED GROSS')){
+        const numVals=allVals.map(v=>parseAmt(v)).filter(v=>v>0);
+        if(numVals.length)summaryData.grossRevenue=numVals[0];
+      }
+      if(rowStr.includes('EXPECTED EXPENSES')||rowStr.includes('EXPECTED  EXPENSES')){
+        const numVals=allVals.map(v=>parseAmt(v)).filter(v=>v>0);
+        if(numVals.length)summaryData.totalExpenses=numVals[0];
+      }
+      if(rowStr.match(/^SALARY/i)||rowStr.match(/SALARY[,\s]/)){
+        const numVals=allVals.map(v=>parseAmt(v)).filter(v=>v>0);
+        if(numVals.length&&!summaryData.salary)summaryData.salary=numVals[0];
+      }
+      if(rowStr.includes('Ads (N')||rowStr.includes('ADS (N')){
+        const numVals=allVals.map(v=>parseAmt(v)).filter(v=>v>0);
+        if(numVals.length&&!summaryData.ads)summaryData.ads=numVals[0];
+      }
+      if(rowStr.includes('NET PROFIT')){
+        const numVals=allVals.map(v=>parseAmt(v)).filter(v=>v>0);
+        if(numVals.length)summaryData.netProfit=numVals[0];
+      }
+    });
+    pnlSummaries[m]=summaryData;
+    
+    // Filter for actual invoice records (not summary rows, not blank)
+    const invoiceRows=rows.filter(r=>{
+      if(!r.affiliate&&!r.invAmt)return false;
+      if(r._isSummary)return false;
+      const label=(r.affiliate||'').toUpperCase();
+      if(label.includes('ETC BALANCE')||label.includes('PAYMENT RCVD')||
+         label.includes('GROSS REVENUE')||label.includes('EXPECTED EXPENSES')||
+         label.includes('TOTAL EXPECTED')||label.includes('NET PROFIT'))return false;
+      return true;
+    });
+    
+    // FMD records
+    const fmdRows=invoiceRows.filter(r=>isFMD(r.affiliate));
+    allFMD.push(...fmdRows);
+    
+    // All PNL records
+    allPNL.push(...invoiceRows);
+  }
+  allPNL.push(...userPNL);
+  allFMD.push(...userFMD);
 
-// CTO data
-ss('Loading CTO data...');
-for(const m of['January-CTO','February-CTO','March-CTO','April-CTO']){const rows=await fetchCSV(gv(CTO_ID,m));rows.forEach(r=>{r._month=m.replace('-CTO','');r._source='sheet';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v&&!v.startsWith('_'))));}
-const mayC=await fetchCSV(gvg(CTO_ID,'395665584'));mayC.forEach(r=>{r._month='May';r._source='sheet';});allCTO.push(...mayC);
+  // CTO data
+  setStatus('Loading CTO data...');
+  for(const m of['January-CTO','February-CTO','March-CTO','April-CTO']){
+    const rows=await fetchCSV(gv(CTO_ID,m));
+    rows.forEach(r=>{r._month=m.replace('-CTO','');r._source='sheet';});
+    allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v&&!v.startsWith('_'))));
+  }
+  const mayC=await fetchCSV(gvg(CTO_ID,'395665584'));
+  mayC.forEach(r=>{r._month='May';r._source='sheet';});
+  allCTO.push(...mayC);
 
-// Forecast data - ONLY from gid=1869330459 (March 1-8) and other sheets from FCST_ID
-ss('Loading Forecast data...');
-const fSheets=['May 11 - 16','May 1-11','April 1-15','March 9-22','March 1- 8','Feb 16-22','Feb 9-15','Feb 1-8'];
-for(const s of fSheets){
-  const rows=await fetchCSV(gv(FCST_ID,s));
-  rows.forEach(r=>{
-    r._period=s;r._source='sheet';
-    r.date=r['Inv Date']||r['Date']||'';
-    r.company=r['Company']||'ETC';
-    r.affiliate=r['Affiliate Name']||r['Affiliate']||'';
-    r.amount=parseFloat((r['Invoice Amount']||'0').replace(/[$,]/g,''))||0;
+  // Forecast data - all weekly periods
+  setStatus('Loading Forecast data...');
+  const fSheets=['May 11 - 16','May 1-11','April 1-15','March 9-22','March 1- 8','Feb 16-22','Feb 9-15','Feb 1-8'];
+  for(const s of fSheets){
+    const rows=await fetchCSV(gv(FCST_ID,s));
+    rows.forEach(r=>{
+      r._period=s;r._source='sheet';
+      r.date=r['Inv Date']||r['Date']||'';
+      r.affiliate=r['Affiliate Name']||r['Affiliate']||'';
+      r.amount=parseAmt(r['Invoice Amount']||'0');
+    });
+    allFC.push(...rows.filter(r=>r.affiliate));
+  }
+
+  // Weekly Revenue - pull from PNL records, group by week
+  // Each PNL record becomes a revenue record
+  allPNL.filter(r=>r._source==='sheet'||(r._source==='user')).forEach(r=>{
+    const rev={
+      _source:r._source,
+      _key:'rev_'+r._key,
+      date:r.date,
+      _week:getWeekLabel(r.date),
+      _month:r._month,
+      affiliate:r.affiliate,
+      amount:r.invAmt,
+      rcvd:r.rcvd,
+      status:r.status,
+      remarks:r.remarks
+    };
+    allRev.push(rev);
   });
-  allFC.push(...rows.filter(r=>r.affiliate));
+  allRev.push(...userRev.map(r=>({...r,_week:getWeekLabel(r.date)})));
+
+  document.getElementById('loadingOverlay').style.display='none';
+
+  // Populate forecast period filter
+  const periods=[...new Set(allFC.map(r=>r._period))].filter(Boolean);
+  const pf=document.getElementById('fc-period-f');
+  periods.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;pf.appendChild(o);});
+
+  // Build PNL month buttons
+  buildMonthButtons();
+  
+  renderAll();
+  buildCharts();
 }
 
-// Daily Revenue - use PNL data filtered for records that have dates (actual received amounts)
-// Daily revenue = records from PNL where rcvd > 0 OR use Forecast as daily revenue source
-// Per user request: Daily Revenue = only actual daily entries (not historical past)
-// We populate allRev from PNL records that have actual received amounts and dates
-allPNL.filter(r=>r.rcvd>0||r._source==='user').forEach(r=>{
-  const rev={_source:r._source,_key:'rev_'+r._key,date:r.date,affiliate:r.affiliate||r.company,amount:r.rcvd>0?r.rcvd:r.invAmt,status:r.status,remarks:r.remarks,_month:r._month};
-  allRev.push(rev);
-});
-allRev.push(...userRev);
-
-document.getElementById('loadingOverlay').style.display='none';
-
-// Populate forecast period filter
-const periods=[...new Set(allFC.map(r=>r._period))].filter(Boolean);
-const pf=document.getElementById('fc-period-f');
-periods.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;pf.appendChild(o);});
-
-renderAll();
-buildCharts();
+function buildMonthButtons(){
+  const container=document.getElementById('pnl-month-buttons');
+  if(!container)return;
+  const months=['January','February','March','April','May','June'];
+  const allBtn=document.createElement('button');
+  allBtn.className='month-btn active';
+  allBtn.textContent='All Months';
+  allBtn.onclick=()=>{
+    document.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('active'));
+    allBtn.classList.add('active');
+    document.getElementById('pnl-month-f').value='';
+    document.getElementById('pnl-summary-banner').style.display='none';
+    applyPNLFilters();
+  };
+  container.appendChild(allBtn);
+  months.forEach(m=>{
+    const btn=document.createElement('button');
+    btn.className='month-btn';
+    btn.textContent=m;
+    btn.onclick=()=>{
+      document.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('pnl-month-f').value=m;
+      showMonthlySummary(m);
+      applyPNLFilters();
+    };
+    container.appendChild(btn);
+  });
 }
 
-// ===== RENDER FUNCTIONS =====
-function getRevFilt(){const q=(document.getElementById('rev-search').value||'').toLowerCase();const sf=document.getElementById('rev-status-f').value;const{from,to}=getDR('rev');setHint('rev',from,to);return allRev.filter(r=>{if(sf&&r.status!==sf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
-function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase();const mf=document.getElementById('pnl-month-f').value;const sf=document.getElementById('pnl-status-f').value;const{from,to}=getDR('pnl');setHint('pnl',from,to);return allPNL.filter(r=>{if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
-function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').toLowerCase();const mf=document.getElementById('cto-month-f').value;const keys=allCTO.length?Object.keys(allCTO[0]):[];const dk=keys.find(k=>k.toLowerCase().includes('date'))||'';const{from,to}=getDR('cto');setHint('cto',from,to);return allCTO.filter(r=>{if(mf&&r._month!==mf)return false;if(!inDR(r[dk]||r.date||'',from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
-function getFcFilt(){const q=(document.getElementById('fc-search').value||'').toLowerCase();const pf=document.getElementById('fc-period-f').value;return allFC.filter(r=>{if(pf&&r._period!==pf)return false;if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;return true;});}
+function showMonthlySummary(month){
+  const banner=document.getElementById('pnl-summary-banner');
+  const content=document.getElementById('pnl-summary-content');
+  if(!banner||!content)return;
+  const s=pnlSummaries[month]||{};
+  if(!Object.keys(s).length){banner.style.display='none';return;}
+  banner.style.display='block';
+  content.innerHTML=
+    '<div class="psb-group"><div class="psb-group-title">Revenue</div>'+
+    (s.paymentRcvd?'<div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(s.paymentRcvd)+'</span></div>':'')+
+    (s.grossRevenue?'<div class="psb-line"><span class="psb-key">Total Expected Gross Revenue</span><span class="psb-value gold">'+$m(s.grossRevenue)+'</span></div>':'')+
+    (s.balance!==undefined?'<div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(s.balance)+'</span></div>':'')+
+    '</div>'+
+    '<div class="psb-group"><div class="psb-group-title">Expenses</div>'+
+    (s.totalExpenses?'<div class="psb-line"><span class="psb-key">Total Expected Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>':'')+
+    (s.salary?'<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>':'')+
+    (s.ads?'<div class="psb-line"><span class="psb-key">Ads (not included)</span><span class="psb-value">'+$m(s.ads)+'</span></div>':'')+
+    '</div>'+
+    '<div class="psb-group"><div class="psb-group-title">Net Result</div>'+
+    (s.netProfit?'<div class="psb-line"><span class="psb-key">Total Expected Net Profit</span><span class="psb-value green">'+$m(s.netProfit)+'</span></div>':'')+
+    '</div>';
+}
+// ===== FILTER FUNCTIONS =====
+function getRevFilt(){
+  const q=(document.getElementById('rev-search').value||'').toLowerCase();
+  const sf=document.getElementById('rev-status-f').value;
+  const mf=document.getElementById('rev-month-f').value;
+  const{from,to}=getDR('rev');
+  return allRev.filter(r=>{
+    if(sf&&r.status!==sf)return false;
+    if(mf&&r._month!==mf)return false;
+    if(!inDR(r.date,from,to))return false;
+    if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function getPNLFilt(){
+  const q=(document.getElementById('pnl-search').value||'').toLowerCase();
+  const mf=document.getElementById('pnl-month-f').value;
+  const sf=document.getElementById('pnl-status-f').value;
+  return allPNL.filter(r=>{
+    if(mf&&r._month!==mf)return false;
+    if(sf&&r.status!==sf)return false;
+    if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function getCTOFilt(){
+  const q=(document.getElementById('cto-search').value||'').toLowerCase();
+  const mf=document.getElementById('cto-month-f').value;
+  const{from,to}=getDR('cto');
+  const keys=allCTO.length?Object.keys(allCTO[0]):[];
+  const dk=keys.find(k=>k.toLowerCase().includes('date'))||'';
+  return allCTO.filter(r=>{
+    if(mf&&r._month!==mf)return false;
+    if(!inDR(r[dk]||r.date||'',from,to))return false;
+    if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function getFcFilt(){
+  const q=(document.getElementById('fc-search').value||'').toLowerCase();
+  const pf=document.getElementById('fc-period-f').value;
+  return allFC.filter(r=>{
+    if(pf&&r._period!==pf)return false;
+    if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function getFMDFilt(){
+  const q=(document.getElementById('fmd-search').value||'').toLowerCase();
+  const mf=document.getElementById('fmd-month-f').value;
+  const sf=document.getElementById('fmd-status-f').value;
+  const{from,to}=getDR('fmd');
+  return allFMD.filter(r=>{
+    if(mf&&r._month!==mf)return false;
+    if(sf&&r.status!==sf)return false;
+    if(!inDR(r.date,from,to))return false;
+    if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+}
 
-function sortArr(arr,sc){return[...arr].sort((a,b)=>{let av=a[sc.c]||'',bv=b[sc.c]||'';const an=parseFloat(av);if(!isNaN(an)){av=an;bv=parseFloat(bv)||0;}return av>bv?sc.d:av<bv?-sc.d:0;});}
-function doSort(tab,col){const m={rev:{s:revSort,fn:renderRevenue},pnl:{s:pnlSort,fn:renderPNL},cto:{s:ctoSort,fn:renderCTO},fc:{s:fcSort,fn:renderFC}};const o=m[tab];if(!o)return;if(o.s.c===col)o.s.d*=-1;else{o.s.c=col;o.s.d=1;}if(tab==='rev')revPage=1;if(tab==='pnl')pnlPage=1;if(tab==='cto')ctoPage=1;if(tab==='fc')fcPage=1;o.fn();}
-function sortRev(c){doSort('rev',c);}function sortPNL(c){doSort('pnl',c);}function sortCTO(c){doSort('cto',c);}function sortFc(c){doSort('fc',c);}
+function sortArr(arr,sc){
+  return[...arr].sort((a,b)=>{
+    let av=a[sc.c]||'',bv=b[sc.c]||'';
+    const an=parseFloat(av);
+    if(!isNaN(an)){av=an;bv=parseFloat(bv)||0;}
+    return av>bv?sc.d:av<bv?-sc.d:0;
+  });
+}
+function doSort(tab,col){
+  const m={rev:{s:revSort,fn:renderRevenue},pnl:{s:pnlSort,fn:renderPNL},cto:{s:ctoSort,fn:renderCTO},fc:{s:fcSort,fn:renderFC},fmd:{s:fmdSort,fn:renderFMD}};
+  const o=m[tab];if(!o)return;
+  if(o.s.c===col)o.s.d*=-1;else{o.s.c=col;o.s.d=1;}
+  if(tab==='rev')revPage=1;if(tab==='pnl')pnlPage=1;if(tab==='cto')ctoPage=1;if(tab==='fc')fcPage=1;if(tab==='fmd')fmdPage=1;
+  o.fn();
+}
+function sortRev(c){doSort('rev',c);}function sortPNL(c){doSort('pnl',c);}function sortCTO(c){doSort('cto',c);}function sortFc(c){doSort('fc',c);}function sortFMD(c){doSort('fmd',c);}
 
 function renderPagination(prefix,page,totalPages,perPage,total){
-const el=document.getElementById(prefix+'-pagination');if(!el)return;
-const s=total===0?0:(page-1)*perPage+1,e=Math.min(page*perPage,total);
-let b='<button class="page-btn" '+(page<=1?'disabled':'')+' onclick="goPage(\x27'+prefix+'\x27,'+(page-1)+')">« Prev</button>';
-for(let p=Math.max(1,page-2);p<=Math.min(totalPages,page+2);p++)b+='<button class="page-btn'+(p===page?' active':'')+'" onclick="goPage(\x27'+prefix+'\x27,'+p+')">'+p+'</button>';
-b+='<button class="page-btn" '+(page>=totalPages?'disabled':'')+' onclick="goPage(\x27'+prefix+'\x27,'+(page+1)+')">Next »</button>';
-el.innerHTML='<span class="pg-info">Showing '+s+'–'+e+' of '+total+'</span><div class="pg-btns">'+b+'</div>';
+  const el=document.getElementById(prefix+'-pagination');if(!el)return;
+  const s=total===0?0:(page-1)*perPage+1,e=Math.min(page*perPage,total);
+  let b='<button class="page-btn" '+(page<=1?'disabled':'')+' onclick="goPage(\x27'+prefix+'\x27,'+(page-1)+')">&#171; Prev</button>';
+  for(let p=Math.max(1,page-2);p<=Math.min(totalPages,page+2);p++)b+='<button class="page-btn'+(p===page?' active':'')+'" onclick="goPage(\x27'+prefix+'\x27,'+p+')">'+p+'</button>';
+  b+='<button class="page-btn" '+(page>=totalPages?'disabled':'')+' onclick="goPage(\x27'+prefix+'\x27,'+(page+1)+')">Next &#187;</button>';
+  el.innerHTML='<span class="pg-info">Showing '+s+'&#8211;'+e+' of '+total+'</span><div class="pg-btns">'+b+'</div>';
 }
-function goPage(pre,p){if(pre==='rev'){revPage=p;renderRevenue();}if(pre==='pnl'){pnlPage=p;renderPNL();}if(pre==='cto'){ctoPage=p;renderCTO();}if(pre==='fc'){fcPage=p;renderFC();}}
+function goPage(pre,p){
+  if(pre==='rev'){revPage=p;renderRevenue();}
+  if(pre==='pnl'){pnlPage=p;renderPNL();}
+  if(pre==='cto'){ctoPage=p;renderCTO();}
+  if(pre==='fc'){fcPage=p;renderFC();}
+  if(pre==='fmd'){fmdPage=p;renderFMD();}
+}
 
 function renderRevenue(){
-const f=getRevFilt();const pp=parseInt(document.getElementById('rev-entries').value)||10;const tp=Math.max(1,Math.ceil(f.length/pp));revPage=Math.min(revPage,tp);
-const s=calcS(f,'amount',null);setStat('rev-s-total',$m(s.tot));setStat('rev-s-paid',$m(s.paid));setStat('rev-s-pend',$m(s.pend));setStat('rev-s-count',s.n);setStat('rev-s-rate',s.rate+'%');
-const sl=sortArr(f,revSort).slice((revPage-1)*pp,revPage*pp);
-const tb=document.getElementById('rev-tbody');
-tb.innerHTML=sl.length?sl.map((r,i)=>{const gi=(revPage-1)*pp+i;const iu=r._source==='user';return'<tr><td>'+(r.date||'—')+'</td><td>'+(r.affiliate||'—')+'</td><td>'+$m(r.amount)+'</td><td><select class="status-select" onchange="updStatus(this,\x27rev\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27rev\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td>'+(iu?'<button class="btn-del" onclick="delRev('+gi+')">Del</button>':'—')+'</td></tr>';}).join(''):'<tr><td colspan="6" class="empty-state">No records found</td></tr>';
-renderPagination('rev',revPage,tp,pp,f.length);
-updateRevCharts(f);
+  const f=getRevFilt();
+  const pp=parseInt(document.getElementById('rev-entries').value)||10;
+  const tp=Math.max(1,Math.ceil(f.length/pp));
+  revPage=Math.min(revPage,tp);
+  const s=calcS(f,'amount',null);
+  setStat('rev-s-total',$m(s.tot));setStat('rev-s-paid',$m(s.paid));setStat('rev-s-pend',$m(s.pend));setStat('rev-s-count',s.n);setStat('rev-s-rate',s.rate+'%');
+  const sl=sortArr(f,revSort).slice((revPage-1)*pp,revPage*pp);
+  const tb=document.getElementById('rev-tbody');
+  tb.innerHTML=sl.length?sl.map((r,i)=>{
+    const gi=(revPage-1)*pp+i;
+    const iu=r._source==='user';
+    return '<tr><td>'+(r.date||'&#8212;')+'</td><td style="font-size:.75rem;color:var(--text3)">'+(r._week||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.amount)+'</td><td><select class="status-select" onchange="updStatus(this,\x27rev\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27rev\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td>'+(iu?'<button class="btn-del" onclick="delRev('+gi+')">Del</button>':'&#8212;')+'</td></tr>';
+  }).join(''):'<tr><td colspan="7" class="empty-state">No records found</td></tr>';
+  renderPagination('rev',revPage,tp,pp,f.length);
+  updateRevCharts(f);
 }
 
 function renderPNL(){
-const f=getPNLFilt();const pp=parseInt(document.getElementById('pnl-entries').value)||10;const tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);
-const s=calcS(f,'invAmt','rcvd');setStat('pnl-s-paid',$m(s.paid));setStat('pnl-s-pend',$m(s.pend));setStat('pnl-s-total',$m(s.tot));setStat('pnl-s-count',s.n);setStat('pnl-s-rate',s.rate+'%');
-const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);
-const tb=document.getElementById('pnl-tbody');
-tb.innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;const iu=r._source==='user';return'<tr><td>'+(r.invId||'—')+'</td><td>'+(r.date||'—')+'</td><td>'+(r._month||'—')+'</td><td>'+(r.company||'—')+'</td><td>'+(r.affiliate||'—')+'</td><td>'+$m(r.invAmt)+'</td><td>'+$m(r.rcvd)+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td>'+(r._doc?'<a href="'+r._doc+'" target="_blank" style="color:var(--navy);font-size:.78rem">View</a>':'—')+'</td><td>'+(iu?'<button class="btn-del" onclick="delPNL('+gi+')">Del</button>':'—')+'</td></tr>';}).join(''):'<tr><td colspan="11" class="empty-state">No records found</td></tr>';
-renderPagination('pnl',pnlPage,tp,pp,f.length);
-updatePNLCharts(f);
+  const f=getPNLFilt();
+  const pp=parseInt(document.getElementById('pnl-entries').value)||10;
+  const tp=Math.max(1,Math.ceil(f.length/pp));
+  pnlPage=Math.min(pnlPage,tp);
+  const s=calcS(f,'invAmt','rcvd');
+  setStat('pnl-s-paid',$m(s.paid));setStat('pnl-s-pend',$m(s.pend));setStat('pnl-s-total',$m(s.tot));setStat('pnl-s-count',s.n);setStat('pnl-s-rate',s.rate+'%');
+  const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);
+  const tb=document.getElementById('pnl-tbody');
+  tb.innerHTML=sl.length?sl.map((r,i)=>{
+    const gi=(pnlPage-1)*pp+i;
+    const iu=r._source==='user';
+    return '<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.invAmt)+'</td><td>'+$m(r.rcvd)+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td>'+(r._doc?'<a href="'+r._doc+'" target="_blank" style="color:var(--navy);font-size:.78rem">View</a>':'&#8212;')+'</td><td>'+(iu?'<button class="btn-del" onclick="delPNL('+gi+')">Del</button>':'&#8212;')+'</td></tr>';
+  }).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';
+  renderPagination('pnl',pnlPage,tp,pp,f.length);
+  updatePNLCharts(f);
 }
 
 function renderCTO(){
-const f=getCTOFilt();const pp=parseInt(document.getElementById('cto-entries').value)||10;const tp=Math.max(1,Math.ceil(f.length/pp));ctoPage=Math.min(ctoPage,tp);
-const keys=allCTO.length?Object.keys(allCTO[0]).filter(k=>!k.startsWith('_')):[];
-const dk=keys.find(k=>k.toLowerCase().includes('date'))||'';const nk=keys.find(k=>k.toLowerCase().includes('name')||k.toLowerCase().includes('client'))||'';const pk=keys.find(k=>k.toLowerCase().includes('package')||k.toLowerCase().includes('product')||k.toLowerCase().includes('tier'))||'';const ak=keys.find(k=>k.toLowerCase().includes('amount')||k.toLowerCase().includes('revenue')||k.toLowerCase().includes('price'))||'';const affk=keys.find(k=>k.toLowerCase().includes('affiliate')||k.toLowerCase().includes('agent'))||'';const ntk=keys.find(k=>k.toLowerCase().includes('note')||k.toLowerCase().includes('remark'))||'';
-let tot=0,paid=0,pend=0;f.forEach(r=>{const a=parseFloat((r[ak]||'0').replace(/[$,]/g,''))||0;tot+=a;const s=(r['Status']||r['Payment Status']||r.status||'').toLowerCase();if(s==='paid')paid+=a;else if(s.includes('partial')){paid+=a*.5;pend+=a*.5;}else pend+=a;});const rate=tot>0?Math.round(paid/tot*100):0;
-setStat('cto-s-rev',$m(tot));setStat('cto-s-paid',$m(paid));setStat('cto-s-pend',$m(pend));setStat('cto-s-count',f.length);setStat('cto-s-rate',rate+'%');
-const sl=sortArr(f,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
-const tb=document.getElementById('cto-tbody');
-tb.innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r[dk]||'—')+'</td><td>'+(r._month||'—')+'</td><td>'+(r[nk]||'—')+'</td><td>'+(r[pk]||'—')+'</td><td>'+(r[ak]?$m(r[ak].replace(/[$,]/g,'')):$m(0))+'</td><td>'+(r[affk]||'—')+'</td><td>'+(r[ntk]||'—')+'</td></tr>').join(''):'<tr><td colspan="7" class="empty-state">No records found</td></tr>';
-renderPagination('cto',ctoPage,tp,pp,f.length);
+  const f=getCTOFilt();
+  const pp=parseInt(document.getElementById('cto-entries').value)||10;
+  const tp=Math.max(1,Math.ceil(f.length/pp));
+  ctoPage=Math.min(ctoPage,tp);
+  const keys=allCTO.length?Object.keys(allCTO[0]).filter(k=>!k.startsWith('_')):[];
+  const dk=keys.find(k=>k.toLowerCase().includes('date'))||'';
+  const nk=keys.find(k=>k.toLowerCase().includes('name')||k.toLowerCase().includes('client'))||'';
+  const pk=keys.find(k=>k.toLowerCase().includes('package')||k.toLowerCase().includes('product')||k.toLowerCase().includes('tier'))||'';
+  const ak=keys.find(k=>k.toLowerCase().includes('amount')||k.toLowerCase().includes('revenue')||k.toLowerCase().includes('price'))||'';
+  const affk=keys.find(k=>k.toLowerCase().includes('affiliate')||k.toLowerCase().includes('agent'))||'';
+  const ntk=keys.find(k=>k.toLowerCase().includes('note')||k.toLowerCase().includes('remark'))||'';
+  let tot=0,paid=0,pend=0;
+  f.forEach(r=>{
+    const a=parseAmt(r[ak]||'0');tot+=a;
+    const s=(r['Status']||r['Payment Status']||r.status||'').toLowerCase();
+    if(s==='paid')paid+=a;else if(s.includes('partial')){paid+=a*.5;pend+=a*.5;}else pend+=a;
+  });
+  const rate=tot>0?Math.round(paid/tot*100):0;
+  setStat('cto-s-rev',$m(tot));setStat('cto-s-paid',$m(paid));setStat('cto-s-pend',$m(pend));setStat('cto-s-count',f.length);setStat('cto-s-rate',rate+'%');
+  const sl=sortArr(f,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
+  const tb=document.getElementById('cto-tbody');
+  tb.innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r[dk]||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r[nk]||'&#8212;')+'</strong></td><td>'+(r[pk]||'&#8212;')+'</td><td>'+(r[ak]?$m(r[ak].replace(/[\$,]/g,'')):$m(0))+'</td><td>'+(r[affk]||'&#8212;')+'</td><td>'+(r[ntk]||'&#8212;')+'</td></tr>').join(''):'<tr><td colspan="7" class="empty-state">No records found</td></tr>';
+  renderPagination('cto',ctoPage,tp,pp,f.length);
 }
 
 function renderFC(){
-const f=getFcFilt();const pp=parseInt(document.getElementById('fc-entries').value)||10;const tp=Math.max(1,Math.ceil(f.length/pp));fcPage=Math.min(fcPage,tp);
-const tot=f.reduce((s,r)=>s+r.amount,0);const filled=f.filter(r=>r.amount>0).length;const pf=document.getElementById('fc-period-f').value;
-setStat('fc-s-total',$m(tot));setStat('fc-s-count',f.length);setStat('fc-s-filled',filled);setStat('fc-s-period',pf||'All');
-const sl=sortArr(f,fcSort).slice((fcPage-1)*pp,fcPage*pp);
-const tb=document.getElementById('fc-tbody');
-tb.innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r.date||'—')+'</td><td>'+(r._period||'—')+'</td><td>'+(r.affiliate||'—')+'</td><td>'+(r.amount?$m(r.amount):'—')+'</td></tr>').join(''):'<tr><td colspan="4" class="empty-state">No forecast data</td></tr>';
-renderPagination('fc',fcPage,tp,pp,f.length);
-updateFcCharts(f);
+  const f=getFcFilt();
+  const pp=parseInt(document.getElementById('fc-entries').value)||10;
+  const tp=Math.max(1,Math.ceil(f.length/pp));
+  fcPage=Math.min(fcPage,tp);
+  const tot=f.reduce((s,r)=>s+r.amount,0);
+  const filled=f.filter(r=>r.amount>0).length;
+  const pf=document.getElementById('fc-period-f').value;
+  setStat('fc-s-total',$m(tot));setStat('fc-s-count',f.length);setStat('fc-s-filled',filled);setStat('fc-s-period',pf||'All');
+  const sl=sortArr(f,fcSort).slice((fcPage-1)*pp,fcPage*pp);
+  const tb=document.getElementById('fc-tbody');
+  tb.innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r.date||'&#8212;')+'</td><td>'+(r._period||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.amount?$m(r.amount):'&#8212;')+'</td></tr>').join(''):'<tr><td colspan="4" class="empty-state">No forecast data</td></tr>';
+  renderPagination('fc',fcPage,tp,pp,f.length);
+  updateFcCharts(f);
 }
 
-function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();}
+function renderFMD(){
+  const f=getFMDFilt();
+  const pp=parseInt(document.getElementById('fmd-entries').value)||10;
+  const tp=Math.max(1,Math.ceil(f.length/pp));
+  fmdPage=Math.min(fmdPage,tp);
+  const s=calcS(f,'invAmt','rcvd');
+  setStat('fmd-s-total',$m(s.tot));setStat('fmd-s-paid',$m(s.paid));setStat('fmd-s-pend',$m(s.pend));setStat('fmd-s-count',s.n);setStat('fmd-s-rate',s.rate+'%');
+  const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);
+  const tb=document.getElementById('fmd-tbody');
+  tb.innerHTML=sl.length?sl.map((r,i)=>{
+    const gi=(fmdPage-1)*pp+i;
+    const iu=r._source==='user';
+    return '<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.invAmt)+'</td><td>'+$m(r.rcvd)+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td>'+(iu?'<button class="btn-del" onclick="delFMD('+gi+')">Del</button>':'&#8212;')+'</td></tr>';
+  }).join(''):'<tr><td colspan="9" class="empty-state">No Five Minute Daily records found</td></tr>';
+  renderPagination('fmd',fmdPage,tp,pp,f.length);
+}
 
+function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();}
 // ===== STATUS & REMARKS =====
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
+function getFMDSorted(){return sortArr(getFMDFilt(),fmdSort);}
+
 function updStatus(sel,tab,gi){
-const r=tab==='pnl'?getPNLSorted()[gi]:getRevSorted()[gi];
-if(!r)return;r.status=sel.value;
-if(r._key){uStatus[r._key]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));}
-else if(r._source==='user'){const ua=tab==='pnl'?userPNL:userRev;const i=ua.findIndex(x=>x===r);if(i>-1){ua[i].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':'uRev',JSON.stringify(ua));}}
-if(tab==='pnl')renderPNL();else renderRevenue();
+  let r;
+  if(tab==='pnl')r=getPNLSorted()[gi];
+  else if(tab==='fmd')r=getFMDSorted()[gi];
+  else r=getRevSorted()[gi];
+  if(!r)return;
+  r.status=sel.value;
+  if(r._key){uStatus[r._key]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));}
+  else if(r._source==='user'){
+    const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);
+    const idx=ua.findIndex(x=>x===r);
+    if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));}
+  }
+  if(tab==='pnl')renderPNL();else if(tab==='fmd')renderFMD();else renderRevenue();
 }
 function updRemark(ta,tab,gi){
-const r=tab==='pnl'?getPNLSorted()[gi]:getRevSorted()[gi];
-if(!r)return;r.remarks=ta.value;
-if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
-else if(r._source==='user'){const ua=tab==='pnl'?userPNL:userRev;const i=ua.findIndex(x=>x===r);if(i>-1){ua[i].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':'uRev',JSON.stringify(ua));}}
+  let r;
+  if(tab==='pnl')r=getPNLSorted()[gi];
+  else if(tab==='fmd')r=getFMDSorted()[gi];
+  else r=getRevSorted()[gi];
+  if(!r)return;
+  r.remarks=ta.value;
+  if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
+  else if(r._source==='user'){
+    const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);
+    const idx=ua.findIndex(x=>x===r);
+    if(idx>-1){ua[idx].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));}
+  }
 }
 
 // ===== SAVE / DELETE =====
-function savePNLRecord(){const r={_source:'user',_month:document.getElementById('f-month').value||'Manual',_key:'u_'+Date.now(),invId:document.getElementById('f-invId').value,date:document.getElementById('f-invDate').value,company:document.getElementById('f-company').value,affiliate:document.getElementById('f-affiliate').value,invAmt:parseFloat(document.getElementById('f-invAmt').value)||0,rcvd:parseFloat(document.getElementById('f-rcvd').value)||0,status:document.getElementById('f-status').value||'Pending',remarks:document.getElementById('f-remarks').value,_doc:null};const fl=document.getElementById('f-docFile').files[0];if(fl)r._doc=URL.createObjectURL(fl);allPNL.push(r);userPNL.push(r);localStorage.setItem('uPNL',JSON.stringify(userPNL));document.getElementById('addPNLModal').classList.remove('open');['f-invId','f-invDate','f-company','f-affiliate','f-invAmt','f-rcvd','f-remarks'].forEach(id=>document.getElementById(id).value='');renderPNL();}
-function delPNL(gi){const r=getPNLSorted()[gi];if(!r||r._source!=='user')return;allPNL.splice(allPNL.indexOf(r),1);const i=userPNL.indexOf(r);if(i>-1)userPNL.splice(i,1);localStorage.setItem('uPNL',JSON.stringify(userPNL));renderPNL();}
-function saveRevRecord(){const r={_source:'user',_key:'ur_'+Date.now(),date:document.getElementById('fr-date').value,affiliate:document.getElementById('fr-affiliate').value,amount:parseFloat(document.getElementById('fr-amt').value)||0,status:document.getElementById('fr-status').value||'Pending',remarks:document.getElementById('fr-remarks').value};allRev.push(r);userRev.push(r);localStorage.setItem('uRev',JSON.stringify(userRev));document.getElementById('addRevModal').classList.remove('open');['fr-date','fr-affiliate','fr-amt','fr-remarks'].forEach(id=>document.getElementById(id).value='');renderRevenue();}
-function delRev(gi){const r=getRevSorted()[gi];if(!r||r._source!=='user')return;allRev.splice(allRev.indexOf(r),1);const i=userRev.indexOf(r);if(i>-1)userRev.splice(i,1);localStorage.setItem('uRev',JSON.stringify(userRev));renderRevenue();}
+function savePNLRecord(){
+  const r={_source:'user',_month:document.getElementById('f-month').value||'Manual',_key:'u_'+Date.now(),
+    invId:document.getElementById('f-invId').value,date:document.getElementById('f-invDate').value,
+    affiliate:document.getElementById('f-affiliate').value,
+    invAmt:parseFloat(document.getElementById('f-invAmt').value)||0,
+    rcvd:parseFloat(document.getElementById('f-rcvd').value)||0,
+    status:document.getElementById('f-status').value||'Pending',
+    remarks:document.getElementById('f-remarks').value,_doc:null};
+  const fl=document.getElementById('f-docFile').files[0];
+  if(fl)r._doc=URL.createObjectURL(fl);
+  allPNL.push(r);userPNL.push(r);
+  localStorage.setItem('uPNL',JSON.stringify(userPNL));
+  document.getElementById('addPNLModal').classList.remove('open');
+  ['f-invId','f-invDate','f-affiliate','f-invAmt','f-rcvd','f-remarks'].forEach(id=>document.getElementById(id).value='');
+  renderPNL();
+}
+function delPNL(gi){
+  const r=getPNLSorted()[gi];if(!r||r._source!=='user')return;
+  allPNL.splice(allPNL.indexOf(r),1);
+  const i=userPNL.indexOf(r);if(i>-1)userPNL.splice(i,1);
+  localStorage.setItem('uPNL',JSON.stringify(userPNL));renderPNL();
+}
+function saveRevRecord(){
+  const r={_source:'user',_key:'ur_'+Date.now(),
+    date:document.getElementById('fr-date').value,
+    _week:getWeekLabel(document.getElementById('fr-date').value),
+    _month:'Manual',
+    affiliate:document.getElementById('fr-affiliate').value,
+    amount:parseFloat(document.getElementById('fr-amt').value)||0,
+    status:document.getElementById('fr-status').value||'Pending',
+    remarks:document.getElementById('fr-remarks').value};
+  allRev.push(r);userRev.push(r);
+  localStorage.setItem('uRev',JSON.stringify(userRev));
+  document.getElementById('addRevModal').classList.remove('open');
+  ['fr-date','fr-affiliate','fr-amt','fr-remarks'].forEach(id=>document.getElementById(id).value='');
+  renderRevenue();
+}
+function delRev(gi){
+  const r=getRevSorted()[gi];if(!r||r._source!=='user')return;
+  allRev.splice(allRev.indexOf(r),1);
+  const i=userRev.indexOf(r);if(i>-1)userRev.splice(i,1);
+  localStorage.setItem('uRev',JSON.stringify(userRev));renderRevenue();
+}
+function saveFMDRecord(){
+  const r={_source:'user',_month:document.getElementById('fm-month').value||'Manual',_key:'ufmd_'+Date.now(),
+    date:document.getElementById('fm-date').value,
+    affiliate:document.getElementById('fm-affiliate').value,
+    invAmt:parseFloat(document.getElementById('fm-invAmt').value)||0,
+    rcvd:parseFloat(document.getElementById('fm-rcvd').value)||0,
+    status:document.getElementById('fm-status').value||'Pending',
+    remarks:document.getElementById('fm-remarks').value};
+  allFMD.push(r);userFMD.push(r);
+  localStorage.setItem('uFMD',JSON.stringify(userFMD));
+  document.getElementById('addFMDModal').classList.remove('open');
+  ['fm-date','fm-affiliate','fm-invAmt','fm-rcvd','fm-remarks'].forEach(id=>document.getElementById(id).value='');
+  renderFMD();
+}
+function delFMD(gi){
+  const r=getFMDSorted()[gi];if(!r||r._source!=='user')return;
+  allFMD.splice(allFMD.indexOf(r),1);
+  const i=userFMD.indexOf(r);if(i>-1)userFMD.splice(i,1);
+  localStorage.setItem('uFMD',JSON.stringify(userFMD));renderFMD();
+}
 
 // ===== FILTER ACTIONS =====
 function applyRevFilters(){revPage=1;renderRevenue();}
-function clearRevFilters(){['rev-search','rev-date-from','rev-date-to'].forEach(id=>document.getElementById(id).value='');document.getElementById('rev-status-f').value='';document.getElementById('rev-entries').value='10';applyRevFilters();}
+function clearRevFilters(){
+  ['rev-search','rev-date-from','rev-date-to'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rev-status-f').value='';
+  document.getElementById('rev-month-f').value='';
+  document.getElementById('rev-entries').value='10';
+  applyRevFilters();
+}
 function applyPNLFilters(){pnlPage=1;renderPNL();}
-function clearPNLFilters(){['pnl-search','pnl-date-from','pnl-date-to'].forEach(id=>document.getElementById(id).value='');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-status-f').value='';document.getElementById('pnl-entries').value='10';applyPNLFilters();}
+function clearPNLFilters(){
+  ['pnl-search'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pnl-month-f').value='';
+  document.getElementById('pnl-status-f').value='';
+  document.getElementById('pnl-entries').value='10';
+  document.querySelectorAll('.month-btn').forEach((b,i)=>{b.classList.toggle('active',i===0);});
+  document.getElementById('pnl-summary-banner').style.display='none';
+  applyPNLFilters();
+}
 function applyCTOFilters(){ctoPage=1;renderCTO();}
-function clearCTOFilters(){['cto-search','cto-date-from','cto-date-to'].forEach(id=>document.getElementById(id).value='');document.getElementById('cto-month-f').value='';document.getElementById('cto-entries').value='10';applyCTOFilters();}
+function clearCTOFilters(){
+  ['cto-search','cto-date-from','cto-date-to'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cto-month-f').value='';
+  document.getElementById('cto-entries').value='10';
+  applyCTOFilters();
+}
 function applyFcFilters(){fcPage=1;renderFC();}
-function clearFcFilters(){document.getElementById('fc-search').value='';document.getElementById('fc-period-f').value='';document.getElementById('fc-entries').value='10';applyFcFilters();}
+function clearFcFilters(){
+  document.getElementById('fc-search').value='';
+  document.getElementById('fc-period-f').value='';
+  document.getElementById('fc-entries').value='10';
+  applyFcFilters();
+}
+function applyFMDFilters(){fmdPage=1;renderFMD();}
+function clearFMDFilters(){
+  ['fmd-search','fmd-date-from','fmd-date-to'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fmd-month-f').value='';
+  document.getElementById('fmd-status-f').value='';
+  document.getElementById('fmd-entries').value='10';
+  applyFMDFilters();
+}
 
 // ===== CHARTS =====
-function mkChart(id,type,labels,datasets,opts){const ctx=document.getElementById(id);if(!ctx)return null;const existing=Chart.getChart(id);if(existing)existing.destroy();return new Chart(ctx,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==='doughnut',position:'bottom',labels:{font:{size:11},padding:10}},tooltip:{callbacks:{label:c=>type==='doughnut'?c.label+': '+$m(c.raw):$m(c.raw)}}},scales:type!=='doughnut'?{x:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{callback:v=>'$'+v.toLocaleString(),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}:undefined,...(opts||{})}});}
-
+function mkChart(id,type,labels,datasets,opts){
+  const ctx=document.getElementById(id);if(!ctx)return null;
+  const existing=Chart.getChart(id);if(existing)existing.destroy();
+  return new Chart(ctx,{type,data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:type==='doughnut',position:'bottom',labels:{font:{size:11},padding:10}},
+      tooltip:{callbacks:{label:c=>type==='doughnut'?c.label+': '+$m(c.raw):$m(c.raw)}}
+    },
+    scales:type!=='doughnut'?{x:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{callback:v=>'$'+v.toLocaleString(),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}:undefined,
+    ...(opts||{})
+  }});
+}
 function buildCharts(){updateRevCharts(allRev);updatePNLCharts(allPNL);updateFcCharts(allFC);}
 
 function updateRevCharts(f){
-// Bar: by affiliate
-const agg={};f.forEach(r=>{const a=r.affiliate||'Unknown';agg[a]=(agg[a]||0)+r.amount;});
-const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,15);
-const labels=sorted.map(x=>x[0].substring(0,20));const vals=sorted.map(x=>x[1]);
-revChart1=mkChart('revBarChart','bar',labels,[{label:'Revenue',data:vals,backgroundColor:CHART_COLORS.slice(0,vals.length),borderRadius:4}]);
-// Doughnut: by status
-const stAgg={Paid:0,'Partially Paid':0,Unpaid:0,Pending:0};f.forEach(r=>{const s=r.status||'Pending';if(stAgg[s]!==undefined)stAgg[s]+=r.amount;else stAgg['Pending']+=r.amount;});
-const stL=Object.keys(stAgg).filter(k=>stAgg[k]>0);const stV=stL.map(k=>stAgg[k]);
-revChart2=mkChart('revDoughnutChart','doughnut',stL,[{data:stV,backgroundColor:[GREEN,YELLOW,RED,PURPLE],borderWidth:2}]);
+  const agg={};
+  f.forEach(r=>{const a=r.affiliate||'Unknown';agg[a]=(agg[a]||0)+r.amount;});
+  const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  revChart1=mkChart('revBarChart','bar',sorted.map(x=>x[0].substring(0,20)),
+    [{label:'Revenue',data:sorted.map(x=>x[1]),backgroundColor:CHART_COLORS.slice(0,sorted.length),borderRadius:4}]);
+  const stAgg={Paid:0,'Partially Paid':0,Unpaid:0,Pending:0};
+  f.forEach(r=>{const s=r.status||'Pending';if(stAgg[s]!==undefined)stAgg[s]+=r.amount;else stAgg['Pending']+=r.amount;});
+  const stL=Object.keys(stAgg).filter(k=>stAgg[k]>0);
+  revChart2=mkChart('revDoughnutChart','doughnut',stL,[{data:stL.map(k=>stAgg[k]),backgroundColor:[GREEN,YELLOW,RED,PURPLE],borderWidth:2}]);
 }
-
 function updatePNLCharts(f){
-// Bar: by month
-const months=['January','February','March','April','May','June'];const mAgg={};months.forEach(m=>mAgg[m]=0);f.forEach(r=>{if(mAgg[r._month]!==undefined)mAgg[r._month]+=r.invAmt;});
-const ml=months.filter(m=>mAgg[m]>0);const mv=ml.map(m=>mAgg[m]);
-pnlChart1=mkChart('pnlBarChart','bar',ml,[{label:'Invoice Amount',data:mv,backgroundColor:NAVY,borderRadius:4},{label:'Received',data:ml.map(m=>f.filter(r=>r._month===m).reduce((s,r)=>s+r.rcvd,0)),backgroundColor:ACCENT,borderRadius:4}]);
-// Doughnut: status
-const stAgg={Paid:0,'Partially Paid':0,Unpaid:0,Pending:0};f.forEach(r=>{const s=r.status||'Unpaid';if(stAgg[s]!==undefined)stAgg[s]+=r.invAmt;else stAgg['Pending']+=r.invAmt;});
-const stL=Object.keys(stAgg).filter(k=>stAgg[k]>0);
-pnlChart2=mkChart('pnlDoughnutChart','doughnut',stL,[{data:stL.map(k=>stAgg[k]),backgroundColor:[GREEN,YELLOW,RED,PURPLE],borderWidth:2}]);
+  const months=['January','February','March','April','May','June'];
+  const mAgg={};months.forEach(m=>mAgg[m]=0);
+  f.forEach(r=>{if(mAgg[r._month]!==undefined)mAgg[r._month]+=r.invAmt;});
+  const ml=months.filter(m=>mAgg[m]>0);
+  pnlChart1=mkChart('pnlBarChart','bar',ml,
+    [{label:'Invoice Amount',data:ml.map(m=>mAgg[m]),backgroundColor:NAVY,borderRadius:4},
+     {label:'Received',data:ml.map(m=>f.filter(r=>r._month===m).reduce((s,r)=>s+r.rcvd,0)),backgroundColor:ACCENT,borderRadius:4}]);
+  const stAgg={Paid:0,'Partially Paid':0,Unpaid:0,Pending:0};
+  f.forEach(r=>{const s=r.status||'Unpaid';if(stAgg[s]!==undefined)stAgg[s]+=r.invAmt;else stAgg['Pending']+=r.invAmt;});
+  const stL=Object.keys(stAgg).filter(k=>stAgg[k]>0);
+  pnlChart2=mkChart('pnlDoughnutChart','doughnut',stL,[{data:stL.map(k=>stAgg[k]),backgroundColor:[GREEN,YELLOW,RED,PURPLE],borderWidth:2}]);
 }
-
 function updateFcCharts(f){
-// Bar: top 15 affiliates by amount
-const agg={};f.filter(r=>r.amount>0).forEach(r=>{const a=r.affiliate||'Unknown';agg[a]=(agg[a]||0)+r.amount;});
-const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,15);
-fcChart1=mkChart('fcBarChart','bar',sorted.map(x=>x[0].substring(0,18)),[{label:'Forecast',data:sorted.map(x=>x[1]),backgroundColor:CHART_COLORS.slice(0,sorted.length),borderRadius:4}]);
-// Bar: by period total
-const pAgg={};f.forEach(r=>{pAgg[r._period]=(pAgg[r._period]||0)+r.amount;});
-const pSorted=Object.entries(pAgg).sort((a,b)=>b[1]-a[1]);
-fcChart2=mkChart('fcPeriodChart','bar',pSorted.map(x=>x[0]),[{label:'Period Total',data:pSorted.map(x=>x[1]),backgroundColor:NAVY,borderRadius:4}]);
+  const agg={};
+  f.filter(r=>r.amount>0).forEach(r=>{const a=r.affiliate||'Unknown';agg[a]=(agg[a]||0)+r.amount;});
+  const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  fcChart1=mkChart('fcBarChart','bar',sorted.map(x=>x[0].substring(0,18)),
+    [{label:'Forecast',data:sorted.map(x=>x[1]),backgroundColor:CHART_COLORS.slice(0,sorted.length),borderRadius:4}]);
+  const pAgg={};
+  f.forEach(r=>{pAgg[r._period]=(pAgg[r._period]||0)+r.amount;});
+  const pSorted=Object.entries(pAgg).sort((a,b)=>b[1]-a[1]);
+  fcChart2=mkChart('fcPeriodChart','bar',pSorted.map(x=>x[0]),
+    [{label:'Period Total',data:pSorted.map(x=>x[1]),backgroundColor:NAVY,borderRadius:4}]);
 }
 
 fetchAllData().catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});
