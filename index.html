@@ -343,7 +343,7 @@ if(rs.includes('EXPENSES')&&!rs.includes('GROSS REVENUE')&&!rs.includes('NET PRO
 if(rs.match(/SALARY/)&&!rs.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.salary)sum.salary=n[0];}
 if((rs.includes('ADS (')||rs.includes('ADS/LEADS')||rs.includes('ADS/L'))&&!rs.includes('BEEHIV')&&!rs.includes('FIVE MINUTE')&&!rs.includes('REVENUE')&&!rs.includes('FMD')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.ads)sum.ads=n[0];}
 if((rs.includes('NET PROFIT')||rs.includes('EXPECTED PROFIT'))&&rs.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.netProfit=n[0];}
-if(rs.includes('ETC BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>=0&&v!==Infinity);sum.balance=n.length?n[0]:0;}
+if(rs.includes('ETC BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);sum.balance=n.length?n[0]:0;}
 });
 pnlSummaries[m]=sum;
 const EXPENSE_KEYS=['ETC BALANCE','PAYMENT RCVD','PAYMENT RECEIVED','TOTAL EXPECTED','NET PROFIT','GROSS REVENUE','EXPECTED REVENUE','EXPECTED PROFIT','SALARY','ADS (NEM','ADS/LEADS','ADS (','ADS/L','GOBOT','BEEHIIV EXPENSE','FMD REVENUE','FMD COST'];
@@ -406,7 +406,7 @@ bEl.style.display='block';
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div>'+
 (s.paymentRcvd?'<div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(s.paymentRcvd)+'</span></div>':'')+
 (s.grossRevenue?'<div class="psb-line"><span class="psb-key">Total Expected Revenue</span><span class="psb-value gold">'+$m(s.grossRevenue)+'</span></div>':'')+
-((s.balance||s.balance===0)?'<div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(s.balance)+'</span></div>':'')+
+'<div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(s.balance||0)+'</span></div>'+
 '</div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+
 (s.totalExpenses?'<div class="psb-line"><span class="psb-key">Total Expected Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>':'')+
 (s.salary?'<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>':'')+
