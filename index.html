@@ -465,7 +465,7 @@ function renderMonthlySummary(){var months=['January','February','March','April'
 function renderRevenue(){const f=getRevFilt(),pp=parseInt(document.getElementById('rev-entries').value)||25,tp=Math.max(1,Math.ceil(f.length/pp));revPage=Math.min(revPage,tp);renderMonthlySummary();
 var selM=document.getElementById('rev-month-f').value||'';
 var months=['January','February','March','April','May','June'];
-var ctoByMonth={};allRev.forEach(function(r){if(r._srcLabel==='CTO'){var m=r._month||'';if(m)ctoByMonth[m]=(ctoByMonth[m]||0)+r.amount;}});
+var ctoByMonth={};allRev.forEach(function(r){if(r._srcLabel==='CTO'||r._srcLabel==='IO'){var m=r._month||'';if(m)ctoByMonth[m]=(ctoByMonth[m]||0)+r.amount;}});
 var mTotRev=0,mTotExp=0,mFcTot=0;
 var filterMonths=selM?[selM]:months;
 filterMonths.forEach(function(m){
