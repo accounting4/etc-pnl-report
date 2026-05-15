@@ -287,7 +287,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
 <div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="May">May</option><option value="April">April</option><option value="March">March</option><option value="February">February</option><option value="January">January</option><option value="">All Months</option></select></div>
-<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>CPA</option><option>CPL</option></select></div>
+<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>CPL</option></select></div>
 <div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="10">10</option></select></div>
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
 </div>
@@ -435,13 +435,8 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
 for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));}
-ss('Loading CPA data...');
-const ctoCPA=[{gid:'1347298166',m:'January'},{gid:'777972971',m:'February'},{gid:'1281435621',m:'March'},{gid:'1850542940',m:'April'},{gid:'1766344774',m:'May'}];
-for(const t of ctoCPA){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CPA';r['Current Lead Count']=r['CV']||r['Current Lead Count']||'';r['Rate/Lead ($)']=r['Rate per lead/conversion ($)']||r['Rate/Lead ($)']||'';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));}
-ss('Loading Interactive Offers...');
-const ioRows=await fetchCSV(gvg(CTO_ID,'1171889233'));
-ioRows.forEach(r=>{r._month='May';r._source='sheet';r._isIO=true;});
-allCTO.push(...ioRows.filter(r=>{var name=r['Advertiser/Offer']||'';return name&&name.trim()&&!name.includes('Total');}));
+// CPA data removed — Tracking Dashboard shows CTO Performance Dashboard only
+// IO data removed — Tracking Dashboard shows CTO Performance Dashboard only
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
@@ -455,7 +450,7 @@ var offer=r['Offers']||r['Advertiser/Offer']||'';
 var label=advertiser?(advertiser+(offer&&offer!==advertiser?' - '+offer:'')):offer;
 if(!label||!label.trim())return;
 var isIO=label.toLowerCase().includes('interactive')||r._isIO;
-var srcType=r._ctoType==='CPA'?'CPA':(isIO?'IO':'CTO');
+var srcType='CTO';
 allRev.push({_source:'sheet',_srcLabel:srcType,_key:'cto_'+r._month+'_'+label+'_'+srcType,date:r['Since Last Update']||r['Since Last Updated']||'',_week:r._month+' ('+srcType+')',_month:r._month,affiliate:label,amount:amt,status:'Paid',remarks:r['Type']||r._ctoType||''});
 });
 ss('Loading Forecast data...');
