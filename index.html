@@ -164,9 +164,9 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="header-badge">LIVE DATA</div>
 </div>
 <div class="nav-tabs">
-<button class="nav-tab active" onclick="showTab('revenue')" id="btn-revenue">&#128200; REAL-TIME Revenue &amp; Forecast</button>
+<button class="nav-tab active" onclick="showTab('revenue')" id="btn-revenue">&#128200; Revenue &amp; Forecast</button>
 <button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
-<button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; CTO Reports</button>
+<button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; Tracking Dashboard</button>
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
 </div>
 <div id="tab-revenue" class="tab-content active">
@@ -179,7 +179,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="chart-card"><h3>&#128200; Revenue by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="revBarChart"></canvas></div></div>
 <div class="chart-card"><h3>&#128200; Daily Revenue Trend</h3><div class="chart-wrap"><canvas id="revTrendChart"></canvas></div></div>
 </div>
-<div class="section-header"><div class="section-title"><div class="icon-circle">&#128200;</div> REAL-TIME Revenue Records</div></div>
+<div class="section-header"><div class="section-title"><div class="icon-circle">&#128200;</div> Revenue Records</div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
 <div class="fg"><label>Month</label><select id="rev-month-f" onchange="applyRevFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
@@ -266,7 +266,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="chart-card"><h3>&#128202; Revenue by Affiliate</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRevChart"></canvas></div></div>
 <div class="chart-card"><h3>&#127942; Affiliate Rankings</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRankChart"></canvas></div></div>
 </div>
-<div class="section-header"><div class="section-title"><div class="icon-circle">&#128202;</div> CTO Reports — Performance Dashboard</div></div>
+<div class="section-header"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CPA / CTO / CPL</div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
 <div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="May">May</option><option value="April">April</option><option value="March">March</option><option value="February">February</option><option value="January">January</option><option value="">All Months</option></select></div>
@@ -353,12 +353,12 @@ rows.forEach(r=>{
 r._month=m;r._source='sheet';
 r.invId=r['Invoice ID']||r['Invoice #']||(r._rawVals&&r._rawVals[0])||'';
 r.date=r['Inv Date']||r['Inv Data']||r['Date']||r['_c1']||'';
-r.affiliate=r['Affiliate Name']||r['Affiliate']||'';
+r.affiliate=r['Affiliate Name']||r['Affiliate']||(r._rawVals&&r._rawVals[3])||'';
 r.invAmt=parseAmt(r['Invoice Amount']||(r._rawVals&&r._rawVals[4])||'0');
 r.rcvd=parseAmt(r['Inv Amount rcvd']||r['Amount Received']||(r._rawVals&&r._rawVals[5])||'0');
 r.displayAmt=r.invAmt>0?r.invAmt:r.rcvd;
 r._key=m+'_'+(r.invId||r.date+'_'+r.affiliate);
-const ss2=r['STATUS']||r['Status']||'';
+const ss2=r['STATUS']||r['Status']||(r._rawVals&&r._rawVals[6]?r._rawVals[6].trim():'')||'';
 r.status=uStatus[r._key]||ss2||(r.rcvd>=r.displayAmt&&r.displayAmt>0?'Paid':r.rcvd>0?'Partially Paid':'Unpaid');
 const keys=Object.keys(r);const si=keys.findIndex(k=>k==='STATUS'||k==='Status');
 let sr='';if(si>-1&&keys[si+1]&&!keys[si+1].startsWith('_'))sr=r[keys[si+1]]||'';
