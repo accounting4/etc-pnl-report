@@ -437,9 +437,11 @@ ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
 for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));}
 // CPA data removed — Tracking Dashboard shows CTO Performance Dashboard only
-ss('Loading Interactive Offers data...');
-const ioTabs=[{gid:'336810423',m:'February',p:'Feb 1-8'},{gid:'1018787075',m:'February',p:'Feb 9-15'},{gid:'217926340',m:'February',p:'Feb 16-22'},{gid:'1869330459',m:'March',p:'March 1-8'},{gid:'1731429118',m:'March',p:'March 9-22'},{gid:'1098482805',m:'April',p:'April 1-15'},{gid:'374553238',m:'May',p:'May 1-11'},{gid:'1442057268',m:'May',p:'May 11-16'}];
-for(const t of ioTabs){const rows=await fetchCSV(gvg(FCST_ID,t.gid));rows.forEach(r=>{var aff=(r['Affiliate Name']||'').trim();var amt=(r['Invoice Amount']||'').replace(/[\$,]/g,'').trim();if(!aff||!amt)return;allCTO.push({'Advertiser':aff,'Advertiser/Offer':aff,'Offers':aff,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':t.m,'_source':'sheet','_ctoType':'IO','_ioPeriod':t.p});});}
+ss('Loading Interactive Offers data from Everflow...');
+const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
+const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
+const mNames={'01':'January','02':'February','03':'March','04':'April','05':'May','06':'June','07':'July','08':'August','09':'September','10':'October','11':'November','12':'December'};
+ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=(r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':camp,'Advertiser/Offer':camp,'Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt});});
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
