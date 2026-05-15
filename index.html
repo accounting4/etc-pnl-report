@@ -189,6 +189,27 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="chart-card"><h3>&#128200; Monthly Revenue vs Expenses</h3><div class="chart-wrap"><canvas id="revMonthlyChart"></canvas></div></div>
 <div class="chart-card"><h3>&#128200; Revenue by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="revBarChart"></canvas></div></div>
 </div>
+<!-- Forecast Section -->
+<div class="card" style="margin-bottom:1.5rem;padding:1.2rem">
+<h3 style="margin:0 0 1rem;font-size:1.1rem">🔮 Revenue Forecast & Projections</h3>
+<div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem">
+<div class="stat-card" style="flex:1;min-width:170px"><div class="sc-label">PROJECTED MONTH-END</div><div class="sc-value" id="fc-projected-total">$0</div><div class="sc-sub" id="fc-projected-sub">Current month</div></div>
+<div class="stat-card green" style="flex:1;min-width:170px"><div class="sc-label">DAILY RUN RATE</div><div class="sc-value" id="fc-run-rate">$0</div><div class="sc-sub">Avg revenue per day</div></div>
+<div class="stat-card purple" style="flex:1;min-width:170px"><div class="sc-label">GROWTH TREND</div><div class="sc-value" id="fc-growth">0%</div><div class="sc-sub">Month-over-month</div></div>
+<div class="stat-card" style="flex:1;min-width:170px;border-top-color:var(--accent)"><div class="sc-label">NEXT MONTH FORECAST</div><div class="sc-value" id="fc-next-month">$0</div><div class="sc-sub" id="fc-next-sub">Projected</div></div>
+</div>
+<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;align-items:end">
+<div class="fg"><label>Date Range</label><select id="fc-range" onchange="updateForecasts()"><option value="">All Time</option><option value="ytd">Year to Date</option><option value="q1">Q1 (Jan-Mar)</option><option value="q2">Q2 (Apr-Jun)</option><option value="q3">Q3 (Jul-Sep)</option><option value="q4">Q4 (Oct-Dec)</option><option value="custom">Custom Range</option></select></div>
+<div class="fg" id="fc-custom-from" style="display:none"><label>From</label><input type="date" id="fc-date-from" onchange="updateForecasts()"></div>
+<div class="fg" id="fc-custom-to" style="display:none"><label>To</label><input type="date" id="fc-date-to" onchange="updateForecasts()"></div>
+<div class="fg"><label>Forecast Method</label><select id="fc-method" onchange="updateForecasts()"><option value="linear">Linear Trend</option><option value="movavg">3-Month Moving Avg</option><option value="weighted">Weighted Moving Avg</option></select></div>
+<div class="fg"><label>Project Ahead</label><select id="fc-ahead" onchange="updateForecasts()"><option value="3">3 Months</option><option value="6" selected>6 Months</option><option value="12">12 Months</option></select></div>
+</div>
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1rem">
+<div class="chart-card" style="height:320px"><h3 style="margin:0 0 .5rem;font-size:.95rem">📈 Actual vs Forecast</h3><div class="chart-wrap"><canvas id="forecastLineChart"></canvas></div></div>
+<div class="card" style="height:320px;overflow:auto"><h3 style="margin:0 0 .5rem;font-size:.95rem">📊 Forecast Breakdown</h3><table class="data-table" style="font-size:.85rem"><thead><tr><th>Month</th><th>Actual</th><th>Forecast</th><th>Diff</th></tr></thead><tbody id="fc-table-tbody"></tbody></table></div>
+</div>
+</div>
 <div class="section-header"><div class="section-title"><div class="icon-circle">&#128200;</div> Revenue &amp; Forecast Records</div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
@@ -488,7 +509,181 @@ var sfEl=document.getElementById('rev-sub-forecast');if(sfEl)sfEl.textContent=su
 var seEl=document.getElementById('rev-sub-expenses');if(seEl)seEl.textContent=subLabel;
 var affSet=new Set();f.forEach(function(r){if(r.affiliate&&r.affiliate!=='\xe2\x80\x94'&&r._recType==='revenue')affSet.add(r.affiliate);});
 var allAffSet=new Set();allPNL.filter(function(r2){return !selM||r2._month===selM;}).forEach(function(r2){if(r2.affiliate)allAffSet.add(r2.affiliate);});
-setStat('rev-s-affiliates',allAffSet.size||affSet.size);const sl=sortArr(f,revSort).slice((revPage-1)*pp,revPage*pp);document.getElementById('rev-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(revPage-1)*pp+i;var srcCls=(r._srcLabel||'pnl').toLowerCase();if(r._recType==='forecast')srcCls='forecast';return'<tr><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.amount)+'</td><td style="font-size:.8rem;color:var(--text3)">'+(r._week||r._month||'&#8212;')+'</td><td style="font-size:.8rem">'+(r.remarks||'&#8212;')+'</td><td><span class="source-badge '+srcCls+'">'+(r._srcLabel||'P&L')+'</span></td></tr>';}).join(''):'<tr><td colspan="5" class="empty-state">No records found</td></tr>';renderPagination('rev',revPage,tp,pp,f.length);updateRevCharts(f.filter(function(r){return r._recType==='revenue';}));}
+setStat('rev-s-affiliates',allAffSet.size||affSet.size);const sl=sortArr(f,revSort).slice((revPage-1)*pp,revPage*pp);document.getElementById('rev-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(revPage-1)*pp+i;var srcCls=(r._srcLabel||'pnl').toLowerCase();if(r._recType==='forecast')srcCls='forecast';return'<tr><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.amount)+'</td><td style="font-size:.8rem;color:var(--text3)">'+(r._week||r._month||'&#8212;')+'</td><td style="font-size:.8rem">'+(r.remarks||'&#8212;')+'</td><td><span class="source-badge '+srcCls+'">'+(r._srcLabel||'P&L')+'</span></td></tr>';}).join(''):'<tr><td colspan="5" class="empty-state">No records found</td></tr>';renderPagination('rev',revPage,tp,pp,f.length);updateRevCharts(f.filter(function(r){return r._recType==='revenue';}));computeForecasts();}
+
+function computeForecasts(){
+var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var monthNum={January:0,February:1,March:2,April:3,May:4,June:5,July:6,August:7,September:8,October:9,November:10,December:11};
+var daysInMonth={January:31,February:28,March:31,April:30,May:31,June:30,July:31,August:31,September:30,October:31,November:30,December:31};
+var ctoByMonth={};allRev.forEach(function(r){if(r._srcLabel==='CTO'||r._srcLabel==='IO'){var m=r._month||'';if(m)ctoByMonth[m]=(ctoByMonth[m]||0)+r.amount;}});
+var range=(document.getElementById('fc-range')||{}).value||'';
+var year=new Date().getFullYear();
+var filterFrom=null,filterTo=null;
+if(range==='ytd'){filterFrom=new Date(year,0,1);filterTo=new Date();}
+else if(range==='q1'){filterFrom=new Date(year,0,1);filterTo=new Date(year,2,31);}
+else if(range==='q2'){filterFrom=new Date(year,3,1);filterTo=new Date(year,5,30);}
+else if(range==='q3'){filterFrom=new Date(year,6,1);filterTo=new Date(year,8,30);}
+else if(range==='q4'){filterFrom=new Date(year,9,1);filterTo=new Date(year,11,31);}
+else if(range==='custom'){
+var df=(document.getElementById('fc-date-from')||{}).value;
+var dt=(document.getElementById('fc-date-to')||{}).value;
+if(df)filterFrom=new Date(df+'T00:00:00');
+if(dt)filterTo=new Date(dt+'T23:59:59');
+}
+function monthInRange(m){
+if(!filterFrom&&!filterTo)return true;
+var mi=monthNum[m];if(mi===undefined)return false;
+var mStart=new Date(year,mi,1);
+var mEnd=new Date(year,mi+1,0);
+if(filterFrom&&mEnd<filterFrom)return false;
+if(filterTo&&mStart>filterTo)return false;
+return true;
+}
+var monthlyActual=[];
+months.forEach(function(m,i){
+var ps=pnlSummaries[m]||{};
+var pnlRev=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
+var ctoRev=ctoByMonth[m]||0;
+var total=pnlRev+ctoRev;
+if(total>0&&monthInRange(m))monthlyActual.push({month:m,idx:i,revenue:total,expenses:ps.totalExpenses||0});
+});
+var curMonthName=new Date().toLocaleString('en-US',{month:'long'});
+var curMonthIdx=months.indexOf(curMonthName);
+var today=new Date();
+var dayOfMonth=today.getDate();
+var totalDays=daysInMonth[curMonthName]||30;
+var curData=monthlyActual.find(function(d){return d.month===curMonthName;});
+var curActual=curData?curData.revenue:0;
+var dailyRate=dayOfMonth>0?curActual/dayOfMonth:0;
+var projectedMonthEnd=dailyRate*totalDays;
+var method=document.getElementById('fc-method')?document.getElementById('fc-method').value:'linear';
+var ahead=parseInt((document.getElementById('fc-ahead')||{}).value)||6;
+var completedMonths=monthlyActual.filter(function(d){return d.idx<curMonthIdx;});
+var growthPct=0;
+if(completedMonths.length>=2){
+var last=completedMonths[completedMonths.length-1].revenue;
+var prev=completedMonths[completedMonths.length-2].revenue;
+growthPct=prev>0?((last-prev)/prev*100):0;
+}
+var forecasts=[];
+if(method==='linear'){
+var xs=[],ys=[];
+completedMonths.forEach(function(d,i){xs.push(i);ys.push(d.revenue);});
+if(xs.length>=2){
+var n=xs.length;var sx=xs.reduce(function(a,b){return a+b;},0);var sy=ys.reduce(function(a,b){return a+b;},0);
+var sxx=xs.reduce(function(a,b){return a+b*b;},0);var sxy=0;for(var i=0;i<n;i++)sxy+=xs[i]*ys[i];
+var slope=(n*sxy-sx*sy)/(n*sxx-sx*sx);var intercept=(sy-slope*sx)/n;
+for(var j=0;j<ahead;j++){
+var fi=n+j;
+var fMonth=months[(completedMonths[0].idx+fi)%12]||months[fi%12];
+var fVal=Math.max(0,intercept+slope*fi);
+forecasts.push({month:fMonth,value:fVal});
+}
+}
+}else if(method==='movavg'){
+var window=Math.min(3,completedMonths.length);
+for(var j=0;j<ahead;j++){
+var src=j===0?completedMonths.map(function(d){return d.revenue;}):completedMonths.map(function(d){return d.revenue;}).concat(forecasts.map(function(f){return f.value;}));
+var recent=src.slice(-window);
+var avg=recent.reduce(function(a,b){return a+b;},0)/recent.length;
+var fIdx=(completedMonths.length>0?completedMonths[completedMonths.length-1].idx+1+j:curMonthIdx+j);
+forecasts.push({month:months[fIdx%12],value:avg});
+}
+}else{
+var weights=[0.5,0.3,0.2];
+for(var j=0;j<ahead;j++){
+var src=j===0?completedMonths.map(function(d){return d.revenue;}):completedMonths.map(function(d){return d.revenue;}).concat(forecasts.map(function(f){return f.value;}));
+var recent=src.slice(-3);while(recent.length<3)recent.unshift(recent[0]||0);
+var wAvg=recent[recent.length-1]*weights[0]+recent[recent.length-2]*weights[1]+recent[recent.length-3]*weights[2];
+var fIdx=(completedMonths.length>0?completedMonths[completedMonths.length-1].idx+1+j:curMonthIdx+j);
+forecasts.push({month:months[fIdx%12],value:wAvg});
+}
+}
+var curForecast=forecasts.find(function(f){return f.month===curMonthName;});
+var projDisplay=curForecast?Math.max(projectedMonthEnd,curForecast.value):projectedMonthEnd;
+setStat('fc-projected-total',$m(projDisplay));
+var pSub=document.getElementById('fc-projected-sub');if(pSub)pSub.textContent=curMonthName+' ('+dayOfMonth+'/'+totalDays+' days)';
+setStat('fc-run-rate',$m(dailyRate));
+setStat('fc-growth',(growthPct>=0?'+':'')+growthPct.toFixed(1)+'%');
+var gEl=document.getElementById('fc-growth');if(gEl)gEl.style.color=growthPct>=0?'var(--green)':'var(--red)';
+var nextFc=forecasts.length>0?forecasts[0]:null;
+if(curForecast&&forecasts.length>1){
+var nextIdx=forecasts.indexOf(curForecast)+1;
+nextFc=nextIdx<forecasts.length?forecasts[nextIdx]:forecasts[forecasts.length-1];
+}
+setStat('fc-next-month',$m(nextFc?nextFc.value:0));
+var nSub=document.getElementById('fc-next-sub');if(nSub&&nextFc)nSub.textContent=nextFc.month+' projected';
+var selM=document.getElementById('rev-month-f')?document.getElementById('rev-month-f').value:'';
+var fcForSelected=selM?forecasts.find(function(f){return f.month===selM;}):null;
+if(selM&&fcForSelected){
+var actualForSel=monthlyActual.find(function(d){return d.month===selM;});
+var actVal=actualForSel?actualForSel.revenue:0;
+if(selM===curMonthName){
+setStat('rev-s-forecast',$m(projDisplay));
+}else if(!actualForSel||actVal===0){
+setStat('rev-s-forecast',$m(fcForSelected.value));
+}
+var sfEl2=document.getElementById('rev-sub-forecast');if(sfEl2)sfEl2.textContent=selM+' forecast';
+}
+var allLabels=[],actData=[],fcData=[];
+monthlyActual.forEach(function(d){
+allLabels.push(d.month.substring(0,3));
+actData.push(d.revenue);
+fcData.push(null);
+});
+forecasts.forEach(function(f){
+var existing=monthlyActual.find(function(d){return d.month===f.month;});
+if(!existing){
+allLabels.push(f.month.substring(0,3));
+actData.push(null);
+fcData.push(f.value);
+}else{
+var idx=allLabels.indexOf(f.month.substring(0,3));
+if(idx>=0)fcData[idx]=f.value;
+}
+});
+if(actData.length>0&&fcData.length>0){
+var bridgeIdx=-1;
+for(var k=0;k<actData.length;k++){if(actData[k]!==null&&(k+1>=actData.length||actData[k+1]===null)){bridgeIdx=k;break;}}
+if(bridgeIdx>=0&&bridgeIdx+1<fcData.length&&fcData[bridgeIdx+1]!==null){
+fcData[bridgeIdx]=actData[bridgeIdx];
+}
+}
+var cEl2=document.getElementById('forecastLineChart');
+if(cEl2){
+var ex2=Chart.getChart('forecastLineChart');if(ex2)ex2.destroy();
+new Chart(cEl2,{type:'line',data:{labels:allLabels,datasets:[{label:'Actual Revenue',data:actData,borderColor:ACCENT,backgroundColor:ACCENT+'33',borderWidth:3,pointRadius:5,pointBackgroundColor:ACCENT,tension:0.3,fill:true,spanGaps:false},{label:'Forecast',data:fcData,borderColor:'#f59e0b',backgroundColor:'#f59e0b22',borderWidth:3,borderDash:[8,4],pointRadius:5,pointBackgroundColor:'#f59e0b',tension:0.3,fill:true,spanGaps:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});
+}
+var tbody2=document.getElementById('fc-table-tbody');
+if(tbody2){
+var rows2='';
+var allM=monthlyActual.map(function(d){return{month:d.month,actual:d.revenue,forecast:null};});
+forecasts.forEach(function(f){
+var ex3=allM.find(function(d){return d.month===f.month;});
+if(ex3){ex3.forecast=f.value;}
+else{allM.push({month:f.month,actual:null,forecast:f.value});}
+});
+allM.forEach(function(d){
+var act=d.actual!==null?$m(d.actual):'—';
+var fc=d.forecast!==null?$m(d.forecast):'—';
+var diff='—';
+if(d.actual!==null&&d.forecast!==null){var dv=d.actual-d.forecast;diff='<span style="color:var(--'+(dv>=0?'green':'red')+')">'+$m(dv)+'</span>';}
+else if(d.actual===null&&d.forecast!==null){act='<span style="color:var(--text3);font-style:italic">pending</span>';diff='—';}
+rows2+='<tr><td><strong>'+d.month+'</strong></td><td>'+act+'</td><td style="color:#f59e0b;font-weight:600">'+fc+'</td><td>'+diff+'</td></tr>';
+});
+tbody2.innerHTML=rows2||'<tr><td colspan="4" class="empty-state">No data</td></tr>';
+}
+}
+function updateForecasts(){
+var rangeEl=document.getElementById('fc-range');
+var range=rangeEl?rangeEl.value:'';
+var cfEl=document.getElementById('fc-custom-from');
+var ctEl=document.getElementById('fc-custom-to');
+if(cfEl)cfEl.style.display=range==='custom'?'block':'none';
+if(ctEl)ctEl.style.display=range==='custom'?'block':'none';
+computeForecasts();
+}
+
 function renderPNL(){const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';let lr=0,lb=0,lrv=0,ltexp=0;const _months=['January','February','March','April','May','June'];_months.forEach(function(mo){const s2=pnlSummaries[mo];if(!s2)return;if(selMonthF&&mo!==selMonthF)return;lr+=(s2.paymentRcvd||0);lb+=(s2.balance||0);lrv+=(s2.grossRevenue||(s2.paymentRcvd||0)+(s2.balance||0));ltexp+=(s2.totalExpenses||0);});setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));const allPNLExpenses=Object.values(pnlSummaries||{}).reduce((a,s)=>a+(s.totalExpenses||0),0);const pnlExpDisp=selMonthF&&pnlSummaries&&pnlSummaries[selMonthF]?pnlSummaries[selMonthF].totalExpenses||0:allPNLExpenses;setStat('pnl-s-count',$m(pnlExpDisp));setStat('pnl-s-rate',(lrv>0?Math.round(lr/lrv*100):0)+'%');const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,"+gi+")">&#128206;</label><span id="pnl-att-"+gi+"" class="attach-link" onclick="openPNLAttach("+gi+")" style="display:none">&#128204; View</span></td><td class="action-cell"><button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');Object.keys(pnlAtts).forEach(gi=>{const sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';});}
 function getCTORow(r){
 var name=r['Advertiser']||r['Advertiser/Offer']||'';
