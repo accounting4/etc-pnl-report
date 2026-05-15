@@ -429,21 +429,20 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 });
 }
 
-ss('Loading CTO data...');
-for(const m of['January-CTO','February-CTO','March-CTO','April-CTO']){
-const rows=await fetchCSV(gv(CTO_ID,m));
-rows.forEach(r=>{r._month=m.replace('-CTO','');r._source='sheet';});
-allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));
-}
-const mc=await fetchCSV(gvg(CTO_ID,'395665584'));mc.forEach(r=>{r._month='May';r._source='sheet';});allCTO.push(...mc);
+ss('Loading CTO Performance Dashboard...');
+const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
+for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));}
+ss('Loading CPA data...');
+const ctoCPA=[{gid:'1347298166',m:'January'},{gid:'777972971',m:'February'},{gid:'1281435621',m:'March'},{gid:'1850542940',m:'April'},{gid:'1766344774',m:'May'}];
+for(const t of ctoCPA){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CPA';r['Current Lead Count']=r['CV']||r['Current Lead Count']||'';r['Rate/Lead ($)']=r['Rate per lead/conversion ($)']||r['Rate/Lead ($)']||'';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));}
 ss('Loading Interactive Offers...');
 const ioRows=await fetchCSV(gvg(CTO_ID,'1171889233'));
 ioRows.forEach(r=>{r._month='May';r._source='sheet';r._isIO=true;});
 allCTO.push(...ioRows.filter(r=>{var name=r['Advertiser/Offer']||'';return name&&name.trim()&&!name.includes('Total');}));
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
-var leads=parseInt((r['Current Lead Count']||'0').replace(/,/g,''))||0;
-var rate=parseFloat((r['Rate/Lead ($)']||r['Rate/Lead']||'0').replace(/[\$,]/g,''))||0;
+var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
+var rate=parseFloat((r['Rate/Lead ($)']||r['Rate per lead/conversion ($)']||r['Rate/Lead']||'0').replace(/[\$,]/g,''))||0;
 var flat=parseFloat((r['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
 var totalCol=parseFloat((r['Total Revenue ($)']||r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
 var amt=totalCol>0?totalCol:(leads*rate+flat);
@@ -453,7 +452,8 @@ var offer=r['Offers']||r['Advertiser/Offer']||'';
 var label=advertiser?(advertiser+(offer&&offer!==advertiser?' - '+offer:'')):offer;
 if(!label||!label.trim())return;
 var isIO=label.toLowerCase().includes('interactive')||r._isIO;
-allRev.push({_source:'sheet',_srcLabel:isIO?'IO':'CTO',_key:'cto_'+r._month+'_'+label,date:r['Since Last Update']||'',_week:r._month+' (CTO)',_month:r._month,affiliate:label,amount:amt,status:'Paid',remarks:r['Type']||''});
+var srcType=r._ctoType==='CPA'?'CPA':(isIO?'IO':'CTO');
+allRev.push({_source:'sheet',_srcLabel:srcType,_key:'cto_'+r._month+'_'+label+'_'+srcType,date:r['Since Last Update']||r['Since Last Updated']||'',_week:r._month+' ('+srcType+')',_month:r._month,affiliate:label,amount:amt,status:'Paid',remarks:r['Type']||r._ctoType||''});
 });
 ss('Loading Forecast data...');
 for(const s of['May 11 - 16','May 1-11','April 1-15','March 9-22','March 1- 8','Feb 16-22','Feb 9-15','Feb 1-8']){
@@ -706,8 +706,8 @@ function getCTORow(r){
 var name=r['Advertiser']||r['Advertiser/Offer']||'';
 var offer=r['Offers']||'';
 if(!offer&&r['Advertiser/Offer']){var parts=(r['Advertiser/Offer']||'').match(/^(.+?)\s*\((.+)\)$/);if(parts){name=name||parts[1];offer=parts[2];}else{offer=r['Advertiser/Offer'];}}
-var leads=parseInt((r['Current Lead Count']||'0').replace(/,/g,''))||0;
-var rate=parseFloat((r['Rate/Lead ($)']||'0').replace(/[\$,]/g,''))||0;
+var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
+var rate=parseFloat((r['Rate/Lead ($)']||r['Rate per lead/conversion ($)']||'0').replace(/[\$,]/g,''))||0;
 var flat=parseFloat((r['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
 var totalCol=parseFloat((r['Total Revenue ($)']||r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
 var revenue=totalCol>0?totalCol:(leads*rate+flat);
