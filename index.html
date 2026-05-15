@@ -227,7 +227,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <span id="fc-s-total"></span><span id="fc-s-count"></span><span id="fc-s-filled"></span><span id="fc-s-period"></span>
 <canvas id="fcBarChart"></canvas><canvas id="fcPeriodChart"></canvas>
 <input id="fc-search"><select id="fc-period-f"></select><select id="fc-entries"><option value="25">25</option></select>
-<tbody id="fc-tbody"></tbody><div id="fc-pagination"></div>
+<table style="display:none"><tbody id="fc-tbody"></tbody></table><div id="fc-pagination"></div>
 <input id="rev-date-from" type="hidden"><input id="rev-date-to" type="hidden">
 <canvas id="revTrendChart"></canvas>
 </div>
@@ -414,11 +414,8 @@ allPNL.push(...userPNL.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
 allFMD.push(...userFMD.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
 ss('Loading FMD sheet data...');
 const fmdTabs=[{month:'January',gid:'0'},{month:'February',gid:'823222076'},{month:'March',gid:'1187711453'},{month:'April',gid:'1600216981'},{month:'May',gid:'388191126'}];
-let _fmdDebug=[];
 for(const ft of fmdTabs){
-const fmdUrl=gvg(FMD_ID,ft.gid);
-const fRows=await fetchCSV(fmdUrl);
-_fmdDebug.push(ft.month+':'+fRows.length+'rows');
+const fRows=await fetchCSV(gvg(FMD_ID,ft.gid));
 fRows.forEach(r=>{
 var aff=r['Affiliate Name']||'';
 if(!aff||!aff.trim())return;
@@ -431,9 +428,7 @@ if(displayAmt<=0)return;
 allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,invId:r['Invoice ID']||'',date:r['Inv Date']||'',affiliate:aff,invAmt:invAmt,rcvd:rcvd,displayAmt:displayAmt,status:r['STATUS']||'Unpaid',remarks:r['Remarks']||''});
 });
 }
-console.log('FMD DEBUG:',_fmdDebug.join(', '),'total allFMD:',allFMD.length);
-var _fmdAmts=allFMD.map(function(r){return r.affiliate+'='+r.displayAmt+'('+r._source+'/'+r.status+')';});
-document.title='FMD:'+allFMD.length+' '+_fmdAmts.join(' | ');
+
 ss('Loading CTO data...');
 for(const m of['January-CTO','February-CTO','March-CTO','April-CTO']){
 const rows=await fetchCSV(gv(CTO_ID,m));
@@ -479,7 +474,7 @@ buildMonthButtons();buildFMDMonthButtons();
 var curMonthName=new Date().toLocaleString('en-US',{month:'long'});
 var revMonthF=document.getElementById('rev-month-f');
 if(revMonthF){revMonthF.value=curMonthName;}
-try{renderAll();buildCharts();document.title='OK fmd='+allFMD.length;}catch(e){document.title='ERROR:'+e.message+' at '+e.stack.split('\n')[1];}
+renderAll();buildCharts();
 }
 function buildMonthButtons(){
 const c=document.getElementById('pnl-month-buttons');if(!c)return;
@@ -740,7 +735,7 @@ renderPagination('cto',ctoPage,tp,pp,rows.length);
 updateCTOCharts(rows,affRevMap);
 }
 function renderFC(){const f=getFcFilt(),pp=parseInt(document.getElementById('fc-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fcPage=Math.min(fcPage,tp);const tot=f.reduce((s,r)=>s+r.amount,0),filled=f.filter(r=>r.amount>0).length,pf=document.getElementById('fc-period-f').value;setStat('fc-s-total',$m(tot));setStat('fc-s-count',f.length);setStat('fc-s-filled',filled);setStat('fc-s-period',pf||'All');const sl=sortArr(f,fcSort).slice((fcPage-1)*pp,fcPage*pp);document.getElementById('fc-tbody').innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r.date||'&#8212;')+'</td><td>'+(r._period||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.amount?$m(r.amount):'&#8212;')+'</td></tr>').join(''):'<tr><td colspan="4" class="empty-state">No forecast data</td></tr>';renderPagination('fc',fcPage,tp,pp,f.length);updateFcCharts(f);}
-function renderFMD(){const f=getFMDFilt(),pp=parseInt(document.getElementById('fmd-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fmdPage=Math.min(fmdPage,tp);let paid=0,pend=0,tot=0;console.log('renderFMD: allFMD='+allFMD.length+' filtered='+f.length+' mf='+document.getElementById('fmd-month-f').value+' sf='+document.getElementById('fmd-status-f').value);f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});setStat('fmd-s-total',$m(tot));setStat('fmd-s-paid',$m(paid));setStat('fmd-s-pend',$m(pend));const fmdExpenses=f.reduce((a,r)=>a+(r.invAmt||0),0)-f.reduce((a,r)=>a+(r.rcvd||0),0);setStat('fmd-s-count',$m(fmdExpenses));setStat('fmd-s-rate',tot>0?Math.round(paid/tot*100)+'%':'0%');const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);document.getElementById('fmd-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(fmdPage-1)*pp+i,iu=r._source==='user';return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td>'+(iu?'<button class="btn-del" onclick="delFMD('+gi+')">Del</button>':'&#8212;')+'</td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No Five Minute Daily records found</td></tr>';renderPagination('fmd',fmdPage,tp,pp,f.length);updateFMDCharts(f);}
+function renderFMD(){const f=getFMDFilt(),pp=parseInt(document.getElementById('fmd-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fmdPage=Math.min(fmdPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});setStat('fmd-s-total',$m(tot));setStat('fmd-s-paid',$m(paid));setStat('fmd-s-pend',$m(pend));const fmdExpenses=f.reduce((a,r)=>a+(r.invAmt||0),0)-f.reduce((a,r)=>a+(r.rcvd||0),0);setStat('fmd-s-count',$m(fmdExpenses));setStat('fmd-s-rate',tot>0?Math.round(paid/tot*100)+'%':'0%');const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);document.getElementById('fmd-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(fmdPage-1)*pp+i,iu=r._source==='user';return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td>'+(iu?'<button class="btn-del" onclick="delFMD('+gi+')">Del</button>':'&#8212;')+'</td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No Five Minute Daily records found</td></tr>';renderPagination('fmd',fmdPage,tp,pp,f.length);updateFMDCharts(f);}
 function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
