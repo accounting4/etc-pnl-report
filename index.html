@@ -116,6 +116,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .source-badge.user{background:#fef3c7;color:#92400e}
 .source-badge.everflow{background:#d1fae5;color:#065f46}
 .source-badge.cto{background:#ede9fe;color:#5b21b6}
+.source-badge.pink,.source-badge.io{background:#fce7f3;color:#9d174d}
 .source-badge.io{background:#fce7f3;color:#9d174d}
 .source-badge.forecast{background:#dbeafe;color:#1e40af}
 .source-badge.pnl{background:#e0f2fe;color:#0369a1}
@@ -287,7 +288,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
 <div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="May">May</option><option value="April">April</option><option value="March">March</option><option value="February">February</option><option value="January">January</option><option value="">All Months</option></select></div>
-<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>CPL</option></select></div>
+<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>IO</option><option>CPL</option></select></div>
 <div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="10">10</option></select></div>
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
 </div>
@@ -436,7 +437,9 @@ ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
 for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));}
 // CPA data removed — Tracking Dashboard shows CTO Performance Dashboard only
-// IO data removed — Tracking Dashboard shows CTO Performance Dashboard only
+ss('Loading Interactive Offers data...');
+const ioTabs=[{gid:'336810423',m:'February',p:'Feb 1-8'},{gid:'1018787075',m:'February',p:'Feb 9-15'},{gid:'217926340',m:'February',p:'Feb 16-22'},{gid:'1869330459',m:'March',p:'March 1-8'},{gid:'1731429118',m:'March',p:'March 9-22'},{gid:'1098482805',m:'April',p:'April 1-15'},{gid:'374553238',m:'May',p:'May 1-11'},{gid:'1442057268',m:'May',p:'May 11-16'}];
+for(const t of ioTabs){const rows=await fetchCSV(gvg(FCST_ID,t.gid));rows.forEach(r=>{var aff=(r['Affiliate Name']||'').trim();var amt=(r['Invoice Amount']||'').replace(/[\$,]/g,'').trim();if(!aff||!amt)return;allCTO.push({'Advertiser':aff,'Advertiser/Offer':aff,'Offers':aff,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':t.m,'_source':'sheet','_ctoType':'IO','_ioPeriod':t.p});});}
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
@@ -451,7 +454,7 @@ var label=advertiser?(advertiser+(offer&&offer!==advertiser?' - '+offer:'')):off
 if(!label||!label.trim())label=r['Offers']||'';
 if(!label||!label.trim())return;
 var isIO=label.toLowerCase().includes('interactive')||r._isIO;
-var srcType='CTO';
+var srcType=r._ctoType==='IO'?'IO':'CTO';
 allRev.push({_source:'sheet',_srcLabel:srcType,_key:'cto_'+r._month+'_'+label+'_'+srcType,date:r['Since Last Update']||r['Since Last Updated']||'',_week:r._month+' ('+srcType+')',_month:r._month,affiliate:label,amount:amt,status:'Paid',remarks:r['Type']||r._ctoType||''});
 });
 ss('Loading Forecast data...');
@@ -728,7 +731,7 @@ var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
 showCTOSummary(totRev,totLeads,activeOffers,affRevMap);
 var sl=sortArr(rows,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
-var typeColors={CTO:'purple',CPA:'red',CPL:'accent'};
+var typeColors={CTO:'purple',IO:'pink',CPA:'red',CPL:'accent'};
 document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No CTO records found</td></tr>';
 renderPagination('cto',ctoPage,tp,pp,rows.length);
 updateCTOCharts(rows,affRevMap);
