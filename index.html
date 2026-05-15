@@ -557,13 +557,12 @@ cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue Overv
 }
 function updateCTOCharts(rows,affRevMap){
 var sorted=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
-var ctx1=document.getElementById('ctoRevChart');
-if(ctx1){var ex=Chart.getChart('ctoRevChart');if(ex)ex.destroy();
-new Chart(ctx1,{type:'bar',data:{labels:sorted.map(function(x){return x[0].substring(0,18);}),datasets:[{label:'Revenue',data:sorted.map(function(x){return x[1];}),backgroundColor:CC.slice(0,sorted.length),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'horizontal',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(26,35,64,.95)',callbacks:{label:function(c){return'Revenue: '+$m(c.raw);}}}},scales:{x:{ticks:{font:{size:9,weight:'600'},color:'#4a5578',maxRotation:45},grid:{display:false}},y:{ticks:{callback:function(v){return'$'+(v>=1000?(v/1000).toFixed(0)+'k':v);},font:{size:10},color:'#8892a4'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});}
+mkChart('ctoRevChart','bar',sorted.map(function(x){return x[0].substring(0,18);}),
+[{label:'Revenue',data:sorted.map(function(x){return Number(x[1])||0;}),backgroundColor:CC.slice(0,sorted.length),borderRadius:6}]);
 var ranked=rows.filter(function(r){return r._rank<999&&r._revenue>0;}).sort(function(a,b){return a._rank-b._rank;}).slice(0,15);
-var ctx2=document.getElementById('ctoRankChart');
-if(ctx2){var ex2=Chart.getChart('ctoRankChart');if(ex2)ex2.destroy();
-new Chart(ctx2,{type:'bar',data:{labels:ranked.map(function(r){return'#'+r._rank+' '+(r._offer||r._name).substring(0,15);}),datasets:[{label:'Revenue',data:ranked.map(function(r){return r._revenue;}),backgroundColor:ranked.map(function(r,i){return i<3?ACCENT:i<6?GREEN:PURPLE;}),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'horizontal',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(26,35,64,.95)',callbacks:{label:function(c){return c.label+': '+$m(c.raw);}}}},scales:{x:{ticks:{font:{size:8,weight:'600'},color:'#4a5578',maxRotation:45},grid:{display:false}},y:{ticks:{callback:function(v){return'$'+(v>=1000?(v/1000).toFixed(0)+'k':v);},font:{size:10},color:'#8892a4'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});}
+var rankColors=ranked.map(function(r,i){return i<3?ACCENT:i<6?GREEN:PURPLE;});
+mkChart('ctoRankChart','bar',ranked.map(function(r){return'#'+r._rank+' '+(r._offer||r._name).substring(0,16);}),
+[{label:'Revenue',data:ranked.map(function(r){return Number(r._revenue)||0;}),backgroundColor:rankColors,borderRadius:6}]);
 }
 fetchAllData().catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});
 
