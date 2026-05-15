@@ -374,20 +374,22 @@ const keys=Object.keys(r);const si=keys.findIndex(k=>k==='STATUS'||k==='Status')
 let sr='';if(si>-1&&keys[si+1]&&!keys[si+1].startsWith('_'))sr=r[keys[si+1]]||'';
 r.remarks=uRemarks[r._key]!==undefined?uRemarks[r._key]:sr;
 const av=(r._rawVals||Object.values(r)).map(v=>(v||'').toString());const rs=av.join(' ').toUpperCase();
-if(rs.includes('ETC BALANCE'))r._isSummary=true;
-if(rs.includes('PAYMENT RCVD')||rs.includes('PAYMENT RECEIVED'))r._isSummary=true;
-if(rs.includes('GROSS REVENUE')||rs.includes('EXPECTED REVENUE'))r._isSummary=true;
-if(rs.includes('EXPENSES'))r._isSummary=true;
-if(rs.includes('NET PROFIT')||rs.includes('EXPECTED PROFIT'))r._isSummary=true;
-if(rs.includes('FMD REVENUE')||rs.includes('FMD COST'))r._isSummary=true;
-if(rs.includes('PAYMENT RCVD')||rs.includes('PAYMENT RECEIVED')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.paymentRcvd=n[0];}
-if(rs.includes('TOTAL EXPECTED GROSS')||rs.includes('GROSS REVENUE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.grossRevenue=n[0];}
-if(rs.includes('TOTAL EXPECTED REVENUE')&&!rs.includes('GROSS')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.grossRevenue)sum.grossRevenue=n[0];}
-if(rs.includes('EXPENSES')&&!rs.includes('GROSS REVENUE')&&!rs.includes('NET PROFIT')&&!rs.includes('EXPECTED PROFIT')&&!rs.includes('ADS')&&!rs.includes('BEEHIV')&&!rs.includes('FIVE MINUTE')&&!rs.includes('FMD')&&!rs.includes('GOBOT')&&!rs.includes('BEEHIIV')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.totalExpenses)sum.totalExpenses=n[0];}
-if(rs.match(/SALARY/)&&!rs.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.salary)sum.salary=n[0];}
-if(rs.includes('ADS')&&!rs.includes('BEEHIV')&&!rs.includes('FIVE MINUTE')&&!rs.includes('REVENUE')&&!rs.includes('FMD')&&!rs.includes('PAYMENT')&&!rs.includes('SALARY')&&!rs.includes('PROFIT')&&!rs.includes('BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.ads)sum.ads=n[0];}
-if((rs.includes('NET PROFIT')||rs.includes('EXPECTED PROFIT'))&&rs.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.netProfit=n[0];}
-if(rs.includes('ETC BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);sum.balance=n.length?n[0]:0;}
+const aff3=((r._rawVals&&r._rawVals[3])||r.affiliate||'').toUpperCase();
+if(aff3.includes('ETC BALANCE'))r._isSummary=true;
+if(aff3.includes('PAYMENT RCVD')||aff3.includes('PAYMENT RECEIVED'))r._isSummary=true;
+if(aff3.includes('GROSS REVENUE')||aff3.includes('EXPECTED REVENUE'))r._isSummary=true;
+if(aff3.includes('EXPENSES'))r._isSummary=true;
+if(aff3.includes('NET PROFIT')||aff3.includes('EXPECTED PROFIT'))r._isSummary=true;
+if(aff3.includes('FMD REVENUE')||aff3.includes('FMD COST'))r._isSummary=true;
+if(aff3.includes('SALARY')||aff3.includes('ADS')||aff3.includes('GOBOT')||aff3.includes('BEEHIIV'))r._isSummary=true;
+if(aff3.includes('PAYMENT RCVD')||aff3.includes('PAYMENT RECEIVED')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.paymentRcvd=n[0];}
+if(aff3.includes('TOTAL EXPECTED GROSS')||aff3.includes('GROSS REVENUE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.grossRevenue=n[0];}
+if(aff3.includes('TOTAL EXPECTED REVENUE')&&!aff3.includes('GROSS')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.grossRevenue)sum.grossRevenue=n[0];}
+if(aff3.includes('EXPENSES')&&!aff3.includes('GROSS REVENUE')&&!aff3.includes('NET PROFIT')&&!aff3.includes('EXPECTED PROFIT')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.totalExpenses)sum.totalExpenses=n[0];}
+if(aff3.match(/SALARY/)&&!aff3.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.salary)sum.salary=n[0];}
+if(aff3.includes('ADS')&&!aff3.includes('BEEHIV')&&!aff3.includes('FIVE MINUTE')&&!aff3.includes('REVENUE')&&!aff3.includes('FMD')&&!aff3.includes('PAYMENT')&&!aff3.includes('SALARY')&&!aff3.includes('PROFIT')&&!aff3.includes('BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.ads)sum.ads=n[0];}
+if((aff3.includes('NET PROFIT')||aff3.includes('EXPECTED PROFIT'))&&aff3.includes('TOTAL')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.netProfit=n[0];}
+if(aff3.includes('ETC BALANCE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);sum.balance=n.length?n[0]:0;}
 });
 pnlSummaries[m]=sum;
 const EXPENSE_KEYS=['ETC BALANCE','PAYMENT RCVD','PAYMENT RECEIVED','TOTAL EXPECTED','NET PROFIT','GROSS REVENUE','EXPECTED REVENUE','EXPECTED PROFIT','SALARY','ADS (NEM','ADS/LEADS','ADS (','ADS/L','GOBOT','BEEHIIV EXPENSE','FMD REVENUE','FMD COST'];
