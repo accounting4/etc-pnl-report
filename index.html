@@ -414,8 +414,11 @@ allPNL.push(...userPNL.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
 allFMD.push(...userFMD.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
 ss('Loading FMD sheet data...');
 const fmdTabs=[{month:'January',gid:'0'},{month:'February',gid:'823222076'},{month:'March',gid:'1187711453'},{month:'April',gid:'1600216981'},{month:'May',gid:'388191126'}];
+let _fmdDebug=[];
 for(const ft of fmdTabs){
-const fRows=await fetchCSV(gvg(FMD_ID,ft.gid));
+const fmdUrl=gvg(FMD_ID,ft.gid);
+const fRows=await fetchCSV(fmdUrl);
+_fmdDebug.push(ft.month+':'+fRows.length+'rows');
 fRows.forEach(r=>{
 var aff=r['Affiliate Name']||'';
 if(!aff||!aff.trim())return;
@@ -425,11 +428,11 @@ var invAmt=parseAmt(r['Invoice Amount']||'0');
 var rcvd=parseAmt(r['Inv Amount rcvd']||'0');
 var displayAmt=invAmt>0?invAmt:rcvd;
 if(displayAmt<=0)return;
-var existing=allFMD.find(x=>x._month===ft.month&&x.affiliate===aff&&x._source!=='fmd_sheet');
-if(existing)return;
 allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,invId:r['Invoice ID']||'',date:r['Inv Date']||'',affiliate:aff,invAmt:invAmt,rcvd:rcvd,displayAmt:displayAmt,status:r['STATUS']||'Unpaid',remarks:r['Remarks']||''});
 });
 }
+console.log('FMD DEBUG:',_fmdDebug.join(', '),'total allFMD:',allFMD.length);
+document.title='FMD:'+allFMD.length+' '+_fmdDebug.join(',');
 ss('Loading CTO data...');
 for(const m of['January-CTO','February-CTO','March-CTO','April-CTO']){
 const rows=await fetchCSV(gv(CTO_ID,m));
