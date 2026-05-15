@@ -330,7 +330,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="pagination" id="fmd-pagination"></div>
 </div>
 </div><script>
-const PNL_ID='1rrYVlV4-ITMt7BVG57wAgD0JA0OAC_btmCXhHF_g35E',CTO_ID='1I7kWbN783mXY_qKe51PIsQjUKoMQGMdXz7zh5GmValo',FCST_ID='1Ms692jnHxt1rJExssJUsWjjSH1fLscmhTbhGRwYH16s';
+const PNL_ID='1rrYVlV4-ITMt7BVG57wAgD0JA0OAC_btmCXhHF_g35E',CTO_ID='1I7kWbN783mXY_qKe51PIsQjUKoMQGMdXz7zh5GmValo',FCST_ID='1Ms692jnHxt1rJExssJUsWjjSH1fLscmhTbhGRwYH16s',FMD_ID='1Dusfg5vn01369iT5bLnRmk7bpTqgUhNoZLZV4HxhLB4';
 let allPNL=[],allRev=[],allFC=[],allCTO=[],allFMD=[],pnlSummaries={};
 let userPNL=JSON.parse(localStorage.getItem('uPNL')||'[]'),userRev=JSON.parse(localStorage.getItem('uRev')||'[]'),userFMD=JSON.parse(localStorage.getItem('uFMD')||'[]');
 let uStatus=JSON.parse(localStorage.getItem('uStatus')||'{}'),uRemarks=JSON.parse(localStorage.getItem('uRemarks')||'{}');
@@ -412,6 +412,24 @@ allPNL.push(...inv.filter(r=>!isFMD(r.affiliate)));
 }
 allPNL.push(...userPNL.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
 allFMD.push(...userFMD.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
+ss('Loading FMD sheet data...');
+const fmdTabs=[{month:'January',gid:'0'},{month:'February',gid:'823222076'},{month:'March',gid:'1187711453'},{month:'April',gid:'1600216981'},{month:'May',gid:'388191126'}];
+for(const ft of fmdTabs){
+const fRows=await fetchCSV(gvg(FMD_ID,ft.gid));
+fRows.forEach(r=>{
+var aff=r['Affiliate Name']||'';
+if(!aff||!aff.trim())return;
+var upper=aff.toUpperCase();
+if(upper.includes('FMD REVENUE')||upper.includes('FMD COST')||upper.includes('FMD EXPENSE')||upper.includes('PROFIT'))return;
+var invAmt=parseAmt(r['Invoice Amount']||'0');
+var rcvd=parseAmt(r['Inv Amount rcvd']||'0');
+var displayAmt=invAmt>0?invAmt:rcvd;
+if(displayAmt<=0)return;
+var existing=allFMD.find(x=>x._month===ft.month&&x.affiliate===aff&&x._source!=='fmd_sheet');
+if(existing)return;
+allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,invId:r['Invoice ID']||'',date:r['Inv Date']||'',affiliate:aff,invAmt:invAmt,rcvd:rcvd,displayAmt:displayAmt,status:r['STATUS']||'Unpaid',remarks:r['Remarks']||''});
+});
+}
 ss('Loading CTO data...');
 for(const m of['January-CTO','February-CTO','March-CTO','April-CTO']){
 const rows=await fetchCSV(gv(CTO_ID,m));
@@ -474,7 +492,7 @@ function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-bann
 </script><script>
 function getRevFilt(){const q=(document.getElementById('rev-search').value||'').toLowerCase(),mf=document.getElementById('rev-month-f').value,tf=(document.getElementById('rev-type-f')||{}).value||'',{from,to}=getDR('rev');var merged=allRev.map(function(r){return Object.assign({},r,{_recType:'revenue'});}).concat(allFC.map(function(r){return{_recType:'forecast',_source:'forecast',_srcLabel:'Forecast',_key:r._key||('fc_'+r.affiliate),date:r.date,_week:r._period||'',_month:r._period?r._period.replace(/\s*week.*/i,'').trim():'',affiliate:r.affiliate,amount:r.amount,status:'',remarks:''};}));return merged.filter(r=>{if(tf==='revenue'&&r._recType!=='revenue')return false;if(tf==='forecast'&&r._recType!=='forecast')return false;if(mf&&r._month!==mf&&!(r._week||'').toLowerCase().includes(mf.toLowerCase().substring(0,3)))return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
-function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').toLowerCase();const tf=(document.getElementById('cto-type-f')||{}).value||'';const mf=(document.getElementById('cto-month-f')||{}).value||'';return allCTO.filter(r=>{if(r._isIO)return false;var name=r['Advertiser/Offer']||r['Advertiser']||'';if(!name||!name.trim())return false;if(name.toLowerCase().includes('interactive'))return false;if(mf&&r._month!==mf)return false;if(tf){var t=(r['Type']||r._ctoType||'').toUpperCase();if(!t.includes(tf))return false;}if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
+function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').toLowerCase();const tf=(document.getElementById('cto-type-f')||{}).value||'';const mf=(document.getElementById('cto-month-f')||{}).value||'';return allCTO.filter(r=>{var name=r['Advertiser/Offer']||r['Advertiser']||'';if(!name||!name.trim())return false;if(mf&&r._month!==mf)return false;if(tf){var t=(r['Type']||r._ctoType||'').toUpperCase();if(!t.includes(tf))return false;}if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getFcFilt(){const q=(document.getElementById('fc-search').value||'').toLowerCase(),pf=document.getElementById('fc-period-f').value;return allFC.filter(r=>{if(pf&&r._period!==pf)return false;if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;return true;});}
 function getFMDFilt(){const q=(document.getElementById('fmd-search').value||'').toLowerCase(),mf=document.getElementById('fmd-month-f').value,sf=document.getElementById('fmd-status-f').value,{from,to}=getDR('fmd');return allFMD.filter(r=>{if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function sortArr(a,sc){return[...a].sort((x,y)=>{let av=x[sc.c]||'',bv=y[sc.c]||'';const an=parseFloat(av);if(!isNaN(an)){av=an;bv=parseFloat(bv)||0;}return av>bv?sc.d:av<bv?-sc.d:0;});}
