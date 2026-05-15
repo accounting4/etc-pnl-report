@@ -479,10 +479,7 @@ buildMonthButtons();buildFMDMonthButtons();
 var curMonthName=new Date().toLocaleString('en-US',{month:'long'});
 var revMonthF=document.getElementById('rev-month-f');
 if(revMonthF){revMonthF.value=curMonthName;}
-renderAll();buildCharts();
-console.log('POST-RENDER allFMD:',allFMD.length,'displayAmts:',allFMD.map(r=>r.displayAmt));
-var _dbgTot=0;allFMD.forEach(function(r){_dbgTot+=(r.displayAmt||0);});
-document.title='RENDERED fmd='+allFMD.length+' tot='+_dbgTot+' stat='+document.getElementById('fmd-s-total').textContent;
+try{renderAll();buildCharts();document.title='OK fmd='+allFMD.length;}catch(e){document.title='ERROR:'+e.message+' at '+e.stack.split('\n')[1];}
 }
 function buildMonthButtons(){
 const c=document.getElementById('pnl-month-buttons');if(!c)return;
