@@ -432,7 +432,8 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 });
 }
 console.log('FMD DEBUG:',_fmdDebug.join(', '),'total allFMD:',allFMD.length);
-document.title='FMD:'+allFMD.length+' '+_fmdDebug.join(',');
+var _fmdAmts=allFMD.map(function(r){return r.affiliate+'='+r.displayAmt+'('+r._source+'/'+r.status+')';});
+document.title='FMD:'+allFMD.length+' '+_fmdAmts.join(' | ');
 ss('Loading CTO data...');
 for(const m of['January-CTO','February-CTO','March-CTO','April-CTO']){
 const rows=await fetchCSV(gv(CTO_ID,m));
