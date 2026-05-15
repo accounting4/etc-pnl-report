@@ -370,6 +370,25 @@ rows.forEach(r=>{r._month=m.replace('-CTO','');r._source='sheet';});
 allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));
 }
 const mc=await fetchCSV(gvg(CTO_ID,'395665584'));mc.forEach(r=>{r._month='May';r._source='sheet';});allCTO.push(...mc);
+ss('Loading Interactive Offers...');
+const ioRows=await fetchCSV(gvg(CTO_ID,'1171889233'));
+ioRows.forEach(r=>{r._month='May';r._source='sheet';r._isIO=true;});
+allCTO.push(...ioRows.filter(r=>{var name=r['Advertiser/Offer']||'';return name&&name.trim()&&!name.includes('Total');}));
+ss('Building CTO revenue...');
+allCTO.forEach(function(r){
+var leads=parseInt((r['Current Lead Count']||'0').replace(/,/g,''))||0;
+var rate=parseFloat((r['Rate/Lead ($)']||r['Rate/Lead']||'0').replace(/[\$,]/g,''))||0;
+var flat=parseFloat((r['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
+var totalCol=parseFloat((r['Total Revenue ($)']||r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
+var amt=totalCol>0?totalCol:(leads*rate+flat);
+if(amt<=0)return;
+var advertiser=r['Advertiser']||r['Advertiser/Offer']||'';
+var offer=r['Offers']||r['Advertiser/Offer']||'';
+var label=advertiser?(advertiser+(offer&&offer!==advertiser?' - '+offer:'')):offer;
+if(!label||!label.trim())return;
+var isIO=label.toLowerCase().includes('interactive')||r._isIO;
+allRev.push({_source:'sheet',_srcLabel:isIO?'IO':'CTO',_key:'cto_'+r._month+'_'+label,date:r['Since Last Update']||'',_week:r._month+' (CTO)',_month:r._month,affiliate:label,amount:amt,status:'Paid',remarks:r['Type']||''});
+});
 ss('Loading Forecast data...');
 for(const s of['May 11 - 16','May 1-11','April 1-15','March 9-22','March 1- 8','Feb 16-22','Feb 9-15','Feb 1-8']){
 const rows=await fetchCSV(gv(FCST_ID,s));
@@ -415,9 +434,17 @@ function sortRev(c){doSort('rev',c);}function sortPNL(c){doSort('pnl',c);}functi
 function renderPagination(px,pg,tp,pp,tot){const el=document.getElementById(px+'-pagination');if(!el)return;const s=tot===0?0:(pg-1)*pp+1,e=Math.min(pg*pp,tot);let b='<button class="page-btn" '+(pg<=1?'disabled':'')+' onclick="goPage(\x27'+px+'\x27,'+(pg-1)+')">&#171; Prev</button>';for(let p=Math.max(1,pg-2);p<=Math.min(tp,pg+2);p++)b+='<button class="page-btn'+(p===pg?' active':'')+'" onclick="goPage(\x27'+px+'\x27,'+p+')">'+p+'</button>';b+='<button class="page-btn" '+(pg>=tp?'disabled':'')+' onclick="goPage(\x27'+px+'\x27,'+(pg+1)+')">Next &#187;</button>';el.innerHTML='<span class="pg-info">Showing '+s+'&#8211;'+e+' of '+tot+'</span><div class="pg-btns">'+b+'</div>';}
 function goPage(px,p){if(px==='rev'){revPage=p;renderRevenue();}if(px==='pnl'){pnlPage=p;renderPNL();}if(px==='cto'){ctoPage=p;renderCTO();}if(px==='fc'){fcPage=p;renderFC();}if(px==='fmd'){fmdPage=p;renderFMD();}}
 function renderRevenue(){const f=getRevFilt(),pp=parseInt(document.getElementById('rev-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));revPage=Math.min(revPage,tp);const s=calcS(f,'amount',null);setStat('rev-s-total',$m(s.tot));
+var ctoTot=0;allCTO.forEach(function(r2){
+var leads2=parseInt((r2['Current Lead Count']||'0').replace(/,/g,''))||0;
+var rate2=parseFloat((r2['Rate/Lead ($)']||r2['Rate/Lead']||'0').replace(/[\$,]/g,''))||0;
+var flat2=parseFloat((r2['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
+var tc2=parseFloat((r2['Total Revenue ($)']||r2['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
+ctoTot+=(tc2>0?tc2:(leads2*rate2+flat2));
+});
 var fcTot=allFC.filter(function(r){var cm=new Date().toLocaleString('en-US',{month:'long'});return (r._period||'').toLowerCase().includes(cm.toLowerCase().substring(0,3));}).reduce(function(a,r){return a+r.amount;},0);
 if(fcTot<=0)fcTot=allFC.reduce(function(a,r){return a+r.amount;},0);
-setStat('rev-s-forecast',$m(fcTot));
+var forecastDisplay=fcTot+ctoTot+s.tot;
+setStat('rev-s-forecast',$m(forecastDisplay));
 var affSet=new Set();f.forEach(function(r){if(r.affiliate&&r.affiliate!=='—')affSet.add(r.affiliate);});
 var curM=document.getElementById('rev-month-f').value||'';
 var allAffSet=new Set();allPNL.filter(function(r2){return !curM||r2._month===curM;}).forEach(function(r2){if(r2.affiliate)allAffSet.add(r2.affiliate);});
