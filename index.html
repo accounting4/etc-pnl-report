@@ -114,6 +114,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .source-badge.everflow{background:#d1fae5;color:#065f46}
 .source-badge.cto{background:#ede9fe;color:#5b21b6}
 .source-badge.io{background:#fce7f3;color:#9d174d}
+.source-badge.forecast{background:#dbeafe;color:#1e40af}
 .source-badge.pnl{background:#e0f2fe;color:#0369a1}
 .source-badge.accent{background:#fef3c7;color:#92400e}
 .source-badge.red{background:#fee2e2;color:#991b1b}
@@ -170,6 +171,12 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
 </div>
 <div id="tab-revenue" class="tab-content active">
+<div class="stats-row">
+<div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="rev-s-total">$0</div><div class="sc-sub">All sources YTD</div></div>
+<div class="stat-card green"><div class="sc-label">Forecast Total</div><div class="sc-value" id="rev-s-forecast">$0</div><div class="sc-sub">Current month expected</div></div>
+<div class="stat-card purple"><div class="sc-label">Active Affiliates</div><div class="sc-value" id="rev-s-affiliates">0</div><div class="sc-sub">This month</div></div>
+<div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="rev-s-expenses">$0</div><div class="sc-sub">Year to date</div></div>
+</div>
 <div class="section-header" style="margin-bottom:0"><div class="section-title"><div class="icon-circle">&#128202;</div> Monthly Revenue Report</div></div>
 <div class="table-card" style="margin-bottom:24px">
 <table id="rev-monthly-table">
@@ -182,50 +189,26 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <div class="chart-card"><h3>&#128200; Monthly Revenue vs Expenses</h3><div class="chart-wrap"><canvas id="revMonthlyChart"></canvas></div></div>
 <div class="chart-card"><h3>&#128200; Revenue by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="revBarChart"></canvas></div></div>
 </div>
-<div class="stats-row">
-<div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="rev-s-total">$0</div><div class="sc-sub">All sources combined</div></div>
-<div class="stat-card green"><div class="sc-label">Forecast Total</div><div class="sc-value" id="rev-s-forecast">$0</div><div class="sc-sub">Current month expected</div></div>
-<div class="stat-card purple"><div class="sc-label">Active Affiliates</div><div class="sc-value" id="rev-s-affiliates">0</div><div class="sc-sub">This month</div></div>
-<div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="rev-s-expenses">$0</div><div class="sc-sub">Year to date</div></div>
-</div>
-<div class="chart-card" style="margin-bottom:24px"><h3>&#128200; Daily Revenue Trend</h3><div class="chart-wrap"><canvas id="revTrendChart"></canvas></div></div>
-<div class="section-header"><div class="section-title"><div class="icon-circle">&#128200;</div> Revenue Records</div></div>
+<div class="section-header"><div class="section-title"><div class="icon-circle">&#128200;</div> Revenue &amp; Forecast Records</div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
 <div class="fg"><label>Month</label><select id="rev-month-f" onchange="applyRevFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
-<div class="fg"><label>Date From</label><input id="rev-date-from" type="date" onchange="applyRevFilters()"></div>
-<div class="fg"><label>Date To</label><input id="rev-date-to" type="date" onchange="applyRevFilters()"></div>
-<div class="fg"><label>Show</label><select id="rev-entries" onchange="applyRevFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+<div class="fg"><label>Type</label><select id="rev-type-f" onchange="applyRevFilters()"><option value="">All Types</option><option value="revenue">Revenue</option><option value="forecast">Forecast</option></select></div>
+<div class="fg"><label>Show</label><select id="rev-entries" onchange="applyRevFilters()"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
 <button class="btn-clear" onclick="clearRevFilters()">Clear</button>
 </div>
 <div class="table-card">
-<table><thead><tr><th onclick="sortRev('date')">Date</th><th onclick="sortRev('_week')">Week / Period</th><th onclick="sortRev('affiliate')">Affiliate / Partner</th><th onclick="sortRev('amount')">Revenue</th><th>Remarks</th><th>Source</th></tr></thead>
+<table><thead><tr><th onclick="sortRev('affiliate')">Affiliate / Partner</th><th onclick="sortRev('amount')">Amount</th><th onclick="sortRev('_week')">Period</th><th>Remarks</th><th>Source</th></tr></thead>
 <tbody id="rev-tbody"></tbody></table>
 <div class="pagination" id="rev-pagination"></div>
 </div>
-<div class="weekly-section">
-<div class="stats-row">
-<div class="stat-card"><div class="sc-label">Forecast Total</div><div class="sc-value" id="fc-s-total">$0</div><div class="sc-sub">Expected</div></div>
-<div class="stat-card"><div class="sc-label">Partners Listed</div><div class="sc-value" id="fc-s-count">0</div><div class="sc-sub">All periods</div></div>
-<div class="stat-card green"><div class="sc-label">With Amounts</div><div class="sc-value" id="fc-s-filled">0</div><div class="sc-sub">Have values</div></div>
-<div class="stat-card purple"><div class="sc-label">Current Period</div><div class="sc-value" id="fc-s-period" style="font-size:1rem">All</div><div class="sc-sub">Selected</div></div>
-</div>
-<div class="two-col">
-<div class="chart-card"><h3>&#127919; Forecast by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="fcBarChart"></canvas></div></div>
-<div class="chart-card"><h3>&#128218; Weekly Period Comparison</h3><div class="chart-wrap"><canvas id="fcPeriodChart"></canvas></div></div>
-</div>
-<div class="section-header"><div class="section-title"><div class="icon-circle">&#127919;</div> Weekly Forecast</div></div>
-<div class="filter-bar">
-<div class="fg"><label>Search Affiliate</label><input id="fc-search" type="search" placeholder="Search..." oninput="applyFcFilters()"></div>
-<div class="fg"><label>Period</label><select id="fc-period-f" onchange="applyFcFilters()"><option value="">All Periods</option></select></div>
-<div class="fg"><label>Show</label><select id="fc-entries" onchange="applyFcFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-<button class="btn-clear" onclick="clearFcFilters()">Clear</button>
-</div>
-<div class="table-card">
-<table><thead><tr><th onclick="sortFc('date')">Inv. Date</th><th onclick="sortFc('_period')">Period</th><th onclick="sortFc('affiliate')">Affiliate / Partner</th><th onclick="sortFc('amount')">Forecast Amount</th></tr></thead>
-<tbody id="fc-tbody"></tbody></table>
-<div class="pagination" id="fc-pagination"></div>
-</div>
+<div style="display:none">
+<span id="fc-s-total"></span><span id="fc-s-count"></span><span id="fc-s-filled"></span><span id="fc-s-period"></span>
+<canvas id="fcBarChart"></canvas><canvas id="fcPeriodChart"></canvas>
+<input id="fc-search"><select id="fc-period-f"></select><select id="fc-entries"><option value="25">25</option></select>
+<tbody id="fc-tbody"></tbody><div id="fc-pagination"></div>
+<input id="rev-date-from" type="hidden"><input id="rev-date-to" type="hidden">
+<canvas id="revTrendChart"></canvas>
 </div>
 </div>
 <div id="tab-pnl" class="tab-content">
@@ -468,7 +451,7 @@ c.appendChild(b);
 }
 function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=liveRcvd+liveBal;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+(s.totalExpenses?'<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>':'')+(s.salary?'<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>':'')+(s.ads?'<div class="psb-line"><span class="psb-key">Ads</span><span class="psb-value">'+$m(s.ads)+'</span></div>':'')+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
-function getRevFilt(){const q=(document.getElementById('rev-search').value||'').toLowerCase(),mf=document.getElementById('rev-month-f').value,{from,to}=getDR('rev');return allRev.filter(r=>{if(mf&&r._month!==mf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
+function getRevFilt(){const q=(document.getElementById('rev-search').value||'').toLowerCase(),mf=document.getElementById('rev-month-f').value,tf=(document.getElementById('rev-type-f')||{}).value||'',{from,to}=getDR('rev');var merged=allRev.map(function(r){return Object.assign({},r,{_recType:'revenue'});}).concat(allFC.map(function(r){return{_recType:'forecast',_source:'forecast',_srcLabel:'Forecast',_key:r._key||('fc_'+r.affiliate),date:r.date,_week:r._period||'',_month:r._period?r._period.replace(/\s*week.*/i,'').trim():'',affiliate:r.affiliate,amount:r.amount,status:'',remarks:''};}));return merged.filter(r=>{if(tf==='revenue'&&r._recType!=='revenue')return false;if(tf==='forecast'&&r._recType!=='forecast')return false;if(mf&&r._month!==mf&&!(r._week||'').toLowerCase().includes(mf.toLowerCase().substring(0,3)))return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').toLowerCase();const tf=(document.getElementById('cto-type-f')||{}).value||'';const mf=(document.getElementById('cto-month-f')||{}).value||'';return allCTO.filter(r=>{if(r._isIO)return false;var name=r['Advertiser/Offer']||r['Advertiser']||'';if(!name||!name.trim())return false;if(name.toLowerCase().includes('interactive'))return false;if(mf&&r._month!==mf)return false;if(tf){var t=(r['Type']||r._ctoType||'').toUpperCase();if(!t.includes(tf))return false;}if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getFcFilt(){const q=(document.getElementById('fc-search').value||'').toLowerCase(),pf=document.getElementById('fc-period-f').value;return allFC.filter(r=>{if(pf&&r._period!==pf)return false;if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;return true;});}
@@ -494,7 +477,7 @@ setStat('rev-s-forecast',$m(forecastDisplay));
 var affSet=new Set();f.forEach(function(r){if(r.affiliate&&r.affiliate!=='—')affSet.add(r.affiliate);});
 var curM=document.getElementById('rev-month-f').value||'';
 var allAffSet=new Set();allPNL.filter(function(r2){return !curM||r2._month===curM;}).forEach(function(r2){if(r2.affiliate)allAffSet.add(r2.affiliate);});
-setStat('rev-s-affiliates',allAffSet.size||affSet.size);const sl=sortArr(f,revSort).slice((revPage-1)*pp,revPage*pp);document.getElementById('rev-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(revPage-1)*pp+i,iu=r._source==='user';return'<tr><td>'+(r.date||'&#8212;')+'</td><td style="font-size:.75rem;color:var(--text3)">'+(r._week||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.amount)+'</td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27rev\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td><span class="source-badge '+((r._srcLabel||'pnl').toLowerCase())+'">'+(r._srcLabel||'P&L')+'</span></td></tr>';}).join(''):'<tr><td colspan="7" class="empty-state">No records found</td></tr>';renderPagination('rev',revPage,tp,pp,f.length);updateRevCharts(f);}
+setStat('rev-s-affiliates',allAffSet.size||affSet.size);const sl=sortArr(f,revSort).slice((revPage-1)*pp,revPage*pp);document.getElementById('rev-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(revPage-1)*pp+i;var srcCls=(r._srcLabel||'pnl').toLowerCase();if(r._recType==='forecast')srcCls='forecast';return'<tr><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.amount)+'</td><td style="font-size:.8rem;color:var(--text3)">'+(r._week||r._month||'&#8212;')+'</td><td style="font-size:.8rem">'+(r.remarks||'&#8212;')+'</td><td><span class="source-badge '+srcCls+'">'+(r._srcLabel||'P&L')+'</span></td></tr>';}).join(''):'<tr><td colspan="5" class="empty-state">No records found</td></tr>';renderPagination('rev',revPage,tp,pp,f.length);updateRevCharts(f.filter(function(r){return r._recType==='revenue';}));}
 function renderPNL(){const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';let lr=0,lb=0,lrv=0,ltexp=0;const _months=['January','February','March','April','May','June'];_months.forEach(function(mo){const s2=pnlSummaries[mo];if(!s2)return;if(selMonthF&&mo!==selMonthF)return;lr+=(s2.paymentRcvd||0);lb+=(s2.balance||0);lrv+=(s2.grossRevenue||(s2.paymentRcvd||0)+(s2.balance||0));ltexp+=(s2.totalExpenses||0);});setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));const allPNLExpenses=Object.values(pnlSummaries||{}).reduce((a,s)=>a+(s.totalExpenses||0),0);const pnlExpDisp=selMonthF&&pnlSummaries&&pnlSummaries[selMonthF]?pnlSummaries[selMonthF].totalExpenses||0:allPNLExpenses;setStat('pnl-s-count',$m(pnlExpDisp));setStat('pnl-s-rate',(lrv>0?Math.round(lr/lrv*100):0)+'%');const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,"+gi+")">&#128206;</label><span id="pnl-att-"+gi+"" class="attach-link" onclick="openPNLAttach("+gi+")" style="display:none">&#128204; View</span></td><td class="action-cell"><button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');Object.keys(pnlAtts).forEach(gi=>{const sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';});}
 function getCTORow(r){
 var name=r['Advertiser']||r['Advertiser/Offer']||'';
@@ -544,7 +527,7 @@ function delRev(gi){const r=getRevSorted()[gi];if(!r||r._source!=='user')return;
 function saveFMDRecord(){const r={_source:'user',_month:document.getElementById('fm-month').value||'Manual',_key:'ufmd_'+Date.now(),date:document.getElementById('fm-date').value,affiliate:document.getElementById('fm-affiliate').value,invAmt:parseFloat(document.getElementById('fm-invAmt').value)||0,rcvd:parseFloat(document.getElementById('fm-rcvd').value)||0,status:document.getElementById('fm-status').value||'Pending',remarks:document.getElementById('fm-remarks').value};r.displayAmt=r.invAmt>0?r.invAmt:r.rcvd;allFMD.push(r);userFMD.push(r);localStorage.setItem('uFMD',JSON.stringify(userFMD));document.getElementById('addFMDModal').classList.remove('open');['fm-date','fm-affiliate','fm-invAmt','fm-rcvd','fm-remarks'].forEach(id=>document.getElementById(id).value='');renderFMD();}
 function delFMD(gi){const r=getFMDSorted()[gi];if(!r||r._source!=='user')return;allFMD.splice(allFMD.indexOf(r),1);const i=userFMD.indexOf(r);if(i>-1)userFMD.splice(i,1);localStorage.setItem('uFMD',JSON.stringify(userFMD));renderFMD();}
 function applyRevFilters(){revPage=1;renderRevenue();}
-function clearRevFilters(){['rev-search','rev-date-from','rev-date-to'].forEach(id=>document.getElementById(id).value='');document.getElementById('rev-month-f').value='';document.getElementById('rev-entries').value='10';applyRevFilters();}
+function clearRevFilters(){['rev-search','rev-date-from','rev-date-to'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('rev-month-f').value='';var tf=document.getElementById('rev-type-f');if(tf)tf.value='';document.getElementById('rev-entries').value='25';applyRevFilters();}
 function applyPNLFilters(){pnlPage=1;renderPNL();var smb=document.querySelector('#pnl-month-buttons button.active');if(smb&&smb.textContent!=='All Months')showMonthlySummary(smb.textContent);}
 function clearPNLFilters(){['pnl-search'].forEach(id=>document.getElementById(id).value='');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-status-f').value='';document.getElementById('pnl-entries').value='10';document.querySelectorAll('.month-btn').forEach((b,i)=>b.classList.toggle('active',i===0));document.getElementById('pnl-summary-banner').style.display='none';applyPNLFilters();}
 function applyCTOFilters(){ctoPage=1;renderCTO();}
