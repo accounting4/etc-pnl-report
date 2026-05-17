@@ -442,27 +442,30 @@ for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEac
 ss('Loading QB Invoices...');
 const QB_ID='1J054vIZKXwNYr_Z0MXT11Boaor2elCXw4utRd-c79LU';
 const qbRows=await fetchCSV(gvg(QB_ID,'0'));
-const existingPNLKeys=new Set(allPNL.filter(r=>!r._isSummary).map(r=>{
-  const aff=(r.affiliate||'').toUpperCase().trim();
-  const amt=r.rcvd>0?r.rcvd:r.displayAmt;
-  return aff+'|'+Math.round(amt*100);
-}));
 let qbAdded=0,qbSkipped=0;
 qbRows.forEach(r=>{
   const cust=(r['Customer']||'').trim();
-  const amt=parseFloat((r['Invoice Amount']||'0').replace(/[\$,]/g,''))||0;
-  const balance=parseFloat((r['Balance']||'0').replace(/[\$,]/g,''))||0;
+  const amtStr=(r['Invoice Amount']||'0').replace(/[\$,]/g,'');
+  const amt=parseFloat(amtStr)||0;
+  const balStr=(r['Balance']||'0').replace(/[\$,]/g,'');
+  const balance=parseFloat(balStr)||0;
   const date=(r['Date']||'').trim();
   const doc=(r['Doc Number']||'').trim();
-  const status=(r['Status']||'').trim();
+  const statusCol=(r['Status']||'').trim();
   const desc=(r['Description']||'').trim();
   if(!cust||amt<=0)return;
-  if(cust.toUpperCase()==='TEST')return;
-  const dupKey=cust.toUpperCase()+'|'+Math.round(amt*100);
+  const dateParts=date.split('-');
+  let monthName='';
+  if(dateParts.length===3){
+    const mm=dateParts[1];
+    monthName=mNames[mm]||'';
+  }
+  if(!monthName)return;
   const matchPNL=allPNL.some(p=>{
-    if(p._isSummary)return false;
+    if(p._isSummary||p._source==='qb')return false;
     const pAff=(p.affiliate||'').toUpperCase();
     const pAmt=p.rcvd>0?p.rcvd:p.displayAmt;
+    if(p._month!==monthName)return false;
     if(Math.abs(pAmt-amt)<1){
       const custUp=cust.toUpperCase();
       if(pAff.includes(custUp)||custUp.includes(pAff))return true;
@@ -473,12 +476,13 @@ qbRows.forEach(r=>{
     return false;
   });
   if(matchPNL){qbSkipped++;return;}
-  const monthName='May';
+  const fmtDate=dateParts.length===3?(dateParts[1]+'/'+dateParts[2]):date;
   allPNL.push({
     _month:monthName,_source:'qb',invId:'QB#'+doc,
-    date:date.replace(/^(\d{4})-(\d{2})-(\d{2})$/,'$2/$3'),
+    date:fmtDate,
     affiliate:cust,invAmt:amt,rcvd:balance===0?amt:amt-balance,
-    displayAmt:amt,status:status,remarks:'QB: '+desc,
+    displayAmt:amt,status:statusCol||(balance===0?'Paid':'Unpaid'),
+    remarks:'QB: '+desc,
     _key:'qb_'+monthName+'_'+doc,_isSummary:false
   });
   qbAdded++;
