@@ -2157,7 +2157,7 @@ if(!hEl)return;
 hEl.innerHTML=events.length?events.map(function(e){
 return '<tr><td style="white-space:nowrap;font-size:.78rem">'+new Date(e.ts).toLocaleString()+'</td><td>'+e.source+'</td><td>'+e.event+'</td><td style="font-size:.82rem">'+e.details+'</td><td style="font-size:.82rem">'+(e.before||'—')+' → '+(e.after||'—')+'</td></tr>';
 }).join(''):'<tr><td colspan="5" class="empty-state">No change events recorded yet</td></tr>';
-});
+}).catch(function(e){console.warn('Audit log read error',e)});
 }
 /* Show reset button for admins */
 var resetBtn=document.getElementById('btn-reset-baseline');
@@ -2182,7 +2182,7 @@ if(changes.length>0&&fbDb){
 changes.forEach(function(c){
 var inv=allPNL.find(function(r){return r.invId===c.id;});
 var logEntry={ts:Date.now(),source:'QuickBooks',event:c.type==='added'?'Invoice Added':'Status Changed',details:c.id+' ('+(inv?inv.affiliate:'?')+') $'+(inv?inv.displayAmt.toFixed(2):'?'),before:c.type==='status_changed'?c.from:'N/A',after:c.type==='added'?c.status:c.to};
-fbDb.ref('/auditLog').push(logEntry);
+try{fbDb.ref('/auditLog').push(logEntry);}catch(e){}
 });
 }
 localStorage.setItem('qbBaselineInvIds',JSON.stringify(curInvIds));
