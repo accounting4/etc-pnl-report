@@ -1370,13 +1370,12 @@ async function inviteUser() {
       invitedBy: currentUser.email,
       invitedAt: firebase.database.ServerValue.TIMESTAMP
     });
-    // Send invite email via mailto
+    // Show invite message with copy button
     var dashUrl = window.location.href.split('?')[0].split('#')[0];
-    var subject = encodeURIComponent('You\'re invited to the ETC Dashboard');
-    var body = encodeURIComponent('Hi,\n\nYou\'ve been invited to access the ETC PNL Report Dashboard as a ' + role.charAt(0).toUpperCase() + role.slice(1) + '.\n\nTo get started:\n1. Go to: ' + dashUrl + '\n2. Click "Create Account" and sign up with this email: ' + email + '\n3. Your ' + role + ' role will be assigned automatically.\n\nBest regards,\n' + (currentUser.displayName || currentUser.email));
-    window.open('mailto:' + email + '?subject=' + subject + '&body=' + body, '_blank');
-    msgEl.textContent = '✅ Invite created & email opened! ' + email + ' will get the ' + role + ' role when they sign up.';
+    var inviteMsg = 'Hi,\n\nYou\'ve been invited to the ETC PNL Report Dashboard as a ' + role.charAt(0).toUpperCase() + role.slice(1) + '.\n\nTo get started:\n1. Go to: ' + dashUrl + '\n2. Click "Create Account" and sign up with this email: ' + email + '\n3. Your ' + role + ' role will be assigned automatically.';
+    msgEl.innerHTML = '✅ Invite created! <strong>' + email + '</strong> will get the <strong>' + role + '</strong> role when they sign up.<br><button onclick="copyInviteMsg()" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600" id="copy-invite-btn">📋 Copy Invite Message</button>';
     msgEl.style.display = 'block';
+    window._lastInviteMsg = inviteMsg;
     document.getElementById('invite-email').value = '';
     loadAdminPanel();
   } catch(e) {
@@ -1388,6 +1387,13 @@ async function inviteUser() {
     }
     errEl.style.display = 'block';
   }
+}
+
+function copyInviteMsg() {
+  navigator.clipboard.writeText(window._lastInviteMsg || '').then(function() {
+    var btn = document.getElementById('copy-invite-btn');
+    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(function(){ btn.textContent = '📋 Copy Invite Message'; }, 2000); }
+  }).catch(function() { prompt('Copy this invite message:', window._lastInviteMsg || ''); });
 }
 
 // ===== HARDCODED FIREBASE CONFIG =====
