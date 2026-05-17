@@ -1466,7 +1466,7 @@ qbRows.forEach(r=>{
     return false;
   });
   if(matchPNL){qbSkipped++;return;}
-  const fmtDate=dateParts.length===3?(dateParts[1]+'/'+dateParts[2]):date;
+  const fmtDate=dateParts.length===3?(dateParts[1]+'/'+dateParts[2]+'/'+dateParts[0]):date;
   allPNL.push({
     _month:monthName,_source:'qb',invId:'QB#'+doc,
     date:fmtDate,
@@ -1989,9 +1989,13 @@ function renderOverview(){
     var fcEl=document.getElementById('fc-projected-total');
     if(fcEl)setStat('ov-forecast',fcEl.textContent);
     
-    // PNL total (use invAmt or displayAmt or 'Invoice Amount')
+    // PNL total — match the P&L tab: use pnlSummaries gross revenue (same source of truth)
     var pnlTotal=0;
-    allPNL.forEach(function(r){pnlTotal+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||parseMoney(r.rcvd)||parseMoney(r['Inv Amount rcvd'])||0;});
+    var _ovMonths=['January','February','March','April','May','June'];
+    _ovMonths.forEach(function(mo){
+      var s=pnlSummaries[mo];if(!s)return;
+      pnlTotal+=(s.grossRevenue||(s.paymentRcvd||0)+(s.balance||0))||0;
+    });
     setStat('ov-pnl','$'+pnlTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
     // Expenses (read from stat card if rendered, else show N/A)
@@ -2003,15 +2007,14 @@ function renderOverview(){
     allCTO.forEach(function(r){ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});
     setStat('ov-tracking','$'+ctoTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Collection rate (use correct PNL fields)
-    var paid=0,total=0;
-    allPNL.forEach(function(r){
-      var amt=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||parseMoney(r.rcvd)||0;
-      total+=amt;
-      var st=(r.status||r.STATUS||'').toLowerCase();
-      if(st.includes('paid')&&!st.includes('unpaid'))paid+=amt;
+    // Collection rate — match P&L tab: use pnlSummaries
+    var ovPaid=0,ovTotal=0;
+    _ovMonths.forEach(function(mo){
+      var s=pnlSummaries[mo];if(!s)return;
+      ovPaid+=(s.paymentRcvd||0);
+      ovTotal+=(s.grossRevenue||(s.paymentRcvd||0)+(s.balance||0))||0;
     });
-    var pct=total>0?Math.round(paid/total*100):0;
+    var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
     // FMD (same structure as PNL)
