@@ -479,6 +479,19 @@ var curMonthName=new Date().toLocaleString('en-US',{month:'long'});
 var revMonthF=document.getElementById('rev-month-f');
 if(revMonthF){revMonthF.value=curMonthName;}
 renderAll();buildCharts();
+startAutoRefresh();
+}
+function startAutoRefresh(){
+var REFRESH_MS=5*60*1000;
+setInterval(async function(){
+try{
+allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;
+Object.keys(pnlSummaries).forEach(k=>delete pnlSummaries[k]);
+await fetchAllData();
+}catch(e){console.warn('Auto-refresh error',e);}
+},REFRESH_MS);
+var liveEl=document.querySelector('.live-badge');
+if(liveEl)liveEl.title='Auto-refreshes every 5 minutes';
 }
 function buildMonthButtons(){
 const c=document.getElementById('pnl-month-buttons');if(!c)return;
