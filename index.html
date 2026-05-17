@@ -1241,6 +1241,7 @@ async function inviteUser() {
   var errEl = document.getElementById('invite-err');
   msgEl.style.display = 'none'; errEl.style.display = 'none';
   if (!email) { errEl.textContent = 'Enter an email address'; errEl.style.display = 'block'; return; }
+  if (!fbDb) { errEl.textContent = 'Firestore not connected. Please refresh the page (Ctrl+Shift+R) after setting up Firestore Database in Firebase Console.'; errEl.style.display = 'block'; return; }
   try {
     // Check if user already exists
     var existing = await fbDb.collection('users').where('email', '==', email).get();
