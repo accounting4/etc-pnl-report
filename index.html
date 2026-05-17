@@ -956,24 +956,46 @@ async function inviteUser() {
   } catch(e) { errEl.textContent = 'Error: ' + e.message; errEl.style.display = 'block'; }
 }
 
+// ===== HARDCODED FIREBASE CONFIG =====
+var HARDCODED_FB_CONFIG = {
+  apiKey: "AIzaSyB6mhDfnnexHx6bhun3HUeQZDqNnz18kcQ",
+  authDomain: "etcpnl.firebaseapp.com",
+  projectId: "etcpnl",
+  storageBucket: "etcpnl.firebasestorage.app",
+  messagingSenderId: "1097852201718",
+  appId: "1:1097852201718:web:1b24d3995c52adfe835ad7",
+  measurementId: "G-PDB2HXXV7D"
+};
+
 // ===== AUTH INIT =====
 function initAuth() {
+  // Always use hardcoded config — skip the setup screen entirely
   var config = getStoredConfig();
-  if (!config || config === 'skip') {
-    if (config === 'skip') {
-      // No auth mode
-      document.getElementById('app-container').style.display = '';
-      loadAllData();
-    } else {
-      document.getElementById('setup-overlay').style.display = 'flex';
-    }
+  if (!config) {
+    // First visit: use hardcoded config, store it
+    localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(HARDCODED_FB_CONFIG));
+    config = HARDCODED_FB_CONFIG;
+  }
+  if (config === 'skip') {
+    document.getElementById('app-container').style.display = '';
+    loadAllData();
     return;
   }
+  // Hide setup overlay since we have config
+  var setupOv = document.getElementById('setup-overlay');
+  if (setupOv) setupOv.style.display = 'none';
   if (initFirebase(config)) {
     // Auth state listener will handle the rest
   } else {
-    localStorage.removeItem(FB_CONFIG_KEY);
-    document.getElementById('setup-overlay').style.display = 'flex';
+    // Fallback: show login with hardcoded config
+    localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(HARDCODED_FB_CONFIG));
+    if (initFirebase(HARDCODED_FB_CONFIG)) {
+      // good
+    } else {
+      // Last resort: skip auth
+      document.getElementById('app-container').style.display = '';
+      loadAllData();
+    }
   }
 }
 
@@ -1631,10 +1653,11 @@ function toggleDarkMode(){
 })();
 
 // ===== OVERVIEW TAB =====
+function parseMoney(v){if(typeof v==='number')return v;if(!v)return 0;return parseFloat(String(v).replace(/[$,]/g,''))||0;}
 function renderOverview(){
   try{
     var curMonth=new Date().toLocaleString('en',{month:'long'});
-    // Revenue total
+    // Revenue total (from allRev which already has normalized 'amount')
     var revTotal=0;
     allRev.forEach(function(r){if(r._month===curMonth)revTotal+=parseFloat(r.amount)||0;});
     setStat('ov-revenue','$'+revTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
@@ -1643,32 +1666,34 @@ function renderOverview(){
     var fcEl=document.getElementById('fc-projected-total');
     if(fcEl)setStat('ov-forecast',fcEl.textContent);
     
-    // PNL total
+    // PNL total (use invAmt or displayAmt or 'Invoice Amount')
     var pnlTotal=0;
-    allPNL.forEach(function(r){pnlTotal+=parseFloat(r.amount||r.revenue||0);});
+    allPNL.forEach(function(r){pnlTotal+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||parseMoney(r.rcvd)||parseMoney(r['Inv Amount rcvd'])||0;});
     setStat('ov-pnl','$'+pnlTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Expenses
+    // Expenses (read from stat card if rendered, else show N/A)
     var expEl=document.getElementById('rev-s-expenses');
-    if(expEl)setStat('ov-expenses',expEl.textContent);
+    if(expEl&&expEl.textContent&&expEl.textContent!=='$0')setStat('ov-expenses',expEl.textContent);
     
-    // Tracking
-    var ctoEl=document.getElementById('cto-s-total');
-    if(ctoEl)setStat('ov-tracking',ctoEl.textContent);
+    // Tracking revenue (calculate from allCTO using 'Total Revenue ($)')
+    var ctoTotal=0;
+    allCTO.forEach(function(r){ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});
+    setStat('ov-tracking','$'+ctoTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Collection rate
-    var colEl=document.querySelector('#tab-pnl .sc-value');
+    // Collection rate (use correct PNL fields)
     var paid=0,total=0;
     allPNL.forEach(function(r){
-      var amt=parseFloat(r.amount||r.revenue||0);total+=amt;
-      if((r.status||'').toLowerCase().includes('paid')&&!(r.status||'').toLowerCase().includes('unpaid'))paid+=amt;
+      var amt=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||parseMoney(r.rcvd)||0;
+      total+=amt;
+      var st=(r.status||r.STATUS||'').toLowerCase();
+      if(st.includes('paid')&&!st.includes('unpaid'))paid+=amt;
     });
     var pct=total>0?Math.round(paid/total*100):0;
     setStat('ov-collection',pct+'%');
     
-    // FMD
+    // FMD (same structure as PNL)
     var fmdTotal=0;
-    allFMD.forEach(function(r){fmdTotal+=parseFloat(r.amount||r.revenue||0);});
+    allFMD.forEach(function(r){fmdTotal+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
     setStat('ov-fmd','$'+fmdTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
     // Affiliates
@@ -1752,7 +1777,7 @@ function renderMoMCharts(){
     var revByMonth={},ctoByMonth={};
     months.forEach(function(m){revByMonth[m]=0;ctoByMonth[m]=0;});
     allRev.forEach(function(r){if(revByMonth.hasOwnProperty(r._month))revByMonth[r._month]+=parseFloat(r.amount)||0;});
-    allCTO.forEach(function(r){var m=r._month||r.Month||'';if(ctoByMonth.hasOwnProperty(m))ctoByMonth[m]+=parseFloat(r.revenue||r.amount||0);});
+    allCTO.forEach(function(r){var m=r._month||r.Month||'';if(ctoByMonth.hasOwnProperty(m))ctoByMonth[m]+=parseMoney(r['Total Revenue ($)'])||0;});
     
     var activeMonths=months.filter(function(m){return revByMonth[m]>0||ctoByMonth[m]>0;});
     var revData=activeMonths.map(function(m){return revByMonth[m];});
