@@ -114,7 +114,8 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .source-badge{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .source-badge.sheet{background:#e0f2fe;color:#0369a1}
 .source-badge.user{background:#fef3c7;color:#92400e}
-.source-badge.everflow{background:#d1fae5;color:#065f46}
+.source-badge.everflow,.source-badge.ef-etc{background:#d1fae5;color:#065f46}
+.source-badge.tsd,.source-badge.ef-tsd{background:#fef9c3;color:#854d0e}
 .source-badge.cto{background:#ede9fe;color:#5b21b6}
 .source-badge.pink,.source-badge.io{background:#fce7f3;color:#9d174d}
 .source-badge.io{background:#fce7f3;color:#9d174d}
@@ -442,6 +443,12 @@ const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
 const mNames={'01':'January','02':'February','03':'March','04':'April','05':'May','06':'June','07':'July','08':'August','09':'September','10':'October','11':'November','12':'December'};
 ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':camp,'Advertiser/Offer':camp,'Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt});});
+ss('Loading ETC Everflow CPA data...');
+const etcEfRows=await fetchCSV(gv(EF_ID,'Everflow CPA'));
+etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'EF-ETC','_month':monthName,'_source':'sheet','_ctoType':'EF-ETC','_efDate':dt});});
+ss('Loading TSD Everflow CPA data...');
+const tsdEfRows=await fetchCSV(gv(EF_ID,'TSD Daily'));
+tsdEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'EF-TSD','_month':monthName,'_source':'sheet','_ctoType':'EF-TSD','_efDate':dt});});
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
@@ -456,7 +463,7 @@ var label=advertiser?(advertiser+(offer&&offer!==advertiser?' - '+offer:'')):off
 if(!label||!label.trim())label=r['Offers']||'';
 if(!label||!label.trim())return;
 var isIO=label.toLowerCase().includes('interactive')||r._isIO;
-var srcType=r._ctoType==='IO'?'IO':'CTO';
+var srcType=r._ctoType||((r['Type']||'').toUpperCase()==='IO'?'IO':'CTO');
 allRev.push({_source:'sheet',_srcLabel:srcType,_key:'cto_'+r._month+'_'+label+'_'+srcType,date:r['Since Last Update']||r['Since Last Updated']||'',_week:r._month+' ('+srcType+')',_month:r._month,affiliate:label,amount:amt,status:'Paid',remarks:r['Type']||r._ctoType||''});
 });
 ss('Loading Forecast data...');
@@ -746,7 +753,7 @@ var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
 showCTOSummary(totRev,totLeads,activeOffers,affRevMap);
 var sl=sortArr(rows,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
-var typeColors={CTO:'purple',IO:'pink',CPA:'red',CPL:'accent'};
+var typeColors={CTO:'purple',IO:'pink',CPA:'red',CPL:'accent','EF-ETC':'everflow','EF-TSD':'tsd'};
 document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No CTO records found</td></tr>';
 renderPagination('cto',ctoPage,tp,pp,rows.length);
 updateCTOCharts(rows,affRevMap);
