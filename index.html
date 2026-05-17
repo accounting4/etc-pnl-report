@@ -6,7 +6,17 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>ETC PNL Report Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2340">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ETC Dashboard">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -253,6 +263,46 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
   .stat-card,.card,.table-card,.chart-card{box-shadow:none;border:1px solid #ccc}
 }
 
+
+/* Dark Mode */
+body.dark-mode{--bg:#0f1729;--surface:#1a2340;--surface2:#1e2a4a;--border:#2d3a5c;--navy:#0d1526;--navy2:#1a2340;--navy3:#2e3d6e;--text:#e4e8f0;--text2:#9aa3b8;--text3:#6b7a96;--white:#1a2340;--shadow:0 2px 12px rgba(0,0,0,.25);--shadow-lg:0 8px 32px rgba(0,0,0,.4)}
+body.dark-mode .header{background:#0d1526}
+body.dark-mode table th{background:#0d1526}
+body.dark-mode .pnl-summary-banner{background:linear-gradient(135deg,#0d1526,#1a2340)}
+body.dark-mode .stat-card .sc-value{color:var(--text)}
+body.dark-mode .chart-card h3{color:var(--text)}
+body.dark-mode .section-title{color:var(--text)}
+body.dark-mode .nav-tab{color:var(--text2)}
+body.dark-mode .nav-tab.active{color:var(--accent)}
+body.dark-mode .auth-overlay,.dark-mode .setup-overlay{background:#0d1526}
+body.dark-mode .month-btn{background:var(--surface2);border-color:var(--border);color:var(--text2)}
+body.dark-mode .month-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+body.dark-mode td{color:var(--text)}
+body.dark-mode .modal,.dark-mode .modal-box,.dark-mode .auth-box,.dark-mode .setup-box{background:var(--surface);color:var(--text)}
+body.dark-mode .form-row input,.dark-mode .form-row select,.dark-mode .form-row textarea{background:var(--surface2);border-color:var(--border);color:var(--text)}
+.dark-toggle{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 14px;cursor:pointer;font-size:.85rem;color:#fff;transition:all .2s;display:flex;align-items:center;gap:6px}
+.dark-toggle:hover{background:rgba(255,255,255,.18)}
+
+/* Export & Feature Buttons */
+.export-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.btn-export{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-export:hover{background:var(--navy);color:#fff;border-color:var(--navy);transform:translateY(-1px)}
+.btn-export.pdf{border-color:#ef4444;color:#ef4444}.btn-export.pdf:hover{background:#ef4444;color:#fff}
+.btn-export.excel{border-color:#22c55e;color:#22c55e}.btn-export.excel:hover{background:#22c55e;color:#fff}
+.btn-export.email{border-color:var(--accent);color:var(--accent)}.btn-export.email:hover{background:var(--accent);color:#fff}
+.btn-export.share{border-color:var(--purple);color:var(--purple)}.btn-export.share:hover{background:var(--purple);color:#fff}
+/* Alerts */
+.alert-card{border-radius:var(--radius);padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:12px;font-size:.86rem;font-weight:500;animation:slideIn .3s ease}
+.alert-card.success{background:#f0fdf4;border:1px solid #86efac;color:#166534}
+.alert-card.warning{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+.alert-card.info{background:#eff6ff;border:1px solid #93c5fd;color:#1e40af}
+.alert-card .alert-icon{font-size:1.3rem}
+.alert-card .alert-dismiss{margin-left:auto;cursor:pointer;opacity:.5;font-size:1.1rem}
+.alert-card .alert-dismiss:hover{opacity:1}
+@keyframes slideIn{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+/* PWA install */
+.pwa-install{display:none;background:var(--accent);color:#fff;border:none;border-radius:20px;padding:6px 14px;cursor:pointer;font-size:.82rem;font-weight:600;transition:all .2s;align-items:center;gap:6px}
+.pwa-install:hover{background:var(--accent2);transform:translateY(-1px)}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -367,16 +417,74 @@ Secured with Firebase Authentication
 <div class="header">
 <div class="logo-wrap"><img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/2f0a7f16-8131-4842-af34-1cbd8fd2a43c/ETC_logo__1_.png" alt="ETC" onerror="this.style.display='none'"></div>
 <div class="header-info"><h1>ETC PNL Report Dashboard</h1><p>EliteTrade Club &mdash; Financial Performance &amp; Revenue Intelligence</p><div id="currentDate"></div></div>
+<button class="pwa-install" id="pwa-install" onclick="installPWA()">📲 Install App</button>
+<button class="dark-toggle" onclick="toggleDarkMode()" id="dark-toggle" title="Toggle Dark Mode">🌙 Dark</button>
 <div class="header-badge">LIVE DATA</div>
 </div>
 <div class="nav-tabs">
-<button class="nav-tab active" onclick="showTab('revenue')" id="btn-revenue">&#128200; Revenue &amp; Forecast</button>
+<button class="nav-tab active" onclick="showTab('overview')" id="btn-overview">🏠 Overview</button>
+<button class="nav-tab" onclick="showTab('revenue')" id="btn-revenue">&#128200; Revenue &amp; Forecast</button>
 <button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
 <button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; Tracking Dashboard</button>
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
-<div id="tab-revenue" class="tab-content active">
+<div id="tab-overview" class="tab-content active">
+<div class="export-bar">
+<button class="btn-export pdf" onclick="exportPDF('overview')">📄 Export PDF</button>
+<button class="btn-export email" onclick="shareReport()">📧 Email Report</button>
+<button class="btn-export share" onclick="copyReportLink()">🔗 Share Link</button>
+</div>
+<div class="stats-row" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+<div class="stat-card"><div class="sc-label">TOTAL REVENUE (MAY)</div><div class="sc-value" id="ov-revenue">$0</div><div class="sc-sub">All sources combined</div></div>
+<div class="stat-card green"><div class="sc-label">MONTH-END FORECAST</div><div class="sc-value" id="ov-forecast">$0</div><div class="sc-sub">Projected total</div></div>
+<div class="stat-card purple"><div class="sc-label">TOTAL INVOICED (PNL)</div><div class="sc-value" id="ov-pnl">$0</div><div class="sc-sub">All invoices</div></div>
+<div class="stat-card red"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary</div></div>
+</div>
+<div class="stats-row" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+<div class="stat-card"><div class="sc-label">TRACKING REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">CTO + IO + Everflow</div></div>
+<div class="stat-card green"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid / Total</div></div>
+<div class="stat-card purple"><div class="sc-label">FMD INVOICED</div><div class="sc-value" id="ov-fmd">$0</div><div class="sc-sub">Five Minute Daily</div></div>
+<div class="stat-card"><div class="sc-label" style="border-top-color:var(--accent)">ACTIVE AFFILIATES</div><div class="sc-value" id="ov-affiliates">0</div><div class="sc-sub">This month</div></div>
+</div>
+<!-- Goal Tracking -->
+<div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px;box-shadow:var(--shadow)">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+<h3 style="margin:0;font-size:1rem;color:var(--navy)">🎯 Revenue Goal Tracker</h3>
+<div style="display:flex;gap:8px;align-items:center">
+<label style="font-size:.78rem;color:var(--text2);font-weight:600">Monthly Target:</label>
+<input type="text" id="goal-input" value="200000" style="width:110px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:.88rem;font-weight:600;text-align:right" onchange="updateGoalTracker()">
+</div>
+</div>
+<div style="background:var(--bg);border-radius:12px;overflow:hidden;height:36px;position:relative;margin-bottom:10px">
+<div id="goal-bar" style="height:100%;border-radius:12px;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .8s ease;width:0%;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;min-width:60px">
+<span id="goal-pct" style="color:#fff;font-weight:800;font-size:.85rem;text-shadow:0 1px 3px rgba(0,0,0,.3)">0%</span>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--text3)">
+<span>$0</span>
+<span id="goal-remaining" style="font-weight:600;color:var(--text2)">$200,000 remaining</span>
+<span id="goal-target-label">$200,000</span>
+</div>
+</div>
+<!-- Alerts Section -->
+<div id="alerts-section" style="margin-bottom:24px"></div>
+<!-- Month-over-Month Comparison -->
+<div class="two-col">
+<div class="chart-card"><h3>📊 Month-over-Month Revenue</h3><div class="chart-wrap" style="height:280px"><canvas id="momBarChart"></canvas></div></div>
+<div class="chart-card"><h3>📈 Revenue Growth Trend</h3><div class="chart-wrap" style="height:280px"><canvas id="momLineChart"></canvas></div></div>
+</div>
+<!-- Quick Stats by Source -->
+<div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)">
+<h3 style="margin:0 0 16px;font-size:.95rem;color:var(--navy)">💰 Revenue Breakdown by Source</h3>
+<div id="ov-breakdown" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px"></div>
+</div>
+</div>
+<div id="tab-revenue" class="tab-content">
+<div class="export-bar">
+<button class="btn-export pdf" onclick="exportPDF('revenue')">📄 Export PDF</button>
+<button class="btn-export excel" onclick="exportExcel('revenue')">📊 Export Excel</button>
+</div>
 <div class="stats-row">
 <div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="rev-s-total">$0</div><div class="sc-sub" id="rev-sub-total">Selected month</div></div>
 <div class="stat-card green"><div class="sc-label">Forecast Total</div><div class="sc-value" id="rev-s-forecast">$0</div><div class="sc-sub" id="rev-sub-forecast">Revenue + forecast</div></div>
@@ -426,6 +534,10 @@ Secured with Firebase Authentication
 </div>
 </div>
 <div id="tab-pnl" class="tab-content">
+<div class="export-bar">
+<button class="btn-export pdf" onclick="exportPDF('pnl')">📄 Export PDF</button>
+<button class="btn-export excel" onclick="exportExcel('pnl')">📊 Export Excel</button>
+</div>
 <div class="stats-row">
 <div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="pnl-s-total">$0</div><div class="sc-sub">All invoices</div></div>
 <div class="stat-card"><div class="sc-label">ETC Balance</div><div class="sc-value" id="pnl-s-pend">$0</div><div class="sc-sub">Balance</div></div>
@@ -466,6 +578,10 @@ Secured with Firebase Authentication
 </div>
 </div>
 <div id="tab-cto" class="tab-content">
+<div class="export-bar">
+<button class="btn-export pdf" onclick="exportPDF('cto')">📄 Export PDF</button>
+<button class="btn-export excel" onclick="exportExcel('cto')">📊 Export Excel</button>
+</div>
 <div class="stats-row">
 <div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">All offers</div></div>
 <div class="stat-card green"><div class="sc-label">Total Leads</div><div class="sc-value" id="cto-s-leads">0</div><div class="sc-sub">Current count</div></div>
@@ -507,6 +623,10 @@ Secured with Firebase Authentication
 </div>
 </div>
 <div id="tab-fmd" class="tab-content">
+<div class="export-bar">
+<button class="btn-export pdf" onclick="exportPDF('fmd')">📄 Export PDF</button>
+<button class="btn-export excel" onclick="exportExcel('fmd')">📊 Export Excel</button>
+</div>
 <div class="stats-row">
 <div class="stat-card"><div class="sc-label">Total Invoiced</div><div class="sc-value" id="fmd-s-total">$0</div><div class="sc-sub">All FMD invoices</div></div>
 <div class="stat-card green"><div class="sc-label">Total Received</div><div class="sc-value" id="fmd-s-paid">$0</div><div class="sc-sub">Collected</div></div>
@@ -1493,6 +1613,314 @@ function delPNLRow(e,gi){
   const curMonth=document.getElementById('pnl-month-f').value||'';
   if(curMonth)showMonthlySummary(curMonth);
 }
+
+// ===== DARK MODE =====
+function toggleDarkMode(){
+  document.body.classList.toggle('dark-mode');
+  var isDark=document.body.classList.contains('dark-mode');
+  localStorage.setItem('etc_dark_mode',isDark?'1':'0');
+  document.getElementById('dark-toggle').innerHTML=isDark?'☀️ Light':'🌙 Dark';
+  // Re-render charts with proper colors
+  if(typeof buildCharts==='function')try{buildCharts();}catch(e){}
+}
+(function(){
+  if(localStorage.getItem('etc_dark_mode')==='1'){
+    document.body.classList.add('dark-mode');
+    var dt=document.getElementById('dark-toggle');if(dt)dt.innerHTML='☀️ Light';
+  }
+})();
+
+// ===== OVERVIEW TAB =====
+function renderOverview(){
+  try{
+    var curMonth=new Date().toLocaleString('en',{month:'long'});
+    // Revenue total
+    var revTotal=0;
+    allRev.forEach(function(r){if(r._month===curMonth)revTotal+=parseFloat(r.amount)||0;});
+    setStat('ov-revenue','$'+revTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+    
+    // Forecast
+    var fcEl=document.getElementById('fc-projected-total');
+    if(fcEl)setStat('ov-forecast',fcEl.textContent);
+    
+    // PNL total
+    var pnlTotal=0;
+    allPNL.forEach(function(r){pnlTotal+=parseFloat(r.amount||r.revenue||0);});
+    setStat('ov-pnl','$'+pnlTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+    
+    // Expenses
+    var expEl=document.getElementById('rev-s-expenses');
+    if(expEl)setStat('ov-expenses',expEl.textContent);
+    
+    // Tracking
+    var ctoEl=document.getElementById('cto-s-total');
+    if(ctoEl)setStat('ov-tracking',ctoEl.textContent);
+    
+    // Collection rate
+    var colEl=document.querySelector('#tab-pnl .sc-value');
+    var paid=0,total=0;
+    allPNL.forEach(function(r){
+      var amt=parseFloat(r.amount||r.revenue||0);total+=amt;
+      if((r.status||'').toLowerCase().includes('paid')&&!(r.status||'').toLowerCase().includes('unpaid'))paid+=amt;
+    });
+    var pct=total>0?Math.round(paid/total*100):0;
+    setStat('ov-collection',pct+'%');
+    
+    // FMD
+    var fmdTotal=0;
+    allFMD.forEach(function(r){fmdTotal+=parseFloat(r.amount||r.revenue||0);});
+    setStat('ov-fmd','$'+fmdTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+    
+    // Affiliates
+    var affSet=new Set();
+    allRev.forEach(function(r){if(r._month===curMonth&&r.affiliate)affSet.add(r.affiliate);});
+    setStat('ov-affiliates',affSet.size.toString());
+    
+    // Goal tracker
+    updateGoalTracker();
+    
+    // Alerts
+    renderAlerts(revTotal);
+    
+    // MoM charts
+    renderMoMCharts();
+    
+    // Breakdown
+    renderBreakdown(curMonth);
+  }catch(e){console.warn('Overview render:',e);}
+}
+
+// ===== GOAL TRACKING =====
+function updateGoalTracker(){
+  try{
+    var target=parseFloat((document.getElementById('goal-input').value||'').replace(/[^0-9.]/g,''))||200000;
+    localStorage.setItem('etc_goal_target',target);
+    var curMonth=new Date().toLocaleString('en',{month:'long'});
+    var revTotal=0;
+    allRev.forEach(function(r){if(r._month===curMonth)revTotal+=parseFloat(r.amount)||0;});
+    var pct=Math.min(100,Math.round(revTotal/target*100));
+    var bar=document.getElementById('goal-bar');
+    var pctEl=document.getElementById('goal-pct');
+    var remEl=document.getElementById('goal-remaining');
+    var labelEl=document.getElementById('goal-target-label');
+    if(bar)bar.style.width=Math.max(8,pct)+'%';
+    if(pctEl)pctEl.textContent=pct+'%';
+    var remaining=Math.max(0,target-revTotal);
+    if(remEl)remEl.textContent='$'+remaining.toLocaleString('en',{maximumFractionDigits:0})+' remaining';
+    if(labelEl)labelEl.textContent='$'+target.toLocaleString('en',{maximumFractionDigits:0});
+    if(pct>=100&&bar)bar.style.background='linear-gradient(90deg,var(--green),#16a34a)';
+    else if(pct>=75&&bar)bar.style.background='linear-gradient(90deg,var(--accent),var(--green))';
+    else if(pct>=50&&bar)bar.style.background='linear-gradient(90deg,var(--accent),var(--yellow))';
+    else if(bar)bar.style.background='linear-gradient(90deg,var(--yellow),var(--accent))';
+  }catch(e){}
+}
+(function(){var saved=localStorage.getItem('etc_goal_target');if(saved){var gi=document.getElementById('goal-input');if(gi)gi.value=saved;}})();
+
+// ===== ALERTS =====
+function renderAlerts(revTotal){
+  var sec=document.getElementById('alerts-section');if(!sec)return;
+  sec.innerHTML='';
+  var curMonth=new Date().toLocaleString('en',{month:'long'});
+  var target=parseFloat((document.getElementById('goal-input')||{}).value||200000);
+  var alerts=[];
+  
+  var pct=revTotal/target*100;
+  if(pct>=100)alerts.push({type:'success',icon:'🎉',text:'Goal reached! Revenue hit $'+revTotal.toLocaleString('en',{maximumFractionDigits:0})+' — exceeding your $'+target.toLocaleString('en',{maximumFractionDigits:0})+' target!'});
+  else if(pct>=75)alerts.push({type:'info',icon:'🔥',text:'Almost there! '+Math.round(pct)+'% of goal reached ($'+Math.round(target-revTotal).toLocaleString()+' to go)'});
+  else if(pct>=50)alerts.push({type:'info',icon:'📈',text:'Halfway mark passed! '+Math.round(pct)+'% of $'+target.toLocaleString('en',{maximumFractionDigits:0})+' goal'});
+  
+  // Overdue payments
+  var overdue=0;
+  allPNL.forEach(function(r){if((r.status||'').toLowerCase()==='unpaid')overdue+=parseFloat(r.amount||0);});
+  if(overdue>5000)alerts.push({type:'warning',icon:'⚠️',text:'$'+overdue.toLocaleString('en',{maximumFractionDigits:0})+' in unpaid invoices need attention'});
+  
+  // Day progress
+  var dayOfMonth=new Date().getDate();
+  var daysInMonth=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  var dayPct=Math.round(dayOfMonth/daysInMonth*100);
+  if(dayPct>pct+15)alerts.push({type:'warning',icon:'⏰',text:dayPct+'% of the month has passed but only '+Math.round(pct)+'% of goal reached — may need to accelerate'});
+  
+  alerts.forEach(function(a){
+    sec.innerHTML+='<div class="alert-card '+a.type+'"><span class="alert-icon">'+a.icon+'</span><span>'+a.text+'</span><span class="alert-dismiss" onclick="this.parentElement.remove()">✕</span></div>';
+  });
+}
+
+// ===== MONTH-OVER-MONTH COMPARISON =====
+function renderMoMCharts(){
+  try{
+    var months=['January','February','March','April','May','June'];
+    var revByMonth={},ctoByMonth={};
+    months.forEach(function(m){revByMonth[m]=0;ctoByMonth[m]=0;});
+    allRev.forEach(function(r){if(revByMonth.hasOwnProperty(r._month))revByMonth[r._month]+=parseFloat(r.amount)||0;});
+    allCTO.forEach(function(r){var m=r._month||r.Month||'';if(ctoByMonth.hasOwnProperty(m))ctoByMonth[m]+=parseFloat(r.revenue||r.amount||0);});
+    
+    var activeMonths=months.filter(function(m){return revByMonth[m]>0||ctoByMonth[m]>0;});
+    var revData=activeMonths.map(function(m){return revByMonth[m];});
+    
+    // MoM bar chart
+    var ctx1=document.getElementById('momBarChart');
+    if(ctx1&&ctx1.getContext){
+      if(window._momBar)window._momBar.destroy();
+      window._momBar=new Chart(ctx1,{
+        type:'bar',data:{labels:activeMonths,datasets:[{label:'Revenue',data:revData,backgroundColor:['#f5a623','#22c55e','#7c3aed','#ef4444','#3b82f6','#ec4899'],borderRadius:8,borderSkipped:false}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:function(v){return'$'+Math.round(v/1000)+'k'}},grid:{color:'rgba(0,0,0,.06)'}},x:{grid:{display:false}}}}
+      });
+    }
+    
+    // Growth trend line
+    var growthData=[];
+    for(var i=0;i<revData.length;i++){
+      if(i===0)growthData.push(0);
+      else growthData.push(revData[i-1]>0?Math.round((revData[i]-revData[i-1])/revData[i-1]*100):0);
+    }
+    var ctx2=document.getElementById('momLineChart');
+    if(ctx2&&ctx2.getContext){
+      if(window._momLine)window._momLine.destroy();
+      window._momLine=new Chart(ctx2,{
+        type:'line',data:{labels:activeMonths,datasets:[{label:'Growth %',data:growthData,borderColor:'var(--accent)',backgroundColor:'rgba(245,166,35,.1)',fill:true,tension:.4,pointRadius:6,pointBackgroundColor:'var(--accent)',borderWidth:3}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:function(v){return v+'%'}},grid:{color:'rgba(0,0,0,.06)'}},x:{grid:{display:false}}}}
+      });
+    }
+  }catch(e){console.warn('MoM charts:',e);}
+}
+
+// ===== REVENUE BREAKDOWN =====
+function renderBreakdown(curMonth){
+  var el=document.getElementById('ov-breakdown');if(!el)return;
+  var sources={};
+  allRev.forEach(function(r){
+    if(r._month!==curMonth)return;
+    var src=r._srcLabel||r._source||'Other';
+    if(!sources[src])sources[src]={total:0,count:0};
+    sources[src].total+=parseFloat(r.amount)||0;
+    sources[src].count++;
+  });
+  var colors={PNL:'#0369a1',CTO:'#5b21b6',IO:'#9d174d','EF-ETC':'#065f46',Forecast:'#1e40af',Other:'#6b7280'};
+  var html='';
+  Object.keys(sources).sort(function(a,b){return sources[b].total-sources[a].total;}).forEach(function(src){
+    var s=sources[src];
+    var color=colors[src]||'#6b7280';
+    html+='<div style="background:var(--surface2);border-radius:10px;padding:14px;border-left:4px solid '+color+'">';
+    html+='<div style="font-size:.72rem;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:6px">'+src+'</div>';
+    html+='<div style="font-size:1.2rem;font-weight:800;color:var(--text)">$'+s.total.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>';
+    html+='<div style="font-size:.75rem;color:var(--text3);margin-top:4px">'+s.count+' records</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+// ===== EXPORT PDF =====
+function exportPDF(tabId){
+  var el=document.getElementById('tab-'+tabId);
+  if(!el){alert('Tab not found');return;}
+  var btn=event.target;btn.textContent='⏳ Generating...';btn.disabled=true;
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#f0f2f7'}).then(function(canvas){
+    var pdf=new jspdf.jsPDF('l','mm','a4');
+    var w=pdf.internal.pageSize.getWidth();
+    var h=canvas.height*w/canvas.width;
+    pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,w,h);
+    pdf.save('ETC_Dashboard_'+(tabId.charAt(0).toUpperCase()+tabId.slice(1))+'_'+new Date().toISOString().split('T')[0]+'.pdf');
+    btn.textContent='📄 Export PDF';btn.disabled=false;
+  }).catch(function(e){btn.textContent='📄 Export PDF';btn.disabled=false;alert('PDF export failed: '+e.message);});
+}
+
+// ===== EXPORT EXCEL =====
+function exportExcel(tabId){
+  try{
+    var data=[],headers=[];
+    if(tabId==='revenue'){
+      headers=['Affiliate','Amount','Month','Week','Status','Remarks','Source'];
+      allRev.forEach(function(r){data.push([r.affiliate,r.amount,r._month,r._week,r.status,r.remarks,r._srcLabel]);});
+    }else if(tabId==='pnl'){
+      headers=['Affiliate','Amount','Status','Remarks','Source'];
+      allPNL.forEach(function(r){data.push([r.affiliate||r.name,r.amount||r.revenue,r.status,r.remarks,r._srcLabel||'PNL']);});
+    }else if(tabId==='cto'){
+      headers=['Affiliate','Revenue','Leads','Month','Type','Source'];
+      allCTO.forEach(function(r){data.push([r.affiliate||r.name,r.revenue||r.amount,r.leads||r.conversions,r._month||r.Month,r.type,r._srcLabel||'CTO']);});
+    }else if(tabId==='fmd'){
+      headers=['Affiliate','Amount','Status','Received','Source'];
+      allFMD.forEach(function(r){data.push([r.affiliate||r.name,r.amount||r.revenue,r.status,r.received,r._srcLabel||'FMD']);});
+    }
+    data.unshift(headers);
+    var ws=XLSX.utils.aoa_to_sheet(data);
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,tabId.toUpperCase());
+    XLSX.writeFile(wb,'ETC_'+tabId.toUpperCase()+'_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  }catch(e){alert('Excel export failed: '+e.message);}
+}
+
+// ===== SHARE REPORT (EMAIL) =====
+function shareReport(){
+  try{
+    var curMonth=new Date().toLocaleString('en',{month:'long',year:'numeric'});
+    var revTotal=document.getElementById('ov-revenue')?document.getElementById('ov-revenue').textContent:'$0';
+    var forecast=document.getElementById('ov-forecast')?document.getElementById('ov-forecast').textContent:'$0';
+    var expenses=document.getElementById('ov-expenses')?document.getElementById('ov-expenses').textContent:'$0';
+    var collection=document.getElementById('ov-collection')?document.getElementById('ov-collection').textContent:'0%';
+    
+    var subject=encodeURIComponent('ETC Dashboard Report — '+curMonth);
+    var body=encodeURIComponent(
+      'ETC PNL Report Dashboard — '+curMonth+'\n\n'+
+      '📊 OVERVIEW\n'+
+      '━━━━━━━━━━━━━━━━━━\n'+
+      'Total Revenue: '+revTotal+'\n'+
+      'Forecast Total: '+forecast+'\n'+
+      'Total Expenses: '+expenses+'\n'+
+      'Collection Rate: '+collection+'\n\n'+
+      'View full dashboard: '+window.location.href+'\n'
+    );
+    window.open('mailto:?subject='+subject+'&body='+body);
+  }catch(e){alert('Failed to open email: '+e.message);}
+}
+
+function copyReportLink(){
+  navigator.clipboard.writeText(window.location.href).then(function(){
+    var btn=event.target;btn.textContent='✅ Copied!';
+    setTimeout(function(){btn.textContent='🔗 Share Link';},2000);
+  });
+}
+
+// ===== PWA =====
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();deferredPrompt=e;
+  var btn=document.getElementById('pwa-install');
+  if(btn)btn.style.display='inline-flex';
+});
+function installPWA(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r){
+      if(r.outcome==='accepted')document.getElementById('pwa-install').style.display='none';
+      deferredPrompt=null;
+    });
+  }
+}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
+
+// ===== UPDATE showTab to include overview =====
+var _origShowTab=showTab;
+showTab=function(t){
+  if(t==='overview'){renderOverview();}
+  document.querySelectorAll('.tab-content').forEach(function(e){e.classList.remove('active');});
+  document.querySelectorAll('.nav-tab').forEach(function(e){e.classList.remove('active');});
+  var tabEl=document.getElementById('tab-'+t);
+  var btnEl=document.getElementById('btn-'+t);
+  if(tabEl)tabEl.classList.add('active');
+  if(btnEl)btnEl.classList.add('active');
+  if(t==='admin'&&typeof loadAdminPanel==='function')loadAdminPanel();
+};
+
+// Render overview when data loads
+var _origRenderAll;
+if(typeof renderAll==='function'){
+  _origRenderAll=renderAll;
+  renderAll=function(){
+    _origRenderAll();
+    try{renderOverview();}catch(e){console.warn('Overview:',e);}
+  };
+}
+
 </script>
 <div id="fmd-edit-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeFMDModal()">
 <div class="modal-box">
