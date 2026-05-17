@@ -1164,30 +1164,21 @@ var HARDCODED_FB_CONFIG = {
 
 // ===== AUTH INIT =====
 function initAuth() {
-  // Always use hardcoded config — skip the setup screen entirely
-  var config = getStoredConfig();
-  if (!config) {
-    // First visit: use hardcoded config, store it
+  // Clear any old 'skip' setting — always require login now
+  var old = localStorage.getItem(FB_CONFIG_KEY);
+  if (!old || old === 'skip') {
     localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(HARDCODED_FB_CONFIG));
-    config = HARDCODED_FB_CONFIG;
   }
-  if (config === 'skip') {
-    document.getElementById('app-container').style.display = '';
-    loadAllData();
-    return;
-  }
-  // Hide setup overlay since we have config
+  var config = HARDCODED_FB_CONFIG;
+  // Hide setup overlay — we have hardcoded config
   var setupOv = document.getElementById('setup-overlay');
   if (setupOv) setupOv.style.display = 'none';
   if (initFirebase(config)) {
-    // Auth state listener will handle the rest
+    // Auth state listener will handle showing login or dashboard
   } else {
-    // Fallback: show login with hardcoded config
-    localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(HARDCODED_FB_CONFIG));
-    if (initFirebase(HARDCODED_FB_CONFIG)) {
-      // good
-    } else {
-      // Last resort: skip auth
+    // Fallback: try once more
+    if (!initFirebase(HARDCODED_FB_CONFIG)) {
+      // Last resort: show dashboard without auth
       document.getElementById('app-container').style.display = '';
       loadAllData();
     }
