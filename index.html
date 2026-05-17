@@ -2281,10 +2281,8 @@ if(typeof renderAll==='function'){
 function renderProfitMargin(){
   try{
     var rev=0,exp=0;
-    allRev.forEach(function(r){rev+=parseFloat(r.amount)||0;});
-    // Estimate expenses from PNL if available
-    var expEl=document.getElementById('rev-s-expenses');
-    if(expEl)exp=parseMoney(expEl.textContent);
+    var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    monthsFull.forEach(function(m){var ps=pnlSummaries[m];if(!ps)return;rev+=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;exp+=ps.totalExpenses||0;});
     var profit=rev-exp;
     var margin=rev>0?Math.round(profit/rev*100):0;
     setStat('pm-revenue','$'+rev.toLocaleString('en',{maximumFractionDigits:0}));
@@ -2292,9 +2290,9 @@ function renderProfitMargin(){
     setStat('pm-profit','$'+profit.toLocaleString('en',{maximumFractionDigits:0}));
     var mEl=document.getElementById('pm-margin');
     if(mEl){mEl.textContent=margin+'%';mEl.className='r2-mini-value '+(margin>=20?'green':margin>=0?'accent':'red');}
-    // Top affiliates
+    // Top affiliates by P&L invoiced amount
     var affRev={};
-    allRev.forEach(function(r){var a=r.affiliate||'Unknown';affRev[a]=(affRev[a]||0)+(parseFloat(r.amount)||0);});
+    allPNL.forEach(function(r){var a=r.affiliate||'Unknown';var amt=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||0;affRev[a]=(affRev[a]||0)+amt;});
     var sorted=Object.keys(affRev).sort(function(a,b){return affRev[b]-affRev[a];}).slice(0,5);
     var topHtml='';
     sorted.forEach(function(a,i){topHtml+='<div class="r2-mini-stat"><span class="r2-mini-label">'+(i+1)+'. '+a+'</span><span class="r2-mini-value">$'+affRev[a].toLocaleString('en',{maximumFractionDigits:0})+'</span></div>';});
@@ -2337,31 +2335,31 @@ function renderAgingReport(){
 // ===== CASH FLOW FORECAST =====
 function renderCashFlow(){
   try{
-    var months=['Jan','Feb','Mar','Apr','May','Jun'];
-    var monthsFull=['January','February','March','April','May','June'];
-    var inflows=[],outflows=[],net=[];
-    monthsFull.forEach(function(m){
-      var inf=0;
-      allRev.forEach(function(r){if(r._month===m)inf+=parseFloat(r.amount)||0;});
-      inflows.push(inf);
-      var outf=inf*0.65; // Estimate: 65% expense ratio
-      outflows.push(outf);
-      net.push(inf-outf);
+    var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var monthsShort=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var active=[],labels=[],inflows=[],outflows=[],net=[];
+    monthsFull.forEach(function(m,i){
+      var ps=pnlSummaries[m];if(!ps)return;
+      var rev=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
+      var exp=ps.totalExpenses||0;
+      if(rev<=0&&exp<=0)return;
+      active.push(m);labels.push(monthsShort[i]);
+      inflows.push(rev);outflows.push(exp);net.push(rev-exp);
     });
     var ctx=document.getElementById('cashFlowChart');
     if(ctx&&ctx.getContext){
       if(window._cfChart)window._cfChart.destroy();
-      window._cfChart=new Chart(ctx,{type:'bar',data:{labels:months,datasets:[
-        {label:'Inflows',data:inflows,backgroundColor:'rgba(34,197,94,.7)',borderRadius:6},
-        {label:'Outflows',data:outflows.map(function(v){return-v;}),backgroundColor:'rgba(239,68,68,.7)',borderRadius:6}
+      window._cfChart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
+        {label:'Revenue',data:inflows,backgroundColor:'rgba(34,197,94,.7)',borderRadius:6},
+        {label:'Expenses',data:outflows.map(function(v){return-v;}),backgroundColor:'rgba(239,68,68,.7)',borderRadius:6}
       ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{y:{ticks:{callback:function(v){return'$'+Math.abs(Math.round(v/1000))+'k'}},grid:{color:'rgba(0,0,0,.06)'}},x:{grid:{display:false}}}}});
     }
-    // Summary for next 30d (current month)
-    var curIdx=new Date().getMonth();
-    if(curIdx<inflows.length){
-      setStat('cf-inflow','$'+inflows[curIdx].toLocaleString('en',{maximumFractionDigits:0}));
-      setStat('cf-outflow','$'+outflows[curIdx].toLocaleString('en',{maximumFractionDigits:0}));
-      var n=net[curIdx];
+    var curMonth=new Date().toLocaleString('en',{month:'long'});
+    var ci=active.indexOf(curMonth);
+    if(ci>=0){
+      setStat('cf-inflow','$'+inflows[ci].toLocaleString('en',{maximumFractionDigits:0}));
+      setStat('cf-outflow','$'+outflows[ci].toLocaleString('en',{maximumFractionDigits:0}));
+      var n=net[ci];
       var nel=document.getElementById('cf-net');
       if(nel){nel.textContent='$'+n.toLocaleString('en',{maximumFractionDigits:0});nel.className='r2-mini-value '+(n>=0?'green':'red');}
     }
@@ -2371,10 +2369,11 @@ function renderCashFlow(){
 // ===== BREAK-EVEN ANALYSIS =====
 function renderBreakEven(){
   try{
-    var rev=0;allRev.forEach(function(r){rev+=parseFloat(r.amount)||0;});
-    var expEl=document.getElementById('rev-s-expenses');
-    var exp=expEl?parseMoney(expEl.textContent):rev*0.65;
-    var fixed=exp*0.4; // Estimate 40% fixed
+    var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var rev=0,exp=0,salaryTotal=0,adsTotal=0;
+    monthsFull.forEach(function(m){var ps=pnlSummaries[m];if(!ps)return;rev+=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;exp+=ps.totalExpenses||0;salaryTotal+=ps.salary||0;adsTotal+=ps.ads||0;});
+    var monthsWithData=monthsFull.filter(function(m){return pnlSummaries[m];}).length||1;
+    var fixed=salaryTotal>0?salaryTotal:(exp*0.5);
     var variable=exp-fixed;
     var contribMargin=rev>0?(rev-variable)/rev:0.35;
     var breakEven=contribMargin>0?Math.round(fixed/contribMargin):0;
@@ -2385,13 +2384,12 @@ function renderBreakEven(){
       if(rev>=breakEven){beEl.textContent='✅ Above break-even by $'+(rev-breakEven).toLocaleString('en',{maximumFractionDigits:0});beEl.className='r2-mini-value green';}
       else{beEl.textContent='⚠️ $'+(breakEven-rev).toLocaleString('en',{maximumFractionDigits:0})+' below break-even';beEl.className='r2-mini-value red';}
     }
-    // Chart
     var ctx=document.getElementById('breakEvenChart');
     if(ctx&&ctx.getContext){
       if(window._beChart)window._beChart.destroy();
       var labels=['$0','$'+Math.round(breakEven/2/1000)+'k','$'+Math.round(breakEven/1000)+'k','$'+Math.round(rev/1000)+'k'];
       var revLine=[0,breakEven/2,breakEven,rev];
-      var costLine=[fixed,fixed+(variable/rev)*(breakEven/2),fixed+variable*(breakEven/rev),exp];
+      var costLine=[fixed,fixed+(variable/rev||0)*(breakEven/2),exp*(breakEven/rev||1),exp];
       window._beChart=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
         {label:'Revenue',data:revLine,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',fill:false,tension:.3,borderWidth:3},
         {label:'Total Cost',data:costLine,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.1)',fill:false,tension:.3,borderWidth:3,borderDash:[5,5]}
@@ -2405,22 +2403,19 @@ function renderBudgetVsActual(){
   try{
     var budget=parseMoney(document.getElementById('bva-budget').value)||150000;
     localStorage.setItem('etc_bva_budget',budget);
-    var categories={Revenue:0,CTO:0,IO:0,Everflow:0,FMD:0};
-    var catBudgets={Revenue:budget*0.3,CTO:budget*0.25,IO:budget*0.2,Everflow:budget*0.15,FMD:budget*0.1};
-    allRev.forEach(function(r){
-      var src=r._srcLabel||r._source||'Revenue';
-      if(src==='PNL')src='Revenue';
-      if(categories.hasOwnProperty(src))categories[src]+=parseFloat(r.amount)||0;
-      else categories.Revenue+=parseFloat(r.amount)||0;
-    });
+    var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var curMonth=new Date().toLocaleString('en',{month:'long'});
     var html='';
-    Object.keys(categories).forEach(function(cat){
-      var actual=categories[cat];
-      var budg=catBudgets[cat]||budget*0.2;
-      var pct=budg>0?Math.round(actual/budg*100):0;
+    monthsFull.forEach(function(m){
+      var ps=pnlSummaries[m];if(!ps)return;
+      var rev=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
+      if(rev<=0)return;
+      var pct=budget>0?Math.round(rev/budget*100):0;
       var cls=pct>110?'over':pct>80?'warn':'under';
-      html+='<div class="budget-row"><div class="label">'+cat+'</div><div class="bar-wrap"><div class="bar-fill '+cls+'" style="width:'+Math.min(100,pct)+'%">'+pct+'%</div></div><div class="amt">$'+actual.toLocaleString('en',{maximumFractionDigits:0})+'</div></div>';
+      var isCur=m===curMonth?' ⬅':'';
+      html+='<div class="budget-row"><div class="label">'+m.substring(0,3)+isCur+'</div><div class="bar-wrap"><div class="bar-fill '+cls+'" style="width:'+Math.min(100,pct)+'%">'+pct+'%</div></div><div class="amt">$'+rev.toLocaleString('en',{maximumFractionDigits:0})+'</div></div>';
     });
+    if(!html)html='<div style="color:var(--text3);text-align:center;padding:20px">No monthly data yet</div>';
     var el=document.getElementById('bva-bars');if(el)el.innerHTML=html;
   }catch(e){console.warn('BvA:',e);}
 }
@@ -2429,15 +2424,19 @@ function renderBudgetVsActual(){
 // ===== EXPENSE CATEGORIES =====
 function renderExpenseCategories(){
   try{
+    var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var cats={};
-    allPNL.forEach(function(r){
-      var co=r.Company||r['Company']||'Other';
-      var amt=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;
-      cats[co]=(cats[co]||0)+amt;
+    monthsFull.forEach(function(m){
+      var ps=pnlSummaries[m];if(!ps)return;
+      if(ps.salary)cats['Salary']=(cats['Salary']||0)+ps.salary;
+      if(ps.ads)cats['Ads / Leads']=(cats['Ads / Leads']||0)+ps.ads;
+      var other=(ps.totalExpenses||0)-(ps.salary||0)-(ps.ads||0);
+      if(other>0)cats['Other Expenses']=(cats['Other Expenses']||0)+other;
     });
-    var labels=Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).slice(0,8);
+    var labels=Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];});
     var data=labels.map(function(l){return cats[l];});
-    var colors=['#2563eb','#16a34a','#7c3aed','#dc2626','#0ea5e9','#ec4899','#14b8a6','#f97316'];
+    var colors=['#2563eb','#dc2626','#7c3aed','#0ea5e9','#ec4899','#14b8a6','#f97316','#16a34a'];
+    if(labels.length===0){labels=['No expense data'];data=[1];colors=['#94a3b8'];}
     var ctx=document.getElementById('expensePieChart');
     if(ctx&&ctx.getContext){
       if(window._expPie)window._expPie.destroy();
@@ -2447,7 +2446,7 @@ function renderExpenseCategories(){
     var legEl=document.getElementById('expense-legend');
     if(legEl){
       var lh='';
-      labels.forEach(function(l,i){lh+='<div class="pie-legend-item"><div class="pie-legend-dot" style="background:'+colors[i]+'"></div>'+l+' ($'+cats[l].toLocaleString('en',{maximumFractionDigits:0})+')</div>';});
+      labels.forEach(function(l,i){lh+='<div class="pie-legend-item"><div class="pie-legend-dot" style="background:'+colors[i]+'"></div>'+l+(data[i]>1?' ($'+data[i].toLocaleString('en',{maximumFractionDigits:0})+')':'')+'</div>';});
       legEl.innerHTML=lh;
     }
   }catch(e){console.warn('ExpCat:',e);}
@@ -2459,8 +2458,7 @@ function renderYTDSummary(){
     var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var monthsShort=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     var monthlyRev={};
-    monthsFull.forEach(function(m){monthlyRev[m]=0;});
-    allRev.forEach(function(r){if(monthlyRev.hasOwnProperty(r._month))monthlyRev[r._month]+=parseFloat(r.amount)||0;});
+    monthsFull.forEach(function(m){monthlyRev[m]=0;var ps=pnlSummaries[m];if(ps)monthlyRev[m]=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;});
     
     // Quarterly
     var quarters={Q1:0,Q2:0,Q3:0,Q4:0};
@@ -2493,9 +2491,9 @@ function renderYTDSummary(){
 // ===== TAX ESTIMATE =====
 function renderTaxEstimate(){
   try{
-    var rev=0;allRev.forEach(function(r){rev+=parseFloat(r.amount)||0;});
-    var expEl=document.getElementById('rev-s-expenses');
-    var exp=expEl?parseMoney(expEl.textContent):rev*0.65;
+    var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var rev=0,exp=0;
+    monthsFull.forEach(function(m){var ps=pnlSummaries[m];if(!ps)return;rev+=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;exp+=ps.totalExpenses||0;});
     var profit=rev-exp;
     var taxRate=0.25;
     var quarterly=Math.max(0,Math.round(profit*taxRate/4));
@@ -2922,18 +2920,17 @@ function renderYoYComparison(){
   var curYear=new Date().getFullYear();
   var thisYear={},lastYear={};
   months.forEach(function(m){thisYear[m]=0;lastYear[m]=0;});
+  // Use pnlSummaries for current year (most accurate source)
+  monthFull.forEach(function(m,i){
+    var ps=pnlSummaries[m];
+    if(ps) thisYear[months[i]]=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
+  });
+  // Try to get last year from dated records
   allRev.forEach(function(r){
     var d=r.date||r['Inv Date'];if(!d)return;
     var dt=new Date(d);if(isNaN(dt))return;
     var yr=dt.getFullYear(),mi=dt.getMonth();
-    if(yr===curYear)thisYear[months[mi]]+=parseFloat(r.amount)||0;
-    else if(yr===curYear-1)lastYear[months[mi]]+=parseFloat(r.amount)||0;
-  });
-  // Also check by month name
-  allRev.forEach(function(r){
-    if(!r._month)return;
-    var mi=monthFull.indexOf(r._month);if(mi<0)return;
-    // If not already counted by date, this catches month-label-only data
+    if(yr===curYear-1)lastYear[months[mi]]+=parseFloat(r.amount)||0;
   });
   var existingChart=Chart.getChart('yoyCanvas');
   if(existingChart)existingChart.destroy();
@@ -2958,11 +2955,13 @@ function generateAISummary(){
     var dayOfMonth=now.getDate();
     var daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
     var revTotal=0,pnlPaid=0,pnlTotal=0,ctoTotal=0,ioTotal=0,efTotal=0,fmdTotal=0;
+    // Use pnlSummaries for accurate revenue total
+    var ps=pnlSummaries[curMonth]||{};
+    revTotal=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
     var topAffs={};
-    allRev.forEach(function(r){
+    allPNL.forEach(function(r){
       if(r._month!==curMonth)return;
-      var amt=parseFloat(r.amount)||0;
-      revTotal+=amt;
+      var amt=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||0;
       if(r.affiliate&&amt>0){topAffs[r.affiliate]=(topAffs[r.affiliate]||0)+amt;}
     });
     allPNL.forEach(function(r){var a=parseMoney(r.displayAmt)||0;pnlTotal+=a;var s=(r.status||'').toLowerCase();if(s.includes('paid')&&!s.includes('unpaid'))pnlPaid+=a;});
