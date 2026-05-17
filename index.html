@@ -411,6 +411,19 @@ td,th,.sc-value,.stat-val{font-variant-numeric:tabular-nums}
 .ytd-quarter .q-label{font-size:.72rem;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:6px}
 .ytd-quarter .q-value{font-size:1.3rem;font-weight:800;color:var(--navy)}
 .ytd-quarter .q-sub{font-size:.75rem;color:var(--text3);margin-top:4px}
+.tab-perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:8px}
+.tab-perm-grid label{display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer;padding:4px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--border)}
+.tab-perm-grid label:hover{border-color:var(--accent)}
+.tab-perm-grid input[type=checkbox]{accent-color:var(--accent)}
+.pending-invites-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.pending-invites-table th,.pending-invites-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.pending-invites-table th{font-weight:700;font-size:.75rem;text-transform:uppercase;color:var(--text3)}
+.btn-sm{padding:4px 12px;border:none;border-radius:6px;font-size:.78rem;cursor:pointer;font-weight:600}
+.btn-sm.danger{background:#ef4444;color:#fff}
+.btn-sm.danger:hover{background:#dc2626}
+body.dark-mode .tab-perm-grid label{background:var(--surface2);border-color:var(--border);color:var(--text)}
+body.dark-mode .pending-invites-table th{color:var(--text2)}
+body.dark-mode .pending-invites-table td{color:var(--text)}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -944,6 +957,7 @@ Secured with Firebase Authentication
 // ===== FIREBASE AUTH SYSTEM =====
 var FB_CONFIG_KEY = 'etc_firebase_config';
 var fbApp = null, fbAuth = null, fbDb = null;
+var currentUserAllowedTabs = null;
 var currentUser = null, currentUserRole = null;
 var authMode = 'login';
 
@@ -1154,10 +1168,17 @@ async function handleAuthState(user) {
       console.warn('Database not available — defaulting to admin.');
       currentUserRole = 'admin';
     }
+    // Load tab permissions
+    try {
+      var tabSnap = await fbDb.ref('users/' + user.uid + '/allowedTabs').once('value');
+      currentUserAllowedTabs = tabSnap.exists() ? tabSnap.val() : null;
+    } catch(tp) { currentUserAllowedTabs = null; }
     showDashboard();
+    applyTabPermissions();
   } else {
     currentUser = null;
     currentUserRole = null;
+    currentUserAllowedTabs = null;
     document.getElementById('auth-overlay').style.display = 'flex';
     document.getElementById('app-container').style.display = 'none';
     document.getElementById('user-bar').style.display = 'none';
@@ -1226,6 +1247,9 @@ async function handleSignOut() {
 }
 
 // ===== ADMIN PANEL =====
+var ALL_TABS = ['overview','revenue','pnl','cto','fmd','analytics','tools'];
+var TAB_LABELS = {'overview':'🏠 Overview','revenue':'📈 Revenue','pnl':'💵 P&L','cto':'📊 Tracking','fmd':'⏳ FMD','analytics':'📊 Analytics','tools':'🛠️ Tools'};
+
 async function loadAdminPanel() {
   if (currentUserRole !== 'admin' || !fbDb) return;
   try {
@@ -1246,8 +1270,14 @@ async function loadAdminPanel() {
     if (!tbody) return;
     tbody.innerHTML = users.map(function(u) {
       var isCurrentUser = u.id === currentUser.uid;
-      var lastLogin = u.lastLogin ? new Date(u.lastLogin.seconds * 1000).toLocaleDateString() : '—';
-      var displayName = u.displayName || u.email.split('@')[0];
+      var lastLogin = u.lastLogin ? new Date(typeof u.lastLogin === 'number' ? u.lastLogin : u.lastLogin.seconds * 1000).toLocaleDateString() : '—';
+      var displayName = u.displayName || (u.email||'').split('@')[0];
+      var userTabs = u.allowedTabs || ALL_TABS.slice();
+      var tabCheckboxes = ALL_TABS.map(function(t) {
+        var checked = (u.role === 'admin' || userTabs.indexOf(t) !== -1) ? ' checked' : '';
+        var disabled = (isCurrentUser || u.role === 'admin') ? ' disabled' : '';
+        return '<label><input type="checkbox" data-uid="' + u.id + '" data-tab="' + t + '"' + checked + disabled + ' onchange="toggleUserTab(\'' + u.id + '\',\'' + t + '\',this.checked)">' + (TAB_LABELS[t]||t) + '</label>';
+      }).join('');
       return '<tr>' +
         '<td><strong>' + displayName + '</strong>' + (isCurrentUser ? ' <span style="color:var(--accent);font-size:.75rem">(you)</span>' : '') + '</td>' +
         '<td>' + (u.email || '—') + '</td>' +
@@ -1256,11 +1286,53 @@ async function loadAdminPanel() {
           '<option value="manager"' + (u.role === 'manager' ? ' selected' : '') + '>Manager</option>' +
           '<option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Admin</option>' +
         '</select></td>' +
+        '<td><div class="tab-perm-grid">' + tabCheckboxes + '</div></td>' +
         '<td>' + lastLogin + '</td>' +
         '<td>' + (isCurrentUser ? '—' : '<button class="btn-sm danger" onclick="removeUser(\'' + u.id + '\',\'' + u.email + '\')">Remove</button>') + '</td>' +
       '</tr>';
     }).join('');
+    // Load pending invites
+    loadPendingInvites();
   } catch(e) { console.error('Admin load error:', e); }
+}
+
+async function toggleUserTab(uid, tab, allowed) {
+  try {
+    var userSnap = await fbDb.ref('users/' + uid).once('value');
+    var userData = userSnap.val() || {};
+    var tabs = userData.allowedTabs || ALL_TABS.slice();
+    if (allowed && tabs.indexOf(tab) === -1) tabs.push(tab);
+    if (!allowed) tabs = tabs.filter(function(t) { return t !== tab; });
+    await fbDb.ref('users/' + uid).update({ allowedTabs: tabs });
+  } catch(e) { alert('Error updating tab permissions: ' + e.message); }
+}
+
+async function loadPendingInvites() {
+  var card = document.getElementById('pending-invites-card');
+  var tbody = document.getElementById('invites-tbody');
+  if (!card || !tbody) return;
+  try {
+    var invSnap = await fbDb.ref('invites').once('value');
+    if (!invSnap.exists() || invSnap.numChildren() === 0) {
+      card.style.display = 'none'; return;
+    }
+    card.style.display = 'block';
+    var rows = '';
+    invSnap.forEach(function(child) {
+      var inv = child.val();
+      var safeKey = child.key;
+      rows += '<tr><td>' + (inv.email || safeKey) + '</td><td style="text-transform:capitalize">' + (inv.role || 'viewer') + '</td><td>' + (inv.invitedBy || '—') + '</td><td><button class="btn-sm danger" onclick="cancelInvite(\'' + safeKey + '\')">Cancel</button></td></tr>';
+    });
+    tbody.innerHTML = rows;
+  } catch(e) { card.style.display = 'none'; }
+}
+
+async function cancelInvite(safeKey) {
+  if (!confirm('Cancel this invite?')) return;
+  try {
+    await fbDb.ref('invites/' + safeKey).remove();
+    loadPendingInvites();
+  } catch(e) { alert('Error: ' + e.message); }
 }
 
 async function changeUserRole(uid, newRole) {
@@ -1363,7 +1435,38 @@ let revSort={c:'date',d:1},pnlSort={c:'date',d:1},ctoSort={c:'date',d:1},fcSort=
 const NAVY='#1a2340',ACCENT='#2563eb',GREEN='#16a34a',RED='#dc2626',PURPLE='#7c3aed',YELLOW='#d97706';
 const CC=[ACCENT,'#3b82f6',GREEN,PURPLE,RED,'#06b6d4','#ec4899','#84cc16','#f97316','#8b5cf6','#10b981','#6366f1','#14b8a6','#e11d48','#0ea5e9'];
 document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-function showTab(t){if(t==='admin')loadAdminPanel();document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.getElementById('btn-'+t).classList.add('active');}
+function showTab(t){
+  // Enforce tab permissions (admins see everything)
+  if(currentUserRole!=='admin'&&currentUserAllowedTabs&&currentUserAllowedTabs.indexOf(t)===-1&&t!=='admin'){
+    return;
+  }
+  if(t==='admin')loadAdminPanel();
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('btn-'+t).classList.add('active');
+}
+function applyTabPermissions(){
+  // Hide tabs the user doesn't have access to
+  if(currentUserRole==='admin')return; // admins see all
+  var allTabs=['overview','revenue','pnl','cto','fmd','analytics','tools'];
+  allTabs.forEach(function(t){
+    var btn=document.getElementById('btn-'+t);
+    if(!btn)return;
+    if(currentUserAllowedTabs&&currentUserAllowedTabs.indexOf(t)===-1){
+      btn.style.display='none';
+    }else{
+      btn.style.display='';
+    }
+  });
+  // If current active tab is hidden, switch to first allowed
+  var activeTab=document.querySelector('.tab-content.active');
+  var activeId=activeTab?activeTab.id.replace('tab-',''):'';
+  if(currentUserAllowedTabs&&currentUserAllowedTabs.indexOf(activeId)===-1){
+    var firstAllowed=currentUserAllowedTabs[0]||'overview';
+    showTab(firstAllowed);
+  }
+}
 function fmtDate(d){if(!d||d==='&#8212;')return d||'&#8212;';const months=['January','February','March','April','May','June','July','August','September','October','November','December'];let m;if((m=d.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/)))return months[parseInt(m[1])-1]+' '+m[2]+', '+m[3];if((m=d.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/)))return months[parseInt(m[2])-1]+' '+m[3]+', '+m[1];return d;}
 function $m(v){return'$'+(parseFloat(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function parseD(s){if(!s)return null;try{const d=new Date(s);return isNaN(d.getTime())?null:d;}catch(e){return null;}}
@@ -3228,9 +3331,16 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 <div id="invite-msg" class="auth-success" style="margin:0"></div>
 <div id="invite-err" class="auth-error" style="margin:0"></div>
 </div>
+<div class="card" style="margin-bottom:20px" id="pending-invites-card" style="display:none">
+<h3 style="margin:0 0 12px;font-size:1rem">📩 Pending Invites</h3>
+<table class="pending-invites-table">
+<thead><tr><th>Email</th><th>Role</th><th>Invited By</th><th>Actions</th></tr></thead>
+<tbody id="invites-tbody"></tbody>
+</table>
+</div>
 <div class="table-card">
 <table class="admin-table">
-<thead><tr><th>User</th><th>Email</th><th>Role</th><th>Last Login</th><th>Actions</th></tr></thead>
+<thead><tr><th>User</th><th>Email</th><th>Role</th><th>Allowed Tabs</th><th>Last Login</th><th>Actions</th></tr></thead>
 <tbody id="admin-tbody"></tbody>
 </table>
 </div>
