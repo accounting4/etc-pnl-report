@@ -521,12 +521,6 @@ Secured with Firebase Authentication
 <div class="stat-card purple" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view Profit & Loss"><div class="sc-label">TOTAL INVOICED (PNL)</div><div class="sc-value" id="ov-pnl">$0</div><div class="sc-sub">All invoices →</div></div>
 <div class="stat-card red" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view P&L expenses"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary →</div></div>
 </div>
-<div class="stats-row" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer" title="Click to view Tracking Dashboard"><div class="sc-label">TRACKING REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">CTO + IO + Everflow →</div></div>
-<div class="stat-card green" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view collection details"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid / Total →</div></div>
-<div class="stat-card purple" onclick="showTab('fmd')" style="cursor:pointer" title="Click to view Five Minute Daily"><div class="sc-label">FMD INVOICED</div><div class="sc-value" id="ov-fmd">$0</div><div class="sc-sub">Five Minute Daily →</div></div>
-<div class="stat-card" onclick="showTab('revenue')" style="cursor:pointer" title="Click to view all affiliates"><div class="sc-label" style="border-top-color:var(--accent)">ACTIVE AFFILIATES</div><div class="sc-value" id="ov-affiliates">0</div><div class="sc-sub">This month →</div></div>
-</div>
 <!-- Goal Tracking -->
 <div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px;box-shadow:var(--shadow)">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -587,7 +581,6 @@ Secured with Firebase Authentication
 <div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="rev-s-total">$0</div><div class="sc-sub" id="rev-sub-total">Selected month</div></div>
 <div class="stat-card green"><div class="sc-label">Forecast Total</div><div class="sc-value" id="rev-s-forecast">$0</div><div class="sc-sub" id="rev-sub-forecast">Revenue + forecast</div></div>
 <div class="stat-card purple"><div class="sc-label">Active Affiliates</div><div class="sc-value" id="rev-s-affiliates">0</div><div class="sc-sub">This month</div></div>
-<div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="rev-s-expenses">$0</div><div class="sc-sub" id="rev-sub-expenses">Selected month</div></div>
 </div>
 <div class="chart-card"><h3>&#128200; Revenue by Affiliate (Top 15)</h3><div class="chart-wrap"><canvas id="revBarChart"></canvas></div></div>
 <!-- Forecast Section -->
@@ -595,8 +588,6 @@ Secured with Firebase Authentication
 <h3 style="margin:0 0 1rem;font-size:1.1rem">🔮 Revenue Forecast & Projections</h3>
 <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem">
 <div class="stat-card" style="flex:1;min-width:170px"><div class="sc-label">PROJECTED MONTH-END</div><div class="sc-value" id="fc-projected-total">$0</div><div class="sc-sub" id="fc-projected-sub">Current month</div></div>
-<div class="stat-card green" style="flex:1;min-width:170px"><div class="sc-label">DAILY RUN RATE</div><div class="sc-value" id="fc-run-rate">$0</div><div class="sc-sub">Avg revenue per day</div></div>
-<div class="stat-card purple" style="flex:1;min-width:170px"><div class="sc-label">GROWTH TREND</div><div class="sc-value" id="fc-growth">0%</div><div class="sc-sub">Month-over-month</div></div>
 <div class="stat-card" style="flex:1;min-width:170px;border-top-color:var(--accent)"><div class="sc-label">NEXT MONTH FORECAST</div><div class="sc-value" id="fc-next-month">$0</div><div class="sc-sub" id="fc-next-sub">Projected</div></div>
 </div>
 <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;align-items:end">
@@ -637,7 +628,7 @@ Secured with Firebase Authentication
 <button class="btn-export excel" onclick="exportExcel('pnl')">📊 Export Excel</button>
 </div>
 <div class="stats-row">
-<div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="pnl-s-total">$0</div><div class="sc-sub">All invoices</div></div>
+<div class="stat-card"><div class="sc-label">Gross Revenue</div><div class="sc-value" id="pnl-s-total">$0</div><div class="sc-sub">P&L invoices</div></div>
 <div class="stat-card"><div class="sc-label">ETC Balance</div><div class="sc-value" id="pnl-s-pend">$0</div><div class="sc-sub">Balance</div></div>
 <div class="stat-card green"><div class="sc-label">Payment Received</div><div class="sc-value" id="pnl-s-paid">$0</div><div class="sc-sub">Collected</div></div>
 <div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="pnl-s-count">$0</div><div class="sc-sub">From summary</div></div>
@@ -651,7 +642,6 @@ Secured with Firebase Authentication
 <div class="month-selector" id="pnl-month-buttons"></div>
 <div class="two-col" style="margin-bottom:20px">
 <div class="chart-card"><h3>&#128200; Profit &amp; Expenses by Month</h3><div class="chart-wrap" style="height:320px"><canvas id="pnlProfitChart"></canvas></div></div>
-<div class="chart-card"><h3>&#128202; Revenue vs Expenses Trend</h3><div class="chart-wrap" style="height:320px"><canvas id="revMonthlyChart"></canvas></div></div>
 </div>
 
 <div class="section-header">
@@ -684,7 +674,7 @@ Secured with Firebase Authentication
 <button class="btn-export excel" onclick="exportExcel('cto')">📊 Export Excel</button>
 </div>
 <div class="stats-row">
-<div class="stat-card"><div class="sc-label">Total Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">All offers</div></div>
+<div class="stat-card"><div class="sc-label">Tracking Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">CTO + IO + EF</div></div>
 <div class="stat-card green"><div class="sc-label">Total Leads</div><div class="sc-value" id="cto-s-leads">0</div><div class="sc-sub">Current count</div></div>
 <div class="stat-card purple"><div class="sc-label">Active Offers</div><div class="sc-value" id="cto-s-count">0</div><div class="sc-sub">With revenue</div></div>
 <div class="stat-card"><div class="sc-label">Top Affiliate</div><div class="sc-value" id="cto-s-top" style="font-size:1rem">—</div><div class="sc-sub">By revenue</div></div>
@@ -732,8 +722,6 @@ Secured with Firebase Authentication
 <div class="stat-card"><div class="sc-label">Total Invoiced</div><div class="sc-value" id="fmd-s-total">$0</div><div class="sc-sub">All FMD invoices</div></div>
 <div class="stat-card green"><div class="sc-label">Total Received</div><div class="sc-value" id="fmd-s-paid">$0</div><div class="sc-sub">Collected</div></div>
 <div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="fmd-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
-<div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="fmd-s-count">$0</div><div class="sc-sub">From summary</div></div>
-<div class="stat-card purple"><div class="sc-label">Collection Rate</div><div class="sc-value" id="fmd-s-rate">0%</div><div class="sc-sub">Received / Total</div></div>
 </div>
 <div class="month-selector" id="fmd-month-buttons"></div><div id="fmd-summary-banner" class="pnl-summary-banner" style="display:none"><div class="psb-title">&#128181; Monthly Financial Summary</div><div class="psb-row" id="fmd-summary-content"></div></div><div class="two-col" style="margin-bottom:20px"><div class="chart-card"><h3>&#128200; FMD Revenue vs Received by Month</h3><div class="chart-wrap" style="height:270px"><canvas id="fmdBarChart"></canvas></div></div><div class="chart-card"><h3>&#9679; FMD Payment Status</h3><div class="chart-wrap" style="height:270px"><canvas id="fmdDoughnutChart"></canvas></div></div></div><div class="section-header"><div class="section-title"><div class="icon-circle">&#9203;</div> Five Minute Daily Records</div><div class="action-bar"><button class="btn-add" onclick="document.getElementById('addFMDModal').classList.add('open')">+ Add Record</button></div></div>
 <div class="filter-bar">
@@ -843,27 +831,8 @@ Secured with Firebase Authentication
 <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:.78rem;color:var(--text3)">⚠️ Estimates only — consult your accountant for actual tax obligations</div>
 </div>
 </div>
-<div class="r2-card">
-<h4>🔄 Recurring Revenue Tracker</h4>
-<div id="recurring-content">
-<div class="r2-mini-stat"><span class="r2-mini-label">Recurring Revenue</span><span class="r2-mini-value green" id="rr-recurring">$0</span></div>
-<div class="r2-mini-stat"><span class="r2-mini-label">One-time Revenue</span><span class="r2-mini-value" id="rr-onetime">$0</span></div>
-<div class="r2-mini-stat"><span class="r2-mini-label">Recurring %</span><span class="r2-mini-value accent" id="rr-pct">0%</span></div>
-<div style="margin-top:14px"><h5 style="font-size:.78rem;color:var(--text3);margin:0 0 8px;text-transform:uppercase">Recurring Affiliates</h5><div id="rr-list"></div></div>
 </div>
-</div>
-</div>
-<!-- Top Performers -->
-<div class="r2-grid">
-<div class="r2-card">
-<h4>🏆 Top Performers</h4>
-<div id="tp-up"><h5 style="font-size:.78rem;color:var(--green);margin:0 0 8px">▲ TRENDING UP</h5><div id="tp-up-list"></div></div>
-</div>
-<div class="r2-card">
-<h4>⚠️ Underperformers</h4>
-<div id="tp-down"><h5 style="font-size:.78rem;color:var(--red);margin:0 0 8px">▼ TRENDING DOWN</h5><div id="tp-down-list"></div></div>
-</div>
-</div>
+
 </div>
 
 <div id="tab-tools" class="tab-content">
@@ -926,34 +895,6 @@ Secured with Firebase Authentication
 <button onclick="emailAISummary()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">📧 Email</button>
 <button onclick="closeAISummary()" style="padding:8px 16px;background:var(--red);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">Close</button>
 </div>
-</div>
-</div>
-<div id="tab-admin" class="tab-content">
-<div class="stats-row">
-<div class="stat-card"><div class="sc-label">Total Users</div><div class="sc-value" id="admin-s-total">0</div></div>
-<div class="stat-card green"><div class="sc-label">Admins</div><div class="sc-value" id="admin-s-admins">0</div></div>
-<div class="stat-card purple"><div class="sc-label">Managers</div><div class="sc-value" id="admin-s-managers">0</div></div>
-<div class="stat-card"><div class="sc-label">Viewers</div><div class="sc-value" id="admin-s-viewers">0</div></div>
-</div>
-<div class="card" style="margin-bottom:20px">
-<h3 style="margin:0 0 16px;font-size:1rem">➕ Invite New User</h3>
-<div class="invite-form">
-<input type="email" id="invite-email" placeholder="Enter email address">
-<select id="invite-role">
-<option value="viewer">Viewer</option>
-<option value="manager">Manager</option>
-<option value="admin">Admin</option>
-</select>
-<button onclick="inviteUser()">Invite User</button>
-</div>
-<div id="invite-msg" class="auth-success" style="margin:0"></div>
-<div id="invite-err" class="auth-error" style="margin:0"></div>
-</div>
-<div class="table-card">
-<table class="admin-table">
-<thead><tr><th>User</th><th>Email</th><th>Role</th><th>Last Login</th><th>Actions</th></tr></thead>
-<tbody id="admin-tbody"></tbody>
-</table>
 </div>
 </div>
 </div><!-- /app-container -->
@@ -3177,4 +3118,35 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 <div class="modal-btns"><button class="btn-cancel" onclick="closePNLModal()">Cancel</button><button class="btn-save" onclick="savePNLEdit()">&#10003; Save Changes</button></div>
 </div>
 </div>
+
+<div id="tab-admin" class="tab-content">
+<div class="stats-row">
+<div class="stat-card"><div class="sc-label">Total Users</div><div class="sc-value" id="admin-s-total">0</div></div>
+<div class="stat-card green"><div class="sc-label">Admins</div><div class="sc-value" id="admin-s-admins">0</div></div>
+<div class="stat-card purple"><div class="sc-label">Managers</div><div class="sc-value" id="admin-s-managers">0</div></div>
+<div class="stat-card"><div class="sc-label">Viewers</div><div class="sc-value" id="admin-s-viewers">0</div></div>
+</div>
+<div class="card" style="margin-bottom:20px">
+<h3 style="margin:0 0 16px;font-size:1rem">➕ Invite New User</h3>
+<div class="invite-form">
+<input type="email" id="invite-email" placeholder="Enter email address">
+<select id="invite-role">
+<option value="viewer">Viewer</option>
+<option value="manager">Manager</option>
+<option value="admin">Admin</option>
+</select>
+<button onclick="inviteUser()">Invite User</button>
+</div>
+<div id="invite-msg" class="auth-success" style="margin:0"></div>
+<div id="invite-err" class="auth-error" style="margin:0"></div>
+</div>
+<div class="table-card">
+<table class="admin-table">
+<thead><tr><th>User</th><th>Email</th><th>Role</th><th>Last Login</th><th>Actions</th></tr></thead>
+<tbody id="admin-tbody"></tbody>
+</table>
+</div>
+</div>
+</div><!-- /app-container -->
+
 </body></html>
