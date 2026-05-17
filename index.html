@@ -1023,6 +1023,12 @@ async function handleAuthState(user) {
       var userDoc = await fbDb.collection('users').doc(user.uid).get();
       if (userDoc.exists) {
         currentUserRole = userDoc.data().role || 'viewer';
+        // Auto-promote: if only 1 user exists and they're not admin, make them admin
+        var allUsersSnap = await fbDb.collection('users').get();
+        if (allUsersSnap.size === 1 && currentUserRole !== 'admin') {
+          currentUserRole = 'admin';
+          await fbDb.collection('users').doc(user.uid).update({ role: 'admin' });
+        }
         fbDb.collection('users').doc(user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
       } else {
         // First admin (first user) gets admin role
