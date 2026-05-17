@@ -21,7 +21,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <style>
 :root{--bg:#f4f6fa;--surface:#fff;--surface2:#f8f9fd;--border:#e5e8f0;--navy:#1a2340;--navy2:#243056;--navy3:#2e3d6e;--accent:#2563eb;--accent2:#1d4ed8;--green:#16a34a;--red:#dc2626;--yellow:#d97706;--purple:#7c3aed;--text:#1e293b;--text2:#475569;--text3:#94a3b8;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-lg:0 4px 16px rgba(0,0,0,.08);--radius:10px;--radius-sm:6px;--font-mono:'SF Mono','Fira Code',monospace;--spacing-xs:4px;--spacing-sm:8px;--spacing-md:16px;--spacing-lg:24px;--spacing-xl:32px}
@@ -421,7 +421,7 @@ td,th,.sc-value,.stat-val{font-variant-numeric:tabular-nums}
 <div class="step"><strong>Step 1:</strong> Go to <a href="https://console.firebase.google.com/" target="_blank">console.firebase.google.com</a> and create a new project</div>
 <div class="step"><strong>Step 2:</strong> Go to Project Settings → General → Your apps → Add web app</div>
 <div class="step"><strong>Step 3:</strong> Enable Authentication → Email/Password in the Firebase console</div>
-<div class="step"><strong>Step 4:</strong> Enable Cloud Firestore in the Firebase console</div>
+<div class="step"><strong>Step 4:</strong> Enable Realtime Database in the Firebase console (test mode)</div>
 <div class="step"><strong>Step 5:</strong> Copy the firebaseConfig object and paste it below:</div>
 <textarea id="firebase-config-input" placeholder='{
   "apiKey": "AIza...",
@@ -958,7 +958,7 @@ function initFirebase(config) {
   try {
     fbApp = firebase.initializeApp(config);
     fbAuth = firebase.auth();
-    fbDb = firebase.firestore();
+    fbDb = firebase.database();
     fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     fbAuth.onAuthStateChanged(handleAuthState);
     return true;
@@ -1038,26 +1038,26 @@ async function handleAuth(e) {
       if (name) await cred.user.updateProfile({ displayName: name });
       // Check invite for pre-assigned role, first user gets admin, others viewer
       try {
-        var usersSnap = await fbDb.collection('users').get();
-        var assignedRole = usersSnap.size === 0 ? 'admin' : 'viewer';
-        // Check if this email was invited with a specific role
+        var usersSnap = await fbDb.ref('users').once('value');
+        var assignedRole = (!usersSnap.exists() || usersSnap.numChildren() === 0) ? 'admin' : 'viewer';
         try {
-          var inviteDoc = await fbDb.collection('invites').doc(email).get();
-          if (inviteDoc.exists) {
-            assignedRole = inviteDoc.data().role || assignedRole;
-            await fbDb.collection('invites').doc(email).delete();
+          var safeKey = email.replace(/\./g,'_dot_').replace(/@/g,'_at_');
+          var inviteSnap = await fbDb.ref('invites/' + safeKey).once('value');
+          if (inviteSnap.exists()) {
+            assignedRole = inviteSnap.val().role || assignedRole;
+            await fbDb.ref('invites/' + safeKey).remove();
           }
         } catch(invErr) { console.warn('Invite check failed:', invErr); }
-        await fbDb.collection('users').doc(cred.user.uid).set({
+        await fbDb.ref('users/' + cred.user.uid).set({
           email: email,
           displayName: name || email.split('@')[0],
           role: assignedRole,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          lastLogin: firebase.database.ServerValue.TIMESTAMP
         });
         currentUserRole = assignedRole;
       } catch(fsErr) {
-        console.warn('Firestore write failed — defaulting to admin:', fsErr);
+        console.warn('Database write failed — defaulting to admin:', fsErr);
         currentUserRole = 'admin';
       }
     }
@@ -1083,18 +1083,19 @@ async function handleGoogleSignIn() {
     if (result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
       var gEmail = result.user.email;
       try {
-        var inviteDoc = await fbDb.collection('invites').doc(gEmail).get();
-        var gRole = inviteDoc.exists ? (inviteDoc.data().role || 'viewer') : 'viewer';
-        var usersSnap = await fbDb.collection('users').get();
-        if (usersSnap.size === 0) gRole = 'admin';
-        await fbDb.collection('users').doc(result.user.uid).set({
+        var safeKey = gEmail.replace(/\./g,'_dot_').replace(/@/g,'_at_');
+        var inviteSnap = await fbDb.ref('invites/' + safeKey).once('value');
+        var gRole = inviteSnap.exists() ? (inviteSnap.val().role || 'viewer') : 'viewer';
+        var usersSnap = await fbDb.ref('users').once('value');
+        if (!usersSnap.exists() || usersSnap.numChildren() === 0) gRole = 'admin';
+        await fbDb.ref('users/' + result.user.uid).set({
           email: gEmail,
           displayName: result.user.displayName || gEmail.split('@')[0],
           role: gRole,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          lastLogin: firebase.database.ServerValue.TIMESTAMP
         });
-        if (inviteDoc.exists) await fbDb.collection('invites').doc(gEmail).delete();
+        if (inviteSnap.exists()) await fbDb.ref('invites/' + safeKey).remove();
       } catch(gsErr) { console.warn('Google sign-in role setup:', gsErr); }
     }
   } catch(err) {
@@ -1121,35 +1122,36 @@ async function handleAuthState(user) {
     currentUser = user;
     // Update last login
     try {
-      var userDoc = await fbDb.collection('users').doc(user.uid).get();
-      if (userDoc.exists) {
-        currentUserRole = userDoc.data().role || 'viewer';
+      var userSnap = await fbDb.ref('users/' + user.uid).once('value');
+      if (userSnap.exists()) {
+        currentUserRole = userSnap.val().role || 'viewer';
         // Auto-promote: if only 1 user exists and they're not admin, make them admin
-        var allUsersSnap = await fbDb.collection('users').get();
-        if (allUsersSnap.size === 1 && currentUserRole !== 'admin') {
+        var allUsersSnap = await fbDb.ref('users').once('value');
+        if (allUsersSnap.numChildren() === 1 && currentUserRole !== 'admin') {
           currentUserRole = 'admin';
-          await fbDb.collection('users').doc(user.uid).update({ role: 'admin' });
+          await fbDb.ref('users/' + user.uid).update({ role: 'admin' });
         }
-        fbDb.collection('users').doc(user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
+        fbDb.ref('users/' + user.uid).update({ lastLogin: firebase.database.ServerValue.TIMESTAMP });
       } else {
         // Check invites for pre-assigned role, first user gets admin, others viewer
-        var usersSnap = await fbDb.collection('users').get();
-        var role = usersSnap.size === 0 ? 'admin' : 'viewer';
+        var usersSnap = await fbDb.ref('users').once('value');
+        var role = (!usersSnap.exists() || usersSnap.numChildren() === 0) ? 'admin' : 'viewer';
         try {
-          var invDoc = await fbDb.collection('invites').doc(user.email).get();
-          if (invDoc.exists) { role = invDoc.data().role || role; await fbDb.collection('invites').doc(user.email).delete(); }
+          var safeKey = user.email.replace(/\./g,'_dot_').replace(/@/g,'_at_');
+          var invSnap = await fbDb.ref('invites/' + safeKey).once('value');
+          if (invSnap.exists()) { role = invSnap.val().role || role; await fbDb.ref('invites/' + safeKey).remove(); }
         } catch(ie) { console.warn('Invite check:', ie); }
         currentUserRole = role;
-        await fbDb.collection('users').doc(user.uid).set({
+        await fbDb.ref('users/' + user.uid).set({
           email: user.email,
           displayName: user.displayName || user.email.split('@')[0],
           role: role,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          lastLogin: firebase.database.ServerValue.TIMESTAMP
         });
       }
     } catch(e) {
-      console.warn('Firestore not available — defaulting to admin. Set up Firestore Database in Firebase Console for full role management.');
+      console.warn('Database not available — defaulting to admin.');
       currentUserRole = 'admin';
     }
     showDashboard();
@@ -1227,9 +1229,9 @@ async function handleSignOut() {
 async function loadAdminPanel() {
   if (currentUserRole !== 'admin' || !fbDb) return;
   try {
-    var snap = await fbDb.collection('users').get();
+    var snap = await fbDb.ref('users').once('value');
     var users = [];
-    snap.forEach(function(doc) { users.push({ id: doc.id, ...doc.data() }); });
+    if (snap.exists()) { snap.forEach(function(child) { users.push({ id: child.key, uid: child.key, ...child.val() }); }); }
     var admins = 0, managers = 0, viewers = 0;
     users.forEach(function(u) {
       if (u.role === 'admin') admins++;
@@ -1263,7 +1265,7 @@ async function loadAdminPanel() {
 
 async function changeUserRole(uid, newRole) {
   try {
-    await fbDb.collection('users').doc(uid).update({ role: newRole });
+    await fbDb.ref('users/' + uid).update({ role: newRole });
     loadAdminPanel();
   } catch(e) { alert('Error updating role: ' + e.message); }
 }
@@ -1271,7 +1273,7 @@ async function changeUserRole(uid, newRole) {
 async function removeUser(uid, email) {
   if (!confirm('Remove ' + email + ' from the dashboard?')) return;
   try {
-    await fbDb.collection('users').doc(uid).delete();
+    await fbDb.ref('users/' + uid).remove();
     loadAdminPanel();
   } catch(e) { alert('Error removing user: ' + e.message); }
 }
@@ -1283,17 +1285,18 @@ async function inviteUser() {
   var errEl = document.getElementById('invite-err');
   msgEl.style.display = 'none'; errEl.style.display = 'none';
   if (!email) { errEl.textContent = 'Enter an email address'; errEl.style.display = 'block'; return; }
-  if (!fbDb) { errEl.textContent = 'Firestore not connected. Please refresh the page (Ctrl+Shift+R) after setting up Firestore Database in Firebase Console.'; errEl.style.display = 'block'; return; }
+  if (!fbDb) { errEl.textContent = 'Database not connected. Please refresh the page (Ctrl+Shift+R).'; errEl.style.display = 'block'; return; }
   try {
     // Check if user already exists
-    var existing = await fbDb.collection('users').where('email', '==', email).get();
-    if (!existing.empty) { errEl.textContent = 'This user already has access'; errEl.style.display = 'block'; return; }
+    var existingSnap = await fbDb.ref('users').orderByChild('email').equalTo(email).once('value');
+    if (existingSnap.exists()) { errEl.textContent = 'This user already has access'; errEl.style.display = 'block'; return; }
     // Create pre-authorized entry
-    await fbDb.collection('invites').doc(email).set({
+    var safeKey = email.replace(/\./g,'_dot_').replace(/@/g,'_at_');
+    await fbDb.ref('invites/' + safeKey).set({
       email: email,
       role: role,
       invitedBy: currentUser.email,
-      invitedAt: firebase.firestore.FieldValue.serverTimestamp()
+      invitedAt: firebase.database.ServerValue.TIMESTAMP
     });
     msgEl.textContent = 'Invite created! ' + email + ' can now sign up with the ' + role + ' role.';
     msgEl.style.display = 'block';
@@ -1302,7 +1305,7 @@ async function inviteUser() {
   } catch(e) {
     var msg = e.message || '';
     if (msg.includes('permission') || msg.includes('PERMISSION')) {
-      errEl.textContent = 'Firestore permissions error. Go to Firebase Console → Firestore → Rules and set: allow read, write: if request.auth != null;';
+      errEl.textContent = 'Database permissions error. Check Firebase Console → Realtime Database → Rules.';
     } else {
       errEl.textContent = 'Error: ' + msg;
     }
