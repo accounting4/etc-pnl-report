@@ -994,10 +994,18 @@ async function handleAuth(e) {
       var name = document.getElementById('auth-name').value.trim();
       var cred = await fbAuth.createUserWithEmailAndPassword(email, pass);
       if (name) await cred.user.updateProfile({ displayName: name });
-      // First user gets admin role, others get viewer
+      // Check invite for pre-assigned role, first user gets admin, others viewer
       try {
         var usersSnap = await fbDb.collection('users').get();
         var assignedRole = usersSnap.size === 0 ? 'admin' : 'viewer';
+        // Check if this email was invited with a specific role
+        try {
+          var inviteDoc = await fbDb.collection('invites').doc(email).get();
+          if (inviteDoc.exists) {
+            assignedRole = inviteDoc.data().role || assignedRole;
+            await fbDb.collection('invites').doc(email).delete();
+          }
+        } catch(invErr) { console.warn('Invite check failed:', invErr); }
         await fbDb.collection('users').doc(cred.user.uid).set({
           email: email,
           displayName: name || email.split('@')[0],
@@ -1028,7 +1036,25 @@ async function handleAuth(e) {
 async function handleGoogleSignIn() {
   try {
     var provider = new firebase.auth.GoogleAuthProvider();
-    await fbAuth.signInWithPopup(provider);
+    var result = await fbAuth.signInWithPopup(provider);
+    // For new Google sign-in users, check invites for pre-assigned role
+    if (result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
+      var gEmail = result.user.email;
+      try {
+        var inviteDoc = await fbDb.collection('invites').doc(gEmail).get();
+        var gRole = inviteDoc.exists ? (inviteDoc.data().role || 'viewer') : 'viewer';
+        var usersSnap = await fbDb.collection('users').get();
+        if (usersSnap.size === 0) gRole = 'admin';
+        await fbDb.collection('users').doc(result.user.uid).set({
+          email: gEmail,
+          displayName: result.user.displayName || gEmail.split('@')[0],
+          role: gRole,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        if (inviteDoc.exists) await fbDb.collection('invites').doc(gEmail).delete();
+      } catch(gsErr) { console.warn('Google sign-in role setup:', gsErr); }
+    }
   } catch(err) {
     if(err.code !== 'auth/popup-closed-by-user') {
       document.getElementById('auth-error').textContent = err.message;
@@ -1064,9 +1090,13 @@ async function handleAuthState(user) {
         }
         fbDb.collection('users').doc(user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
       } else {
-        // First admin (first user) gets admin role
+        // Check invites for pre-assigned role, first user gets admin, others viewer
         var usersSnap = await fbDb.collection('users').get();
         var role = usersSnap.size === 0 ? 'admin' : 'viewer';
+        try {
+          var invDoc = await fbDb.collection('invites').doc(user.email).get();
+          if (invDoc.exists) { role = invDoc.data().role || role; await fbDb.collection('invites').doc(user.email).delete(); }
+        } catch(ie) { console.warn('Invite check:', ie); }
         currentUserRole = role;
         await fbDb.collection('users').doc(user.uid).set({
           email: user.email,
@@ -1226,7 +1256,15 @@ async function inviteUser() {
     msgEl.style.display = 'block';
     document.getElementById('invite-email').value = '';
     loadAdminPanel();
-  } catch(e) { errEl.textContent = 'Error: ' + e.message; errEl.style.display = 'block'; }
+  } catch(e) {
+    var msg = e.message || '';
+    if (msg.includes('permission') || msg.includes('PERMISSION')) {
+      errEl.textContent = 'Firestore permissions error. Go to Firebase Console → Firestore → Rules and set: allow read, write: if request.auth != null;';
+    } else {
+      errEl.textContent = 'Error: ' + msg;
+    }
+    errEl.style.display = 'block';
+  }
 }
 
 // ===== HARDCODED FIREBASE CONFIG =====
