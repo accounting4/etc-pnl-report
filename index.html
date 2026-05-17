@@ -482,6 +482,7 @@ Secured with Firebase Authentication
 <button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; Tracking Dashboard</button>
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
 <button class="nav-tab" onclick="showTab('analytics')" id="btn-analytics">📊 Analytics</button>
+<button class="nav-tab" onclick="showTab('tools')" id="btn-tools">🛠️ Tools</button>
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
 <div id="tab-overview" class="tab-content active">
@@ -815,6 +816,38 @@ Secured with Firebase Authentication
 </div>
 </div>
 
+<div id="tab-tools" class="tab-content">
+<!-- Custom Date Range Filter -->
+<div class="date-range-bar">
+<div><label>📆 From</label><input type="date" id="dr-from" onchange="applyDateRange()"></div>
+<div><label>📆 To</label><input type="date" id="dr-to" onchange="applyDateRange()"></div>
+<button class="btn-clear" onclick="clearDateRange()" style="padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;align-self:flex-end">Clear</button>
+<div style="margin-left:auto;font-size:.85rem;color:var(--text);font-weight:600" id="dr-result"></div>
+</div>
+<div class="r2-grid">
+<!-- Notes & Comments -->
+<div class="r2-card">
+<h4>📝 Notes & Comments</h4>
+<div class="note-form">
+<input type="text" id="note-input" placeholder="Add a note..." onkeydown="if(event.key==='Enter')addNote()">
+<button onclick="addNote()">Add</button>
+</div>
+<div id="notes-list" style="max-height:320px;overflow-y:auto"></div>
+</div>
+<!-- Payment Reminders -->
+<div class="r2-card">
+<h4>⏰ Payment Reminders</h4>
+<p style="font-size:.78rem;color:var(--text3);margin:0 0 12px">Unpaid invoices sorted by age — overdue items flagged in red</p>
+<div id="reminders-list" style="max-height:320px;overflow-y:auto"></div>
+<div style="margin-top:10px;font-size:.78rem;color:var(--text3);font-weight:600" id="reminders-summary"></div>
+</div>
+</div>
+<!-- Audit Log -->
+<div class="r2-card" style="margin-bottom:24px">
+<h4>🔍 Audit Log <span style="font-size:.72rem;color:var(--text3);font-weight:400;margin-left:8px">— Tracks who loaded the dashboard and key actions</span></h4>
+<div id="audit-log" style="max-height:400px;overflow-y:auto"></div>
+</div>
+</div>
 <div id="tab-admin" class="tab-content">
 <div class="stats-row">
 <div class="stat-card"><div class="sc-label">Total Users</div><div class="sc-value" id="admin-s-total">0</div></div>
