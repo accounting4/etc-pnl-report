@@ -2492,31 +2492,47 @@ function renderAuditLog(){
 // ===== PAYMENT REMINDERS =====
 function renderPaymentReminders(){
   try{
-    var now=new Date();var reminders=[];
+    var NET_DAYS=30; // Net 30 payment terms
+    var now=new Date();now.setHours(0,0,0,0);var reminders=[];
     allPNL.concat(allFMD).forEach(function(r){
       var st=(r.status||r.STATUS||'').toLowerCase();
-      if(st==='paid'||st.includes('paid')&&!st.includes('unpaid'))return;
+      if(st==='paid'||(st.includes('paid')&&!st.includes('unpaid')))return;
       var amt=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;
       if(amt<=0)return;
       var dateStr=r.date||r['Inv Date']||'';
-      var d=dateStr?new Date(dateStr):null;
-      var days=d?Math.floor((now-d)/(1000*60*60*24)):0;
-      reminders.push({affiliate:r.affiliate||r['Affiliate Name']||'Unknown',amount:amt,days:days,date:dateStr,status:days>60?'overdue':days>30?'due-soon':'ok'});
+      if(!dateStr)return;
+      var d=new Date(dateStr);if(isNaN(d.getTime()))return;
+      d.setHours(0,0,0,0);
+      // Due date = invoice date + Net 30
+      var dueDate=new Date(d.getTime()+(NET_DAYS*86400000));
+      var daysUntilDue=Math.round((dueDate-now)/86400000);
+      var status,label;
+      if(daysUntilDue<-30){status='overdue';label=Math.abs(daysUntilDue)+' days overdue';}
+      else if(daysUntilDue<0){status='overdue';label=Math.abs(daysUntilDue)+' days overdue';}
+      else if(daysUntilDue<=7){status='due-soon';label='Due in '+daysUntilDue+' days';}
+      else{status='ok';label='Due in '+daysUntilDue+' days';}
+      reminders.push({affiliate:r.affiliate||r['Affiliate Name']||'Unknown',amount:amt,daysUntilDue:daysUntilDue,date:dateStr,dueDate:dueDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}),status:status,label:label});
     });
-    reminders.sort(function(a,b){return b.days-a.days;});
+    reminders.sort(function(a,b){return a.daysUntilDue-b.daysUntilDue;});
     var el=document.getElementById('reminders-list');if(!el)return;
-    if(reminders.length===0){el.innerHTML='<div style="color:var(--text3);font-size:.82rem;font-style:italic;padding:20px;text-align:center">No unpaid invoices!</div>';return;}
+    if(reminders.length===0){el.innerHTML='<div style="color:var(--text3);font-size:.82rem;font-style:italic;padding:20px;text-align:center">🎉 No unpaid invoices!</div>';return;}
     var h='';
-    reminders.slice(0,15).forEach(function(r){
+    reminders.slice(0,20).forEach(function(r){
       var cls=r.status==='overdue'?'overdue':r.status==='due-soon'?'due-soon':'';
-      h+='<div class="reminder-item '+cls+'"><span>'+r.affiliate+'</span><span style="font-weight:700">$'+r.amount.toLocaleString('en',{maximumFractionDigits:0})+'</span><span class="due-label '+r.status+'">'+(r.days>0?r.days+' days ago':'Recent')+'</span></div>';
+      h+='<div class="reminder-item '+cls+'">';
+      h+='<span style="flex:1">'+r.affiliate+'</span>';
+      h+='<span style="font-weight:700;min-width:80px;text-align:right">$'+r.amount.toLocaleString('en',{maximumFractionDigits:0})+'</span>';
+      h+='<span style="min-width:70px;text-align:center;font-size:.75rem;color:var(--text3)">Due '+r.dueDate+'</span>';
+      h+='<span class="due-label '+r.status+'" style="min-width:110px;text-align:right">'+r.label+'</span>';
+      h+='</div>';
     });
     el.innerHTML=h;
     var sumEl=document.getElementById('reminders-summary');
     if(sumEl){
       var overdue=reminders.filter(function(r){return r.status==='overdue';}).length;
       var dueSoon=reminders.filter(function(r){return r.status==='due-soon';}).length;
-      sumEl.textContent=reminders.length+' unpaid invoices • '+overdue+' overdue • '+dueSoon+' due soon';
+      var ok=reminders.filter(function(r){return r.status==='ok';}).length;
+      sumEl.textContent=reminders.length+' unpaid • '+overdue+' overdue • '+dueSoon+' due soon • '+ok+' on track (Net 30 terms)';
     }
   }catch(e){console.warn('Reminders:',e);}
 }
