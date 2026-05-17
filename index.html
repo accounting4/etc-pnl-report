@@ -482,7 +482,6 @@ Secured with Firebase Authentication
 <button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; Tracking Dashboard</button>
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
 <button class="nav-tab" onclick="showTab('analytics')" id="btn-analytics">📊 Analytics</button>
-<button class="nav-tab" onclick="showTab('tools')" id="btn-tools">🛠️ Tools</button>
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
 <div id="tab-overview" class="tab-content active">
@@ -815,36 +814,7 @@ Secured with Firebase Authentication
 </div>
 </div>
 </div>
-<div id="tab-tools" class="tab-content">
-<!-- Custom Date Range -->
-<div class="date-range-bar">
-<div><label>From Date</label><input type="date" id="dr-from" onchange="applyDateRange()"></div>
-<div><label>To Date</label><input type="date" id="dr-to" onchange="applyDateRange()"></div>
-<button class="btn-clear" onclick="clearDateRange()">Clear Range</button>
-<div style="margin-left:auto;font-size:.82rem;color:var(--text2)" id="dr-result"></div>
-</div>
-<!-- Row 1: Notes + Payment Reminders -->
-<div class="r2-grid">
-<div class="r2-card">
-<h4>📝 Notes & Comments</h4>
-<div class="note-form">
-<input type="text" id="note-input" placeholder="Add a note about any record or observation...">
-<button onclick="addNote()">Add</button>
-</div>
-<div id="notes-list" style="max-height:300px;overflow-y:auto"></div>
-</div>
-<div class="r2-card">
-<h4>⏰ Payment Reminders</h4>
-<div id="reminders-list" style="max-height:340px;overflow-y:auto"></div>
-<div style="margin-top:8px;font-size:.76rem;color:var(--text3)" id="reminders-summary"></div>
-</div>
-</div>
-<!-- Audit Log -->
-<div class="r2-card" style="margin-bottom:24px">
-<h4>🔍 Audit Log</h4>
-<div id="audit-log" style="max-height:400px;overflow-y:auto"></div>
-</div>
-</div>
+
 <div id="tab-admin" class="tab-content">
 <div class="stats-row">
 <div class="stat-card"><div class="sc-label">Total Users</div><div class="sc-value" id="admin-s-total">0</div></div>
