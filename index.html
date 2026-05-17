@@ -22,6 +22,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <style>
 :root{--bg:#f4f6fa;--surface:#fff;--surface2:#f8f9fd;--border:#e5e8f0;--navy:#1a2340;--navy2:#243056;--navy3:#2e3d6e;--accent:#2563eb;--accent2:#1d4ed8;--green:#16a34a;--red:#dc2626;--yellow:#d97706;--purple:#7c3aed;--text:#1e293b;--text2:#475569;--text3:#94a3b8;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-lg:0 4px 16px rgba(0,0,0,.08);--radius:10px;--radius-sm:6px;--font-mono:'SF Mono','Fira Code',monospace;--spacing-xs:4px;--spacing-sm:8px;--spacing-md:16px;--spacing-lg:24px;--spacing-xl:32px}
@@ -315,6 +316,7 @@ body.dark-mode .filter-bar input,.dark-mode .filter-bar select{background:var(--
 body.dark-mode .fg input,.dark-mode .fg select{background:var(--surface2);color:var(--text);border-color:var(--border)}
 body.dark-mode .admin-panel{color:var(--text)}
 body.dark-mode .invite-form input,.dark-mode .invite-form select{background:var(--surface2);color:var(--text);border-color:var(--border)}
+body.dark-mode #emailjs-setup input{background:var(--surface2);color:var(--text);border-color:var(--border)}
 body.dark-mode .annotation-card{background:var(--surface2);color:var(--text);border-color:var(--border)}
 body.dark-mode .goal-card{color:var(--text)}
 body.dark-mode .export-btn{color:var(--text)}
@@ -1291,8 +1293,9 @@ async function loadAdminPanel() {
         '<td>' + (isCurrentUser ? '—' : '<button class="btn-sm danger" onclick="removeUser(\'' + u.id + '\',\'' + u.email + '\')">Remove</button>') + '</td>' +
       '</tr>';
     }).join('');
-    // Load pending invites
+    // Load pending invites & email config
     loadPendingInvites();
+    loadEmailJSConfig();
   } catch(e) { console.error('Admin load error:', e); }
 }
 
@@ -1370,12 +1373,17 @@ async function inviteUser() {
       invitedBy: currentUser.email,
       invitedAt: firebase.database.ServerValue.TIMESTAMP
     });
-    // Show invite message with copy button
+    // Try auto-email first, fall back to copy button
     var dashUrl = window.location.href.split('?')[0].split('#')[0];
     var inviteMsg = 'Hi,\n\nYou\'ve been invited to the ETC PNL Report Dashboard as a ' + role.charAt(0).toUpperCase() + role.slice(1) + '.\n\nTo get started:\n1. Go to: ' + dashUrl + '\n2. Click "Create Account" and sign up with this email: ' + email + '\n3. Your ' + role + ' role will be assigned automatically.';
-    msgEl.innerHTML = '✅ Invite created! <strong>' + email + '</strong> will get the <strong>' + role + '</strong> role when they sign up.<br><button onclick="copyInviteMsg()" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600" id="copy-invite-btn">📋 Copy Invite Message</button>';
-    msgEl.style.display = 'block';
     window._lastInviteMsg = inviteMsg;
+    var emailSent = await sendInviteEmail(email, role);
+    if (emailSent) {
+      msgEl.innerHTML = '✅ Invite email sent to <strong>' + email + '</strong>! They will get the <strong>' + role + '</strong> role when they sign up.';
+    } else {
+      msgEl.innerHTML = '✅ Invite created! <strong>' + email + '</strong> will get the <strong>' + role + '</strong> role when they sign up.<br><button onclick="copyInviteMsg()" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600" id="copy-invite-btn">📋 Copy Invite Message</button>';
+    }
+    msgEl.style.display = 'block';
     document.getElementById('invite-email').value = '';
     loadAdminPanel();
   } catch(e) {
@@ -1387,6 +1395,49 @@ async function inviteUser() {
     }
     errEl.style.display = 'block';
   }
+}
+
+// ===== EMAILJS AUTO-INVITE =====
+function loadEmailJSConfig() {
+  var statusEl = document.getElementById('emailjs-status');
+  var setupEl = document.getElementById('emailjs-setup');
+  if (!statusEl || !setupEl) return;
+  var cfg = JSON.parse(localStorage.getItem('emailjs_config') || 'null');
+  if (cfg && cfg.pubKey && cfg.serviceId && cfg.templateId) {
+    statusEl.innerHTML = '✅ <strong>Auto-email enabled</strong> — invites will be sent automatically. <button onclick="document.getElementById(\'emailjs-setup\').style.display=\'block\'" style="font-size:.78rem;color:var(--accent);background:none;border:none;cursor:pointer;text-decoration:underline">Edit settings</button> · <button onclick="clearEmailJSConfig()" style="font-size:.78rem;color:var(--red);background:none;border:none;cursor:pointer;text-decoration:underline">Remove</button>';
+    setupEl.style.display = 'none';
+    try { emailjs.init(cfg.pubKey); } catch(e) {}
+  } else {
+    statusEl.innerHTML = '⚠️ Not configured — invites will show a copy button instead. <button onclick="document.getElementById(\'emailjs-setup\').style.display=\'block\'" style="font-size:.78rem;color:var(--accent);background:none;border:none;cursor:pointer;text-decoration:underline">Set up now</button>';
+    setupEl.style.display = 'none';
+  }
+}
+function saveEmailJSConfig() {
+  var pubKey = document.getElementById('ejs-pubkey').value.trim();
+  var serviceId = document.getElementById('ejs-service').value.trim();
+  var templateId = document.getElementById('ejs-template').value.trim();
+  if (!pubKey || !serviceId || !templateId) { alert('Please fill in all three fields'); return; }
+  localStorage.setItem('emailjs_config', JSON.stringify({ pubKey: pubKey, serviceId: serviceId, templateId: templateId }));
+  try { emailjs.init(pubKey); } catch(e) {}
+  loadEmailJSConfig();
+}
+function clearEmailJSConfig() {
+  localStorage.removeItem('emailjs_config');
+  loadEmailJSConfig();
+}
+async function sendInviteEmail(toEmail, role) {
+  var cfg = JSON.parse(localStorage.getItem('emailjs_config') || 'null');
+  if (!cfg || !cfg.pubKey || !cfg.serviceId || !cfg.templateId) return false;
+  var dashUrl = window.location.href.split('?')[0].split('#')[0];
+  try {
+    await emailjs.send(cfg.serviceId, cfg.templateId, {
+      to_email: toEmail,
+      role: role.charAt(0).toUpperCase() + role.slice(1),
+      dashboard_url: dashUrl,
+      from_name: currentUser.displayName || currentUser.email
+    });
+    return true;
+  } catch(e) { console.warn('EmailJS send failed:', e); return false; }
 }
 
 function copyInviteMsg() {
@@ -3322,6 +3373,21 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 <div class="stat-card green"><div class="sc-label">Admins</div><div class="sc-value" id="admin-s-admins">0</div></div>
 <div class="stat-card purple"><div class="sc-label">Managers</div><div class="sc-value" id="admin-s-managers">0</div></div>
 <div class="stat-card"><div class="sc-label">Viewers</div><div class="sc-value" id="admin-s-viewers">0</div></div>
+</div>
+<div class="card" style="margin-bottom:20px" id="email-settings-card">
+<h3 style="margin:0 0 12px;font-size:1rem">📧 Email Settings <span style="font-size:.75rem;font-weight:400;color:var(--text3)">(one-time setup for auto-invites)</span></h3>
+<div id="emailjs-status" style="margin-bottom:10px;font-size:.85rem"></div>
+<div id="emailjs-setup" style="display:none">
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+<input type="text" id="ejs-pubkey" placeholder="Public Key" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;flex:1;min-width:140px">
+<input type="text" id="ejs-service" placeholder="Service ID" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;flex:1;min-width:140px">
+<input type="text" id="ejs-template" placeholder="Template ID" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;flex:1;min-width:140px">
+<button onclick="saveEmailJSConfig()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:.83rem">Save</button>
+</div>
+<div style="font-size:.78rem;color:var(--text3);line-height:1.5">
+Setup: Go to <a href="https://www.emailjs.com" target="_blank" style="color:var(--accent)">emailjs.com</a> → Sign up free → Add Gmail service → Create template with variables: <code>{{to_email}}</code>, <code>{{role}}</code>, <code>{{dashboard_url}}</code>, <code>{{from_name}}</code> → Copy IDs above.
+</div>
+</div>
 </div>
 <div class="card" style="margin-bottom:20px">
 <h3 style="margin:0 0 16px;font-size:1rem">➕ Invite New User</h3>
