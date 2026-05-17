@@ -660,6 +660,7 @@ Secured with Firebase Authentication
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
 <button class="nav-tab" onclick="showTab('analytics')" id="btn-analytics">📊 Analytics</button>
 <button class="nav-tab" onclick="showTab('tools')" id="btn-tools">🛠️ Tools</button>
+<button class="nav-tab" onclick="showTab('audit')" id="btn-audit">📋 Audit Log</button>
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
 <div id="tab-overview" class="tab-content active">
@@ -1350,7 +1351,7 @@ async function handleSignOut() {
 
 // ===== ADMIN PANEL =====
 var ALL_TABS = ['overview','revenue','pnl','cto','fmd','analytics','tools'];
-var TAB_LABELS = {'overview':'🏠 Overview','revenue':'📈 Revenue','pnl':'💵 P&L','cto':'📊 Tracking','fmd':'⏳ FMD','analytics':'📊 Analytics','tools':'🛠️ Tools'};
+var TAB_LABELS = {'overview':'🏠 Overview','revenue':'📈 Revenue','pnl':'💵 P&L','cto':'📊 Tracking','fmd':'⏳ FMD','analytics':'📊 Analytics','tools':'🛠️ Tools','audit':'📋 Audit Log'};
 
 async function loadAdminPanel() {
   if (currentUserRole !== 'admin' || !fbDb) return;
@@ -1584,7 +1585,7 @@ function initAuth() {
 </script>
 <script>
 const PNL_ID='1rrYVlV4-ITMt7BVG57wAgD0JA0OAC_btmCXhHF_g35E',CTO_ID='1I7kWbN783mXY_qKe51PIsQjUKoMQGMdXz7zh5GmValo',FCST_ID='1Ms692jnHxt1rJExssJUsWjjSH1fLscmhTbhGRwYH16s',FMD_ID='1Dusfg5vn01369iT5bLnRmk7bpTqgUhNoZLZV4HxhLB4';
-let allPNL=[],allRev=[],allFC=[],allCTO=[],allFMD=[],pnlSummaries={};
+let allPNL=[],allRev=[],allFC=[],allCTO=[],allFMD=[],pnlSummaries={},qbRawTotals={};
 let userPNL=JSON.parse(localStorage.getItem('uPNL')||'[]'),userRev=JSON.parse(localStorage.getItem('uRev')||'[]'),userFMD=JSON.parse(localStorage.getItem('uFMD')||'[]');
 let uStatus=JSON.parse(localStorage.getItem('uStatus')||'{}'),uRemarks=JSON.parse(localStorage.getItem('uRemarks')||'{}');
 let revPage=1,pnlPage=1,ctoPage=1,fcPage=1,fmdPage=1;
@@ -1641,6 +1642,7 @@ function gv(id,s){return'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?t
 function gvg(id,g){return'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:csv&gid='+g;}
 </script><script>
 async function fetchAllData(){
+if(fbDb&&!window._qbBaseline){try{var _bSnap=await fbDb.ref('/config/qbBaseline').once('value');if(_bSnap.val())window._qbBaseline=_bSnap.val();}catch(e){}}
 const ss=s=>{const e=document.getElementById('loadingStatus');if(e)e.textContent=s;};
 const months=['January','February','March','April','May','June'];
 ss('Loading Profit & Loss data...');
@@ -1741,6 +1743,7 @@ qbRows.forEach(r=>{
     monthName=mNames[mm]||'';
   }
   if(!monthName)return;
+  if(dateParts[0]==='2026'){if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;}
   const matchPNL=allPNL.some(p=>{
     if(p._isSummary||p._source==='qb')return false;
     const pAff=(p.affiliate||'').toUpperCase();
@@ -1818,7 +1821,7 @@ var REFRESH_MS=1*60*1000;
 setInterval(async function(){
 try{
 allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;allCTO.length=0;
-Object.keys(pnlSummaries).forEach(k=>delete pnlSummaries[k]);
+Object.keys(pnlSummaries).forEach(k=>delete pnlSummaries[k]);Object.keys(qbRawTotals).forEach(k=>delete qbRawTotals[k]);
 await fetchAllData();
 }catch(e){console.warn('Auto-refresh error',e);}
 },REFRESH_MS);
@@ -2050,7 +2053,7 @@ if(ctEl)ctEl.style.display=range==='custom'?'block':'none';
 computeForecasts();
 }
 
-function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';let lr=0,lb=0,lrv=0,ltexp=0;const _months=['January','February','March','April','May','June','July','August','September','October','November','December'];_months.forEach(function(mo){const s2=pnlSummaries[mo];if(!s2)return;if(selMonthF&&mo!==selMonthF)return;lr+=(s2.paymentRcvd||0);lb+=(s2.balance||0);lrv+=(s2.grossRevenue||(s2.paymentRcvd||0)+(s2.balance||0));ltexp+=(s2.totalExpenses||0);});var _curM=new Date().getMonth();var _mMap={January:0,February:1,March:2,April:3,May:4,June:5,July:6,August:7,September:8,October:9,November:10,December:11};allPNL.forEach(function(r){if(r._source!=='qb'||r._isSummary)return;if(selMonthF&&r._month!==selMonthF)return;var mi=_mMap[r._month];if(mi===undefined||mi<_curM)return;var dp=(r.date||'').split('/');if(dp.length===3&&dp[2]!=='2026')return;var amt=r.displayAmt||0;var st=(r.status||'').toLowerCase();if(st==='paid'){lr+=amt;}else{lb+=amt;}lrv+=amt;});setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));const allPNLExpenses=Object.values(pnlSummaries||{}).reduce((a,s)=>a+(s.totalExpenses||0),0);const pnlExpDisp=selMonthF&&pnlSummaries&&pnlSummaries[selMonthF]?pnlSummaries[selMonthF].totalExpenses||0:allPNLExpenses;setStat('pnl-s-count',$m(pnlExpDisp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,"+gi+")">&#128206;</label><span id="pnl-att-"+gi+"" class="attach-link" onclick="openPNLAttach("+gi+")" style="display:none">&#128204; View</span></td><td class="action-cell"><button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');Object.keys(pnlAtts).forEach(gi=>{const sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';});}
+function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';let lr=0,lb=0,lrv=0,ltexp=0;const _months=['January','February','March','April','May','June','July','August','September','October','November','December'];_months.forEach(function(mo){const s2=pnlSummaries[mo];if(!s2)return;if(selMonthF&&mo!==selMonthF)return;lr+=(s2.paymentRcvd||0);lb+=(s2.balance||0);lrv+=(s2.grossRevenue||(s2.paymentRcvd||0)+(s2.balance||0));ltexp+=(s2.totalExpenses||0);});var QB_BASE=window._qbBaseline||{January:{p:97719.01,u:2970},February:{p:57319,u:0},March:{p:0,u:0},April:{p:62280.5,u:0},May:{p:49769.5,u:19429.85},June:{p:0,u:0}};Object.keys(qbRawTotals).forEach(function(mo){if(selMonthF&&mo!==selMonthF)return;var base=QB_BASE[mo]||{p:0,u:0};var cur=qbRawTotals[mo]||{p:0,u:0};var dP=cur.p-base.p;var dU=cur.u-base.u;var dT=(cur.p+cur.u)-(base.p+base.u);if(dP>0)lr+=dP;lb+=dU;lrv+=Math.max(0,dT);});setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));const allPNLExpenses=Object.values(pnlSummaries||{}).reduce((a,s)=>a+(s.totalExpenses||0),0);const pnlExpDisp=selMonthF&&pnlSummaries&&pnlSummaries[selMonthF]?pnlSummaries[selMonthF].totalExpenses||0:allPNLExpenses;setStat('pnl-s-count',$m(pnlExpDisp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,"+gi+")">&#128206;</label><span id="pnl-att-"+gi+"" class="attach-link" onclick="openPNLAttach("+gi+")" style="display:none">&#128204; View</span></td><td class="action-cell"><button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');Object.keys(pnlAtts).forEach(gi=>{const sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';});}
 function getCTORow(r){
 var name=r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'';
 var offer=r['Offers']||'';
@@ -2085,7 +2088,122 @@ updateCTOCharts(rows,affRevMap);
 }
 function renderFC(){const f=getFcFilt(),pp=parseInt(document.getElementById('fc-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fcPage=Math.min(fcPage,tp);const tot=f.reduce((s,r)=>s+r.amount,0),filled=f.filter(r=>r.amount>0).length,pf=document.getElementById('fc-period-f').value;setStat('fc-s-total',$m(tot));setStat('fc-s-count',f.length);setStat('fc-s-filled',filled);setStat('fc-s-period',pf||'All');const sl=sortArr(f,fcSort).slice((fcPage-1)*pp,fcPage*pp);document.getElementById('fc-tbody').innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r.date||'&#8212;')+'</td><td>'+(r._period||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.amount?$m(r.amount):'&#8212;')+'</td></tr>').join(''):'<tr><td colspan="4" class="empty-state">No forecast data</td></tr>';renderPagination('fc',fcPage,tp,pp,f.length);updateFcCharts(f);}
 function renderFMD(){const f=getFMDFilt(),pp=parseInt(document.getElementById('fmd-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fmdPage=Math.min(fmdPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});setStat('fmd-s-total',$m(tot));setStat('fmd-s-paid',$m(paid));setStat('fmd-s-pend',$m(pend));const fmdExpenses=f.reduce((a,r)=>a+(r.invAmt||0),0)-f.reduce((a,r)=>a+(r.rcvd||0),0);setStat('fmd-s-count',$m(fmdExpenses));setStat('fmd-s-rate',tot>0?Math.round(paid/tot*100)+'%':'0%');const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);document.getElementById('fmd-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(fmdPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="action-cell"><button class="btn-edit" onclick="editFMDRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delFMDRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No Five Minute Daily records found</td></tr>';renderPagination('fmd',fmdPage,tp,pp,f.length);updateFMDCharts(f);}
-function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();}
+
+function renderAudit(){
+var _m=['January','February','March','April','May','June'];
+var QB_BASE=window._qbBaseline||{January:{p:97719.01,u:2970},February:{p:57319,u:0},March:{p:0,u:0},April:{p:62280.5,u:0},May:{p:49769.5,u:19429.85},June:{p:0,u:0}};
+var pnlTotal=0,qbDeltaTotal=0;
+_m.forEach(function(mo){var s=pnlSummaries[mo];if(s)pnlTotal+=(s.grossRevenue||0);});
+Object.keys(qbRawTotals).forEach(function(mo){
+var base=QB_BASE[mo]||{p:0,u:0};var cur=qbRawTotals[mo];
+var dT=(cur.p+cur.u)-(base.p+base.u);
+if(dT>0)qbDeltaTotal+=dT;
+});
+setStat('audit-pnl-base',$m(pnlTotal));
+setStat('audit-qb-delta',qbDeltaTotal>0?'+'+$m(qbDeltaTotal):'$0.00');
+setStat('audit-final-rev',$m(pnlTotal+Math.max(0,qbDeltaTotal)));
+var now=new Date();
+document.getElementById('audit-last-refresh').textContent=now.toLocaleTimeString();
+/* Stat Composition */
+var pnlPaid=0,pnlBal=0,pnlExp=0,qbDPaid=0,qbDUnpaid=0;
+_m.forEach(function(mo){var s=pnlSummaries[mo];if(!s)return;pnlPaid+=(s.paymentRcvd||0);pnlBal+=(s.balance||0);pnlExp+=(s.totalExpenses||0);});
+Object.keys(qbRawTotals).forEach(function(mo){var base=QB_BASE[mo]||{p:0,u:0};var cur=qbRawTotals[mo];var dP=cur.p-base.p;var dU=cur.u-base.u;if(dP>0)qbDPaid+=dP;qbDUnpaid+=dU;});
+var compRows=[
+{label:'Gross Revenue',pnl:pnlTotal,qb:Math.max(0,qbDeltaTotal),src:'P&L Summary + QB new invoices'},
+{label:'Payment Received',pnl:pnlPaid,qb:Math.max(0,qbDPaid),src:'P&L Summary + QB new paid'},
+{label:'ETC Balance',pnl:pnlBal,qb:qbDUnpaid,src:'P&L Summary + QB new unpaid'},
+{label:'Total Expenses',pnl:pnlExp,qb:0,src:'P&L Summary only'},
+{label:'Net Profit',pnl:pnlTotal-pnlExp,qb:Math.max(0,qbDeltaTotal),src:'(Revenue + QB Δ) - Expenses'}
+];
+document.getElementById('audit-composition').innerHTML=compRows.map(function(r){
+return '<tr><td><strong>'+r.label+'</strong></td><td>'+$m(r.pnl)+'</td><td style="color:'+(r.qb>0?'var(--green)':r.qb<0?'var(--red)':'var(--text3)')+'">'+((r.qb>0?'+':'')+$m(r.qb))+'</td><td><strong>'+$m(r.pnl+r.qb)+'</strong></td><td style="font-size:.78rem;color:var(--text3)">'+r.src+'</td></tr>';
+}).join('');
+/* Monthly Breakdown */
+document.getElementById('audit-monthly').innerHTML=_m.map(function(mo){
+var s=pnlSummaries[mo]||{};
+var base=QB_BASE[mo]||{p:0,u:0};
+var cur=qbRawTotals[mo]||{p:0,u:0};
+var dP=cur.p-base.p;var dU=cur.u-base.u;var dT=(cur.p+cur.u)-(base.p+base.u);
+var hasChange=Math.abs(dT)>0.01;
+return '<tr'+(hasChange?' style="background:rgba(37,99,235,.06)"':'')+'><td><strong>'+mo+'</strong></td><td>'+$m(s.grossRevenue||0)+'</td><td>'+$m(base.p)+' / '+$m(base.u)+'</td><td>'+$m(cur.p)+' / '+$m(cur.u)+'</td><td style="color:'+(dT>0?'var(--green)':dT<0?'var(--red)':'var(--text3)')+'">'+((dT>0?'+':'')+$m(dT))+'</td><td style="font-size:.78rem">'+(hasChange?(dP>0?'Paid +'+$m(dP)+' ':'')+(dU>0?'Balance +'+$m(dU)+' ':'')+(dU<0?'Balance '+$m(dU)+' ':''):'No change')+'</td></tr>';
+}).join('');
+/* QB Invoice Detail - show new/changed invoices */
+var baseInvIds=JSON.parse(localStorage.getItem('qbBaselineInvIds')||'{}');
+var detailRows=[];
+allPNL.filter(function(r){return r._source==='qb';}).forEach(function(r){
+var dp=(r.date||'').split('/');
+if(dp.length===3&&dp[2]!=='2026')return;
+var docId=r.invId||'';
+var inBase=baseInvIds[docId]?true:false;
+var changeType=inBase?'Existing':'🆕 New';
+if(inBase&&baseInvIds[docId]!==r.status)changeType='⚡ Status Changed';
+if(!inBase||changeType!=='Existing')detailRows.push(r);
+});
+document.getElementById('audit-qb-detail').innerHTML=detailRows.length?detailRows.map(function(r){
+var docId=r.invId||'';
+var inBase=baseInvIds[docId]?true:false;
+var oldStatus=baseInvIds[docId]||'N/A';
+var changeType=inBase?(oldStatus!==r.status?'⚡ Status: '+oldStatus+' → '+r.status:'Existing'):'🆕 New Invoice';
+return '<tr><td>'+docId+'</td><td>'+r.date+'</td><td>'+r.affiliate+'</td><td>'+$m(r.displayAmt)+'</td><td>'+r.status+'</td><td>'+(inBase?'Yes':'<strong style="color:var(--green)">No</strong>')+'</td><td>'+changeType+'</td></tr>';
+}).join(''):'<tr><td colspan="7" class="empty-state">No new or changed QB invoices detected since baseline</td></tr>';
+/* Change History from Firebase */
+if(fbDb){
+fbDb.ref('/auditLog').orderByChild('ts').limitToLast(50).once('value').then(function(snap){
+var events=[];
+snap.forEach(function(child){events.push(child.val());});
+events.reverse();
+var hEl=document.getElementById('audit-history');
+if(!hEl)return;
+hEl.innerHTML=events.length?events.map(function(e){
+return '<tr><td style="white-space:nowrap;font-size:.78rem">'+new Date(e.ts).toLocaleString()+'</td><td>'+e.source+'</td><td>'+e.event+'</td><td style="font-size:.82rem">'+e.details+'</td><td style="font-size:.82rem">'+(e.before||'—')+' → '+(e.after||'—')+'</td></tr>';
+}).join(''):'<tr><td colspan="5" class="empty-state">No change events recorded yet</td></tr>';
+});
+}
+/* Show reset button for admins */
+var resetBtn=document.getElementById('btn-reset-baseline');
+if(resetBtn&&window._userRole==='admin')resetBtn.style.display='inline-block';
+/* Store current invoice IDs for future change detection */
+var curInvIds={};
+allPNL.filter(function(r){return r._source==='qb';}).forEach(function(r){
+var dp=(r.date||'').split('/');
+if(dp.length===3&&dp[2]!=='2026')return;
+curInvIds[r.invId||'']=r.status;
+});
+var prevIds=JSON.parse(localStorage.getItem('qbBaselineInvIds')||'{}');
+if(Object.keys(prevIds).length===0){localStorage.setItem('qbBaselineInvIds',JSON.stringify(curInvIds));}
+else{
+/* Detect changes and log to Firebase */
+var changes=[];
+Object.keys(curInvIds).forEach(function(id){
+if(!prevIds[id])changes.push({type:'added',id:id,status:curInvIds[id]});
+else if(prevIds[id]!==curInvIds[id])changes.push({type:'status_changed',id:id,from:prevIds[id],to:curInvIds[id]});
+});
+if(changes.length>0&&fbDb){
+changes.forEach(function(c){
+var inv=allPNL.find(function(r){return r.invId===c.id;});
+var logEntry={ts:Date.now(),source:'QuickBooks',event:c.type==='added'?'Invoice Added':'Status Changed',details:c.id+' ('+(inv?inv.affiliate:'?')+') $'+(inv?inv.displayAmt.toFixed(2):'?'),before:c.type==='status_changed'?c.from:'N/A',after:c.type==='added'?c.status:c.to};
+fbDb.ref('/auditLog').push(logEntry);
+});
+}
+localStorage.setItem('qbBaselineInvIds',JSON.stringify(curInvIds));
+}
+}
+function resetQBBaseline(){
+if(!confirm('Reset QB Baseline to current values?\nThis means QB deltas will return to zero.\nOnly do this AFTER updating your P&L sheet.'))return;
+window._qbBaseline=JSON.parse(JSON.stringify(qbRawTotals));
+if(fbDb)fbDb.ref('/config/qbBaseline').set(qbRawTotals);
+var curInvIds={};
+allPNL.filter(function(r){return r._source==='qb';}).forEach(function(r){
+var dp=(r.date||'').split('/');
+if(dp.length===3&&dp[2]!=='2026')return;
+curInvIds[r.invId||'']=r.status;
+});
+localStorage.setItem('qbBaselineInvIds',JSON.stringify(curInvIds));
+document.getElementById('baseline-status').textContent='✅ Baseline reset at '+new Date().toLocaleTimeString();
+renderAll();
+}
+
+function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
@@ -3475,6 +3593,31 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 <div class="modal-row"><label>Status</label><select id="med-status"><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option><option>No Final Count</option></select></div>
 <div class="modal-row"><label>Remarks</label><input id="med-remarks" type="text"></div>
 <div class="modal-btns"><button class="btn-cancel" onclick="closePNLModal()">Cancel</button><button class="btn-save" onclick="savePNLEdit()">&#10003; Save Changes</button></div>
+</div>
+</div>
+
+<div id="tab-audit" class="tab-content">
+<h2 style="margin-bottom:4px">&#128203; Audit Log &amp; Data Provenance</h2>
+<p style="color:var(--text3);margin:0 0 20px;font-size:.85rem">Full transparency of all financial data — every figure traced to its source</p>
+<div class="stats-row" style="margin-bottom:24px">
+<div class="stat-card"><div class="sc-label">P&amp;L Sheet Base</div><div class="sc-value" id="audit-pnl-base">—</div><div class="sc-sub" style="color:var(--green);font-size:.7rem">Verified Source</div></div>
+<div class="stat-card"><div class="sc-label">QB Delta (+new)</div><div class="sc-value" id="audit-qb-delta">—</div><div class="sc-sub" style="color:var(--accent);font-size:.7rem">Auto-synced</div></div>
+<div class="stat-card"><div class="sc-label">Final Gross Revenue</div><div class="sc-value" id="audit-final-rev">—</div><div class="sc-sub" style="font-size:.7rem">P&amp;L + QB Δ</div></div>
+<div class="stat-card"><div class="sc-label">Last Data Refresh</div><div class="sc-value" id="audit-last-refresh" style="font-size:1rem">—</div><div class="sc-sub" style="font-size:.7rem">Auto every 1 min</div></div>
+</div>
+<h3 style="color:var(--navy);margin:0 0 12px">📊 Stat Card Composition</h3>
+<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Stat Card</th><th>P&amp;L Base</th><th>QB Delta</th><th>Final Value</th><th>Source</th></tr></thead><tbody id="audit-composition"></tbody></table></div>
+<h3 style="color:var(--navy);margin:0 0 12px">📅 Monthly QB Delta Breakdown</h3>
+<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Month</th><th>P&amp;L Revenue</th><th>QB Baseline (Paid/Unpaid)</th><th>QB Current (Paid/Unpaid)</th><th>Delta</th><th>Impact on Stats</th></tr></thead><tbody id="audit-monthly"></tbody></table></div>
+<h3 style="color:var(--navy);margin:0 0 12px">🔍 QB Invoice Detail (New/Changed)</h3>
+<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th><th>In Baseline?</th><th>Change Type</th></tr></thead><tbody id="audit-qb-detail"></tbody></table></div>
+<h3 style="color:var(--navy);margin:0 0 12px">📜 Change History</h3>
+<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Details</th><th>Before → After</th></tr></thead><tbody id="audit-history"></tbody></table></div>
+<div style="margin-top:16px;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+<strong style="color:var(--navy)">🔄 QB Baseline Management</strong>
+<p style="color:var(--text3);font-size:.82rem;margin:6px 0 12px">After updating your P&amp;L sheet to include new QB invoices, reset the baseline so deltas return to zero and prevent double-counting.</p>
+<button class="btn-save" onclick="resetQBBaseline()" id="btn-reset-baseline" style="display:none">🔄 Reset QB Baseline to Current</button>
+<span id="baseline-status" style="margin-left:12px;font-size:.82rem;color:var(--text3)"></span>
 </div>
 </div>
 
