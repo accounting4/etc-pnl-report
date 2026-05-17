@@ -1,0 +1,17 @@
+{
+  "name": "ETC PNL Report Dashboard",
+  "short_name": "ETC Dashboard",
+  "description": "Elite Trade Club — Financial Performance & Revenue Intelligence",
+  "start_url": "/etc-pnl-report/",
+  "display": "standalone",
+  "background_color": "#1a2340",
+  "theme_color": "#1a2340",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://elitetradingclub.com/wp-content/uploads/2023/06/cropped-etc-logo-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
