@@ -681,12 +681,20 @@ Secured with Firebase Authentication
 <div class="psb-row" id="pnl-summary-content"></div>
 </div>
 <div class="month-selector" id="pnl-month-buttons"></div>
-<div class="two-col" style="margin-bottom:20px">
-<div class="chart-card"><h3>&#128200; Profit &amp; Expenses by Month</h3><div class="chart-wrap" style="height:320px"><canvas id="pnlProfitChart"></canvas></div></div>
+<div class="two-col" style="margin-bottom:20px;align-items:stretch">
+<div class="table-card" style="margin-bottom:0">
+<div class="section-title" style="margin-bottom:12px"><div class="icon-circle">&#128181;</div> Profit and Loss Report</div>
+<table id="pnl-monthly-table">
+<thead><tr><th>Month</th><th>Revenue</th><th>Expenses</th><th>Net P&L</th></tr></thead>
+<tbody id="pnl-monthly-tbody"></tbody>
+<tfoot id="pnl-monthly-tfoot"></tfoot>
+</table>
+</div>
+<div class="chart-card" style="margin-bottom:0"><h3>&#128200; Profit &amp; Expenses by Month</h3><div class="chart-wrap" style="height:320px"><canvas id="pnlProfitChart"></canvas></div></div>
 </div>
 
 <div class="section-header">
-<div class="section-title"><div class="icon-circle">&#128181;</div> Profit and Loss Report</div>
+<div class="section-title"><div class="icon-circle">&#128181;</div> Invoice Details</div>
 <div class="action-bar"><button class="btn-add" onclick="document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
 </div>
 <div class="filter-bar">
@@ -695,13 +703,6 @@ Secured with Firebase Authentication
 <div class="fg"><label>Status</label><select id="pnl-status-f" onchange="applyPNLFilters()"><option value="">All Status</option><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option><option>No Final Count</option></select></div>
 <div class="fg"><label>Show</label><select id="pnl-entries" onchange="applyPNLFilters()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
 <button class="btn-clear" onclick="clearPNLFilters()">Clear</button>
-</div>
-<div class="table-card" style="margin-bottom:24px">
-<table id="pnl-monthly-table">
-<thead><tr><th>Month</th><th>Revenue</th><th>Expenses</th><th>Net P&L</th></tr></thead>
-<tbody id="pnl-monthly-tbody"></tbody>
-<tfoot id="pnl-monthly-tfoot"></tfoot>
-</table>
 </div>
 <div class="table-card">
 <table><thead><tr><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Month</th><th onclick="sortPNL('affiliate')">Affiliate Name</th><th onclick="sortPNL('displayAmt')">Invoice Amount</th><th onclick="sortPNL('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Attachment</th><th>Actions</th></tr></thead>
