@@ -7,6 +7,10 @@
 <meta http-equiv="Expires" content="0">
 <title>ETC PNL Report Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
 :root{--bg:#f0f2f7;--surface:#fff;--surface2:#f7f8fc;--border:#e2e6f0;--navy:#1a2340;--navy2:#243056;--navy3:#2e3d6e;--accent:#f5a623;--accent2:#e8941a;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--purple:#7c3aed;--text:#1a2340;--text2:#4a5578;--text3:#8892a4;--white:#fff;--shadow:0 2px 12px rgba(26,35,64,.08);--shadow-lg:0 8px 32px rgba(26,35,64,.14);--radius:12px;--radius-sm:8px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -133,9 +137,205 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .btn-cancel{padding:8px 18px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer}
 .btn-save{padding:8px 18px;border:none;border-radius:var(--radius-sm);background:var(--navy);color:var(--white);cursor:pointer;font-weight:600}
 .btn-edit{padding:4px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);cursor:pointer;font-size:.85rem}
+
+/* ===== AUTH SYSTEM ===== */
+.auth-overlay{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;transition:opacity .3s}
+.auth-overlay.hidden{opacity:0;pointer-events:none}
+.auth-box{background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);padding:40px;width:100%;max-width:420px;margin:20px}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo h1{font-size:1.6rem;color:var(--navy);margin:0 0 4px}
+.auth-logo p{color:var(--text2);font-size:.85rem;margin:0}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.auth-tab{flex:1;padding:10px;text-align:center;font-size:.85rem;font-weight:600;cursor:pointer;background:var(--bg);color:var(--text2);transition:all .2s;border:none}
+.auth-tab.active{background:var(--accent);color:#fff}
+.auth-field{margin-bottom:16px}
+.auth-field label{display:block;font-size:.78rem;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.auth-field input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:.95rem;background:var(--bg);transition:border .2s;box-sizing:border-box}
+.auth-field input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(79,99,255,.15)}
+.auth-btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s}
+.auth-btn-primary{background:var(--accent);color:#fff}
+.auth-btn-primary:hover{background:#3a52e0;transform:translateY(-1px)}
+.auth-btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.auth-link{text-align:center;margin-top:14px;font-size:.82rem;color:var(--text2)}
+.auth-link a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:600}
+.auth-link a:hover{text-decoration:underline}
+.auth-error{background:#fff0f0;border:1px solid #fcc;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#c33;margin-bottom:14px;display:none}
+.auth-success{background:#f0fff4;border:1px solid #9f9;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#363;margin-bottom:14px;display:none}
+.auth-spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.user-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-size:.82rem}
+.user-bar .user-info{display:flex;align-items:center;gap:8px}
+.user-bar .user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700}
+.user-bar .user-role{background:var(--bg);padding:2px 8px;border-radius:4px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.user-bar .user-role.admin{color:var(--accent)}
+.user-bar .user-role.manager{color:var(--purple)}
+.user-bar .user-role.viewer{color:var(--green)}
+.user-bar button{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:.78rem;cursor:pointer;font-weight:600;transition:all .2s}
+.user-bar button:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.setup-overlay{position:fixed;inset:0;z-index:10000;background:var(--navy);display:flex;align-items:center;justify-content:center}
+.setup-box{background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);padding:40px;width:100%;max-width:540px;margin:20px}
+.setup-box h2{margin:0 0 8px;font-size:1.3rem;color:var(--navy)}
+.setup-box p{color:var(--text2);font-size:.85rem;margin:0 0 20px}
+.setup-box textarea{width:100%;height:200px;font-family:monospace;font-size:.82rem;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);box-sizing:border-box;resize:vertical}
+.setup-box .step{background:var(--bg);border-radius:8px;padding:14px;margin-bottom:12px;font-size:.82rem;line-height:1.6}
+.setup-box .step strong{color:var(--accent)}
+/* Admin Panel */
+.admin-table{width:100%;border-collapse:collapse}
+.admin-table th,.admin-table td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+.admin-table th{font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--text2)}
+.admin-table select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.82rem}
+.admin-table .btn-sm{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;cursor:pointer;font-weight:600;background:var(--bg)}
+.admin-table .btn-sm.danger{color:var(--red);border-color:var(--red)}
+.admin-table .btn-sm.danger:hover{background:var(--red);color:#fff}
+.invite-form{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.invite-form input,.invite-form select{padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:.85rem}
+.invite-form input{flex:1;min-width:200px}
+.invite-form button{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem}
+@media(max-width:768px){
+  .auth-box{padding:24px;margin:12px}
+  .auth-box h1{font-size:1.3rem}
+  .setup-box{padding:24px;margin:12px}
+  .user-bar{flex-wrap:wrap;gap:8px;padding:8px 12px}
+  .invite-form{flex-direction:column}
+  .invite-form input{min-width:auto}
+}
+@media(max-width:480px){
+  .auth-box{padding:20px;margin:8px}
+  .user-bar .user-info span:not(.user-avatar):not(.user-role){display:none}
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media(max-width:768px){
+  body{padding:8px}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+  .stat-card{padding:14px}
+  .sc-value{font-size:1.3rem}
+  .sc-label{font-size:.7rem}
+  .tab-bar{gap:4px;padding:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;justify-content:flex-start}
+  .tab-btn{padding:8px 14px;font-size:.8rem;white-space:nowrap;flex-shrink:0}
+  .two-col{grid-template-columns:1fr}
+  .chart-wrap{height:200px}
+  .card{padding:16px}
+  .table-card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:600px;font-size:.82rem}
+  th,td{padding:8px 10px}
+  .chart-card{padding:14px}
+  h3{font-size:1rem}
+  .section-header .section-title{font-size:1rem}
+  .btn-edit{padding:4px 8px;font-size:.75rem}
+  .modal-content{width:95vw;max-height:90vh;margin:5vh auto;padding:20px}
+  .pagination{flex-wrap:wrap;gap:4px}
+  .pagination button{padding:6px 10px;font-size:.8rem}
+  select,input[type="text"],input[type="email"],input[type="password"],input[type="date"],input[type="number"]{font-size:16px!important;min-height:44px}
+  .fc-controls{flex-direction:column}
+}
+@media(max-width:480px){
+  body{padding:4px}
+  .stats-row{grid-template-columns:1fr;gap:8px}
+  .stat-card{padding:12px;text-align:center}
+  .sc-value{font-size:1.15rem}
+  .tab-bar{gap:2px;padding:2px}
+  .tab-btn{padding:7px 10px;font-size:.75rem}
+  table{min-width:500px;font-size:.78rem}
+  th,td{padding:6px 8px}
+  .chart-wrap{height:180px}
+  .modal-content{width:98vw;padding:14px}
+  .source-badge{font-size:.6rem;padding:2px 5px}
+}
+@media(min-width:769px) and (max-width:1024px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr 1fr;gap:14px}
+}
+@media print{
+  .tab-bar,.modal,.btn-edit,.pagination,button{display:none!important}
+  .tab-content{display:block!important}
+  body{background:#fff;color:#000}
+  .stat-card,.card,.table-card,.chart-card{box-shadow:none;border:1px solid #ccc}
+}
+
 </style></head><body>
+
+<!-- Firebase Config Setup Screen -->
+<div id="setup-overlay" class="setup-overlay" style="display:none">
+<div class="setup-box">
+<h2>🔧 Firebase Setup Required</h2>
+<p>Paste your Firebase project configuration below to enable authentication.</p>
+<div class="step"><strong>Step 1:</strong> Go to <a href="https://console.firebase.google.com/" target="_blank">console.firebase.google.com</a> and create a new project</div>
+<div class="step"><strong>Step 2:</strong> Go to Project Settings → General → Your apps → Add web app</div>
+<div class="step"><strong>Step 3:</strong> Enable Authentication → Email/Password in the Firebase console</div>
+<div class="step"><strong>Step 4:</strong> Enable Cloud Firestore in the Firebase console</div>
+<div class="step"><strong>Step 5:</strong> Copy the firebaseConfig object and paste it below:</div>
+<textarea id="firebase-config-input" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "your-project.firebaseapp.com",
+  "projectId": "your-project",
+  "storageBucket": "your-project.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abc123"
+}'></textarea>
+<div style="margin-top:14px;display:flex;gap:10px">
+<button class="auth-btn auth-btn-primary" onclick="saveFirebaseConfig()" style="flex:1">Save & Continue</button>
+<button class="auth-btn" onclick="skipSetup()" style="flex:1;background:var(--bg);color:var(--text2);border:1px solid var(--border)">Skip (No Auth)</button>
+</div>
+<div id="setup-error" class="auth-error" style="margin-top:10px"></div>
+</div>
+</div>
+
+<!-- Login Screen -->
+<div id="auth-overlay" class="auth-overlay" style="display:none">
+<div class="auth-box">
+<div class="auth-logo">
+<h1>📊 ETC Dashboard</h1>
+<p>Sign in to access your financial reports</p>
+</div>
+<div class="auth-tabs">
+<button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+<button class="auth-tab" onclick="switchAuthTab('signup')">Create Account</button>
+</div>
+<div id="auth-error" class="auth-error"></div>
+<div id="auth-success" class="auth-success"></div>
+<form id="auth-form" onsubmit="handleAuth(event)">
+<div class="auth-field">
+<label>Email Address</label>
+<input type="email" id="auth-email" placeholder="you@example.com" required autocomplete="email">
+</div>
+<div class="auth-field">
+<label>Password</label>
+<input type="password" id="auth-password" placeholder="••••••••" required minlength="6" autocomplete="current-password">
+</div>
+<div class="auth-field" id="auth-name-field" style="display:none">
+<label>Full Name</label>
+<input type="text" id="auth-name" placeholder="Your full name" autocomplete="name">
+</div>
+<button type="submit" class="auth-btn auth-btn-primary" id="auth-submit-btn">Sign In</button>
+</form>
+<div class="auth-link" id="auth-reset-link">
+<a onclick="handlePasswordReset()">Forgot your password?</a>
+</div>
+<div class="auth-link" style="margin-top:8px;font-size:.75rem;color:var(--text3)">
+Secured with Firebase Authentication
+</div>
+</div>
+</div>
+
+<!-- User Bar (shown when logged in) -->
+<div id="user-bar" class="user-bar" style="display:none">
+<div class="user-info">
+<div class="user-avatar" id="user-avatar">?</div>
+<span id="user-display-name" style="font-weight:600"></span>
+<span class="user-role" id="user-role-badge"></span>
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+<span id="user-email-display" style="color:var(--text3);font-size:.75rem"></span>
+<button onclick="handleSignOut()">Sign Out</button>
+</div>
+</div>
+
+<div id="app-container" style="display:none">
 <div id="loadingOverlay"><div class="spinner"></div><div class="load-title">Loading ETC Dashboard</div><div id="loadingStatus">Connecting to Google Sheets...</div></div>
-<div class="modal-overlay" id="addPNLModal"><div class="modal"><h2>+ Add PNL Invoice Record</h2>
+<div class="modal-overlay" id="addPNLModal">
+
+<div class="modal"><h2>+ Add PNL Invoice Record</h2>
 <div class="form-row"><label>Invoice ID</label><input id="f-invId" placeholder="e.g. INV-001"></div>
 <div class="form-row"><label>Date</label><input id="f-invDate" type="date"></div>
 <div class="form-row"><label>Month</label><select id="f-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
@@ -174,6 +374,7 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
 <button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; Tracking Dashboard</button>
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
+<button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
 <div id="tab-revenue" class="tab-content active">
 <div class="stats-row">
@@ -321,7 +522,333 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 <tbody id="fmd-tbody"></tbody></table>
 <div class="pagination" id="fmd-pagination"></div>
 </div>
-</div><script>
+</div>
+<div id="tab-admin" class="tab-content">
+<div class="stats-row">
+<div class="stat-card"><div class="sc-label">Total Users</div><div class="sc-value" id="admin-s-total">0</div></div>
+<div class="stat-card green"><div class="sc-label">Admins</div><div class="sc-value" id="admin-s-admins">0</div></div>
+<div class="stat-card purple"><div class="sc-label">Managers</div><div class="sc-value" id="admin-s-managers">0</div></div>
+<div class="stat-card"><div class="sc-label">Viewers</div><div class="sc-value" id="admin-s-viewers">0</div></div>
+</div>
+<div class="card" style="margin-bottom:20px">
+<h3 style="margin:0 0 16px;font-size:1rem">➕ Invite New User</h3>
+<div class="invite-form">
+<input type="email" id="invite-email" placeholder="Enter email address">
+<select id="invite-role">
+<option value="viewer">Viewer</option>
+<option value="manager">Manager</option>
+<option value="admin">Admin</option>
+</select>
+<button onclick="inviteUser()">Invite User</button>
+</div>
+<div id="invite-msg" class="auth-success" style="margin:0"></div>
+<div id="invite-err" class="auth-error" style="margin:0"></div>
+</div>
+<div class="table-card">
+<table class="admin-table">
+<thead><tr><th>User</th><th>Email</th><th>Role</th><th>Last Login</th><th>Actions</th></tr></thead>
+<tbody id="admin-tbody"></tbody>
+</table>
+</div>
+</div>
+</div><!-- /app-container -->
+<script>
+// ===== FIREBASE AUTH SYSTEM =====
+var FB_CONFIG_KEY = 'etc_firebase_config';
+var fbApp = null, fbAuth = null, fbDb = null;
+var currentUser = null, currentUserRole = null;
+var authMode = 'login';
+
+function getStoredConfig() {
+  try { return JSON.parse(localStorage.getItem(FB_CONFIG_KEY)); } catch(e) { return null; }
+}
+
+function initFirebase(config) {
+  try {
+    fbApp = firebase.initializeApp(config);
+    fbAuth = firebase.auth();
+    fbDb = firebase.firestore();
+    fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    fbAuth.onAuthStateChanged(handleAuthState);
+    return true;
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    return false;
+  }
+}
+
+function saveFirebaseConfig() {
+  var raw = document.getElementById('firebase-config-input').value.trim();
+  var errEl = document.getElementById('setup-error');
+  try {
+    // Handle both raw JSON and JS object format
+    var cleaned = raw.replace(/^.*?{/, '{').replace(/}.*?$/, '}');
+    cleaned = cleaned.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":');
+    cleaned = cleaned.replace(/'/g, '"').replace(/,\s*}/g, '}');
+    var config = JSON.parse(cleaned);
+    if (!config.apiKey || !config.projectId) throw new Error('Missing apiKey or projectId');
+    localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(config));
+    if (initFirebase(config)) {
+      document.getElementById('setup-overlay').style.display = 'none';
+      document.getElementById('auth-overlay').style.display = 'flex';
+    } else {
+      throw new Error('Failed to initialize Firebase');
+    }
+  } catch(e) {
+    errEl.textContent = 'Invalid config: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function skipSetup() {
+  localStorage.setItem(FB_CONFIG_KEY, 'skip');
+  document.getElementById('setup-overlay').style.display = 'none';
+  document.getElementById('app-container').style.display = '';
+  loadAllData();
+}
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(function(t, i) {
+    t.classList.toggle('active', (i === 0 && mode === 'login') || (i === 1 && mode === 'signup'));
+  });
+  document.getElementById('auth-name-field').style.display = mode === 'signup' ? '' : 'none';
+  document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Sign In' : 'Create Account';
+  document.getElementById('auth-reset-link').style.display = mode === 'login' ? '' : 'none';
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+function showAuthError(msg) {
+  var el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+function showAuthSuccess(msg) {
+  var el = document.getElementById('auth-success');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function handleAuth(e) {
+  e.preventDefault();
+  var btn = document.getElementById('auth-submit-btn');
+  var email = document.getElementById('auth-email').value.trim();
+  var pass = document.getElementById('auth-password').value;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="auth-spinner"></span>' + (authMode === 'login' ? 'Signing in...' : 'Creating account...');
+  try {
+    if (authMode === 'login') {
+      await fbAuth.signInWithEmailAndPassword(email, pass);
+    } else {
+      var name = document.getElementById('auth-name').value.trim();
+      var cred = await fbAuth.createUserWithEmailAndPassword(email, pass);
+      if (name) await cred.user.updateProfile({ displayName: name });
+      // Create user doc with default role
+      await fbDb.collection('users').doc(cred.user.uid).set({
+        email: email,
+        displayName: name || email.split('@')[0],
+        role: 'viewer',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  } catch(err) {
+    var msg = err.code === 'auth/user-not-found' ? 'No account found with this email' :
+              err.code === 'auth/wrong-password' ? 'Incorrect password' :
+              err.code === 'auth/invalid-credential' ? 'Invalid email or password' :
+              err.code === 'auth/email-already-in-use' ? 'An account already exists with this email' :
+              err.code === 'auth/weak-password' ? 'Password must be at least 6 characters' :
+              err.code === 'auth/too-many-requests' ? 'Too many attempts. Please wait and try again.' :
+              err.message || 'Authentication failed';
+    showAuthError(msg);
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+  }
+}
+
+async function handlePasswordReset() {
+  var email = document.getElementById('auth-email').value.trim();
+  if (!email) { showAuthError('Enter your email address first'); return; }
+  try {
+    await fbAuth.sendPasswordResetEmail(email);
+    showAuthSuccess('Password reset email sent! Check your inbox.');
+  } catch(err) {
+    showAuthError(err.code === 'auth/user-not-found' ? 'No account found with this email' : err.message);
+  }
+}
+
+async function handleAuthState(user) {
+  if (user) {
+    currentUser = user;
+    // Update last login
+    try {
+      var userDoc = await fbDb.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        currentUserRole = userDoc.data().role || 'viewer';
+        fbDb.collection('users').doc(user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
+      } else {
+        // First admin (first user) gets admin role
+        var usersSnap = await fbDb.collection('users').get();
+        var role = usersSnap.size === 0 ? 'admin' : 'viewer';
+        currentUserRole = role;
+        await fbDb.collection('users').doc(user.uid).set({
+          email: user.email,
+          displayName: user.displayName || user.email.split('@')[0],
+          role: role,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    } catch(e) { currentUserRole = 'viewer'; console.error('Role fetch error:', e); }
+    showDashboard();
+  } else {
+    currentUser = null;
+    currentUserRole = null;
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('app-container').style.display = 'none';
+    document.getElementById('user-bar').style.display = 'none';
+  }
+}
+
+function showDashboard() {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app-container').style.display = '';
+  document.getElementById('user-bar').style.display = 'flex';
+  // Update user bar
+  var name = currentUser.displayName || currentUser.email.split('@')[0];
+  document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('user-display-name').textContent = name;
+  document.getElementById('user-email-display').textContent = currentUser.email;
+  var badge = document.getElementById('user-role-badge');
+  badge.textContent = currentUserRole;
+  badge.className = 'user-role ' + currentUserRole;
+  // Role-based access
+  applyRolePermissions();
+  loadAllData();
+}
+
+function applyRolePermissions() {
+  // Admin tab: only admins
+  var adminBtn = document.getElementById('btn-admin');
+  if (adminBtn) adminBtn.style.display = currentUserRole === 'admin' ? '' : 'none';
+  // Edit buttons: only admin and manager
+  var canEdit = currentUserRole === 'admin' || currentUserRole === 'manager';
+  document.querySelectorAll('.btn-edit, .add-record-btn, [onclick*="editCTO"], [onclick*="editFMD"], [onclick*="editPNL"]').forEach(function(el) {
+    el.style.display = canEdit ? '' : 'none';
+  });
+  // Add record sections
+  document.querySelectorAll('.add-section').forEach(function(el) {
+    el.style.display = canEdit ? '' : 'none';
+  });
+}
+
+async function handleSignOut() {
+  try { await fbAuth.signOut(); } catch(e) { console.error('Sign out error:', e); }
+}
+
+// ===== ADMIN PANEL =====
+async function loadAdminPanel() {
+  if (currentUserRole !== 'admin' || !fbDb) return;
+  try {
+    var snap = await fbDb.collection('users').get();
+    var users = [];
+    snap.forEach(function(doc) { users.push({ id: doc.id, ...doc.data() }); });
+    var admins = 0, managers = 0, viewers = 0;
+    users.forEach(function(u) {
+      if (u.role === 'admin') admins++;
+      else if (u.role === 'manager') managers++;
+      else viewers++;
+    });
+    setStat('admin-s-total', users.length);
+    setStat('admin-s-admins', admins);
+    setStat('admin-s-managers', managers);
+    setStat('admin-s-viewers', viewers);
+    var tbody = document.getElementById('admin-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = users.map(function(u) {
+      var isCurrentUser = u.id === currentUser.uid;
+      var lastLogin = u.lastLogin ? new Date(u.lastLogin.seconds * 1000).toLocaleDateString() : '—';
+      var displayName = u.displayName || u.email.split('@')[0];
+      return '<tr>' +
+        '<td><strong>' + displayName + '</strong>' + (isCurrentUser ? ' <span style="color:var(--accent);font-size:.75rem">(you)</span>' : '') + '</td>' +
+        '<td>' + (u.email || '—') + '</td>' +
+        '<td><select class="admin-role-select" onchange="changeUserRole(\'' + u.id + '\',this.value)" ' + (isCurrentUser ? 'disabled' : '') + '>' +
+          '<option value="viewer"' + (u.role === 'viewer' ? ' selected' : '') + '>Viewer</option>' +
+          '<option value="manager"' + (u.role === 'manager' ? ' selected' : '') + '>Manager</option>' +
+          '<option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Admin</option>' +
+        '</select></td>' +
+        '<td>' + lastLogin + '</td>' +
+        '<td>' + (isCurrentUser ? '—' : '<button class="btn-sm danger" onclick="removeUser(\'' + u.id + '\',\'' + u.email + '\')">Remove</button>') + '</td>' +
+      '</tr>';
+    }).join('');
+  } catch(e) { console.error('Admin load error:', e); }
+}
+
+async function changeUserRole(uid, newRole) {
+  try {
+    await fbDb.collection('users').doc(uid).update({ role: newRole });
+    loadAdminPanel();
+  } catch(e) { alert('Error updating role: ' + e.message); }
+}
+
+async function removeUser(uid, email) {
+  if (!confirm('Remove ' + email + ' from the dashboard?')) return;
+  try {
+    await fbDb.collection('users').doc(uid).delete();
+    loadAdminPanel();
+  } catch(e) { alert('Error removing user: ' + e.message); }
+}
+
+async function inviteUser() {
+  var email = document.getElementById('invite-email').value.trim();
+  var role = document.getElementById('invite-role').value;
+  var msgEl = document.getElementById('invite-msg');
+  var errEl = document.getElementById('invite-err');
+  msgEl.style.display = 'none'; errEl.style.display = 'none';
+  if (!email) { errEl.textContent = 'Enter an email address'; errEl.style.display = 'block'; return; }
+  try {
+    // Check if user already exists
+    var existing = await fbDb.collection('users').where('email', '==', email).get();
+    if (!existing.empty) { errEl.textContent = 'This user already has access'; errEl.style.display = 'block'; return; }
+    // Create pre-authorized entry
+    await fbDb.collection('invites').doc(email).set({
+      email: email,
+      role: role,
+      invitedBy: currentUser.email,
+      invitedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    msgEl.textContent = 'Invite created! ' + email + ' can now sign up with the ' + role + ' role.';
+    msgEl.style.display = 'block';
+    document.getElementById('invite-email').value = '';
+    loadAdminPanel();
+  } catch(e) { errEl.textContent = 'Error: ' + e.message; errEl.style.display = 'block'; }
+}
+
+// ===== AUTH INIT =====
+function initAuth() {
+  var config = getStoredConfig();
+  if (!config || config === 'skip') {
+    if (config === 'skip') {
+      // No auth mode
+      document.getElementById('app-container').style.display = '';
+      loadAllData();
+    } else {
+      document.getElementById('setup-overlay').style.display = 'flex';
+    }
+    return;
+  }
+  if (initFirebase(config)) {
+    // Auth state listener will handle the rest
+  } else {
+    localStorage.removeItem(FB_CONFIG_KEY);
+    document.getElementById('setup-overlay').style.display = 'flex';
+  }
+}
+
+</script>
+<script>
 const PNL_ID='1rrYVlV4-ITMt7BVG57wAgD0JA0OAC_btmCXhHF_g35E',CTO_ID='1I7kWbN783mXY_qKe51PIsQjUKoMQGMdXz7zh5GmValo',FCST_ID='1Ms692jnHxt1rJExssJUsWjjSH1fLscmhTbhGRwYH16s',FMD_ID='1Dusfg5vn01369iT5bLnRmk7bpTqgUhNoZLZV4HxhLB4';
 let allPNL=[],allRev=[],allFC=[],allCTO=[],allFMD=[],pnlSummaries={};
 let userPNL=JSON.parse(localStorage.getItem('uPNL')||'[]'),userRev=JSON.parse(localStorage.getItem('uRev')||'[]'),userFMD=JSON.parse(localStorage.getItem('uFMD')||'[]');
@@ -331,7 +858,7 @@ let revSort={c:'date',d:1},pnlSort={c:'date',d:1},ctoSort={c:'date',d:1},fcSort=
 const NAVY='#1a2340',ACCENT='#f5a623',GREEN='#22c55e',RED='#ef4444',PURPLE='#7c3aed',YELLOW='#f59e0b';
 const CC=[ACCENT,'#3b82f6',GREEN,PURPLE,RED,'#06b6d4','#ec4899','#84cc16','#f97316','#8b5cf6','#10b981','#6366f1','#14b8a6','#e11d48','#0ea5e9'];
 document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-function showTab(t){document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.getElementById('btn-'+t).classList.add('active');}
+function showTab(t){if(t==='admin')loadAdminPanel();document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.getElementById('btn-'+t).classList.add('active');}
 function fmtDate(d){if(!d||d==='&#8212;')return d||'&#8212;';const months=['January','February','March','April','May','June','July','August','September','October','November','December'];let m;if((m=d.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/)))return months[parseInt(m[1])-1]+' '+m[2]+', '+m[3];if((m=d.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/)))return months[parseInt(m[2])-1]+' '+m[3]+', '+m[1];return d;}
 function $m(v){return'$'+(parseFloat(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function parseD(s){if(!s)return null;try{const d=new Date(s);return isNaN(d.getTime())?null:d;}catch(e){return null;}}
@@ -893,10 +1420,89 @@ var rankColors=ranked.map(function(r,i){return i<3?ACCENT:i<6?GREEN:PURPLE;});
 mkChart('ctoRankChart','bar',ranked.map(function(r){return'#'+r._rank+' '+(r._offer||r._name).substring(0,16);}),
 [{label:'Revenue',data:ranked.map(function(r){return Number(r._revenue)||0;}),backgroundColor:rankColors,borderRadius:6}]);
 }
-fetchAllData().catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});
+// Initialize auth system (or load data directly if auth is skipped)
+function loadAllData(){fetchAllData().catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
+initAuth();
 
 function handlePNLAttach(input,gi){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){const att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');att[gi]={name:file.name,data:e.target.result};localStorage.setItem('pnlAttachments',JSON.stringify(att));const sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';input.value='';};reader.readAsDataURL(file);}
-function openPNLAttach(gi){const att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');if(!att[gi])return;const w=window.open('');w.document.write('<title>Attachment</title><body><p>'+att[gi].name+'</p><img src="'+att[gi].data+'" style="max-width:100%" onerror="this.style.display=none"><br><a href="'+att[gi].data+'" download="'+att[gi].name+'">Download</a></body>');}
+function openPNLAttach(gi){const att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');if(!att[gi])return;const w=window.open('');w.document.write('<title>Attachment</title><body>
+
+<!-- Firebase Config Setup Screen -->
+<div id="setup-overlay" class="setup-overlay" style="display:none">
+<div class="setup-box">
+<h2>🔧 Firebase Setup Required</h2>
+<p>Paste your Firebase project configuration below to enable authentication.</p>
+<div class="step"><strong>Step 1:</strong> Go to <a href="https://console.firebase.google.com/" target="_blank">console.firebase.google.com</a> and create a new project</div>
+<div class="step"><strong>Step 2:</strong> Go to Project Settings → General → Your apps → Add web app</div>
+<div class="step"><strong>Step 3:</strong> Enable Authentication → Email/Password in the Firebase console</div>
+<div class="step"><strong>Step 4:</strong> Enable Cloud Firestore in the Firebase console</div>
+<div class="step"><strong>Step 5:</strong> Copy the firebaseConfig object and paste it below:</div>
+<textarea id="firebase-config-input" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "your-project.firebaseapp.com",
+  "projectId": "your-project",
+  "storageBucket": "your-project.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abc123"
+}'></textarea>
+<div style="margin-top:14px;display:flex;gap:10px">
+<button class="auth-btn auth-btn-primary" onclick="saveFirebaseConfig()" style="flex:1">Save & Continue</button>
+<button class="auth-btn" onclick="skipSetup()" style="flex:1;background:var(--bg);color:var(--text2);border:1px solid var(--border)">Skip (No Auth)</button>
+</div>
+<div id="setup-error" class="auth-error" style="margin-top:10px"></div>
+</div>
+</div>
+
+<!-- Login Screen -->
+<div id="auth-overlay" class="auth-overlay" style="display:none">
+<div class="auth-box">
+<div class="auth-logo">
+<h1>📊 ETC Dashboard</h1>
+<p>Sign in to access your financial reports</p>
+</div>
+<div class="auth-tabs">
+<button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+<button class="auth-tab" onclick="switchAuthTab('signup')">Create Account</button>
+</div>
+<div id="auth-error" class="auth-error"></div>
+<div id="auth-success" class="auth-success"></div>
+<form id="auth-form" onsubmit="handleAuth(event)">
+<div class="auth-field">
+<label>Email Address</label>
+<input type="email" id="auth-email" placeholder="you@example.com" required autocomplete="email">
+</div>
+<div class="auth-field">
+<label>Password</label>
+<input type="password" id="auth-password" placeholder="••••••••" required minlength="6" autocomplete="current-password">
+</div>
+<div class="auth-field" id="auth-name-field" style="display:none">
+<label>Full Name</label>
+<input type="text" id="auth-name" placeholder="Your full name" autocomplete="name">
+</div>
+<button type="submit" class="auth-btn auth-btn-primary" id="auth-submit-btn">Sign In</button>
+</form>
+<div class="auth-link" id="auth-reset-link">
+<a onclick="handlePasswordReset()">Forgot your password?</a>
+</div>
+<div class="auth-link" style="margin-top:8px;font-size:.75rem;color:var(--text3)">
+Secured with Firebase Authentication
+</div>
+</div>
+</div>
+
+<!-- User Bar (shown when logged in) -->
+<div id="user-bar" class="user-bar" style="display:none">
+<div class="user-info">
+<div class="user-avatar" id="user-avatar">?</div>
+<span id="user-display-name" style="font-weight:600"></span>
+<span class="user-role" id="user-role-badge"></span>
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+<span id="user-email-display" style="color:var(--text3);font-size:.75rem"></span>
+<button onclick="handleSignOut()">Sign Out</button>
+</div>
+</div>
+<p>'+att[gi].name+'</p><img src="'+att[gi].data+'" style="max-width:100%" onerror="this.style.display=none"><br><a href="'+att[gi].data+'" download="'+att[gi].name+'">Download</a></body>');}
 
 let pnlEdits=(function(){try{return JSON.parse(localStorage.getItem('pnlEdits')||'{}')}catch(e){return{}}})();
 let pnlDeletes=new Set(JSON.parse(localStorage.getItem('pnlDeletes')||'[]'));
