@@ -132,7 +132,6 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .source-badge.sheet{background:#e0f2fe;color:#0369a1}
 .source-badge.user{background:#fef3c7;color:#92400e}
 .source-badge.everflow,.source-badge.ef-etc{background:#d1fae5;color:#065f46}
-.source-badge.tsd,.source-badge.ef-tsd{background:#fef9c3;color:#854d0e}
 .source-badge.cto{background:#ede9fe;color:#5b21b6}
 .source-badge.pink,.source-badge.io{background:#fce7f3;color:#9d174d}
 .source-badge.io{background:#fce7f3;color:#9d174d}
@@ -1677,7 +1676,6 @@ qbRows.forEach(r=>{
   });
   qbAdded++;
 });
-console.log('QB: added '+qbAdded+', skipped '+qbSkipped+' duplicates');
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
@@ -2198,9 +2196,13 @@ function renderOverview(){
     });
     setStat('ov-pnl','$'+pnlTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Expenses (read from stat card if rendered, else show N/A)
-    var expEl=document.getElementById('rev-s-expenses');
-    if(expEl&&expEl.textContent&&expEl.textContent!=='$0')setStat('ov-expenses',expEl.textContent);
+    // Expenses — calculate directly from pnlSummaries (don't depend on Revenue tab rendering)
+    var ovExpTotal=0;
+    _ovMonths.forEach(function(mo){
+      var s=pnlSummaries[mo];if(!s)return;
+      ovExpTotal+=(s.totalExpenses||0);
+    });
+    setStat('ov-expenses','$'+ovExpTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
     // Tracking revenue (calculate from allCTO using 'Total Revenue ($)')
     var ctoTotal=0;
@@ -2305,8 +2307,16 @@ function renderMoMCharts(){
     allRev.forEach(function(r){if(revByMonth.hasOwnProperty(r._month))revByMonth[r._month]+=parseFloat(r.amount)||0;});
     allCTO.forEach(function(r){var m=r._month||r.Month||'';if(ctoByMonth.hasOwnProperty(m))ctoByMonth[m]+=parseMoney(r['Total Revenue ($)'])||0;});
     
-    var activeMonths=months.filter(function(m){return revByMonth[m]>0||ctoByMonth[m]>0;});
-    var revData=activeMonths.map(function(m){return revByMonth[m];});
+    var now=new Date();var curMonthName=now.toLocaleString('en',{month:'long'});var curDay=now.getDate();
+    var activeMonths=months.filter(function(m){
+      if(m===curMonthName&&curDay<15)return false;
+      return revByMonth[m]>0||ctoByMonth[m]>0||(pnlSummaries[m]&&(pnlSummaries[m].grossRevenue||pnlSummaries[m].paymentRcvd));
+    });
+    var revData=activeMonths.map(function(m){
+      var ps=pnlSummaries[m];
+      var pnlRev=ps?(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0)):0;
+      return pnlRev||revByMonth[m];
+    });
     
     // MoM bar chart
     var ctx1=document.getElementById('momBarChart');
@@ -3413,7 +3423,7 @@ Setup: Go to <a href="https://www.emailjs.com" target="_blank" style="color:var(
 <div id="invite-msg" class="auth-success" style="margin:0"></div>
 <div id="invite-err" class="auth-error" style="margin:0"></div>
 </div>
-<div class="card" style="margin-bottom:20px" id="pending-invites-card" style="display:none">
+<div class="card" id="pending-invites-card" style="margin-bottom:20px;display:none">
 <h3 style="margin:0 0 12px;font-size:1rem">📩 Pending Invites</h3>
 <table class="pending-invites-table">
 <thead><tr><th>Email</th><th>Role</th><th>Invited By</th><th>Actions</th></tr></thead>
