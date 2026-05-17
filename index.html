@@ -1058,11 +1058,32 @@ function showDashboard() {
 }
 
 function applyRolePermissions() {
+  var role = currentUserRole || 'viewer';
+  // === Tab visibility by role ===
+  // Admin: sees everything
+  // Manager: sees everything except Admin tab
+  // Viewer: only Overview + Revenue & Forecast (customize below)
+  var viewerTabs = ['overview','revenue']; // tabs Viewers can see
+  var allTabIds = ['overview','revenue','pnl','cto','fmd','analytics','tools'];
+  allTabIds.forEach(function(t) {
+    var btn = document.getElementById('btn-' + t);
+    if (!btn) return;
+    if (role === 'viewer') {
+      btn.style.display = viewerTabs.indexOf(t) >= 0 ? '' : 'none';
+    } else {
+      btn.style.display = '';
+    }
+  });
   // Admin tab: only admins
   var adminBtn = document.getElementById('btn-admin');
-  if (adminBtn) adminBtn.style.display = currentUserRole === 'admin' ? '' : 'none';
+  if (adminBtn) adminBtn.style.display = role === 'admin' ? '' : 'none';
+  // If viewer is on a hidden tab, switch to overview
+  if (role === 'viewer') {
+    var activeTab = document.querySelector('.nav-tab.active');
+    if (activeTab && activeTab.style.display === 'none') showTab('overview');
+  }
   // Edit buttons: only admin and manager
-  var canEdit = currentUserRole === 'admin' || currentUserRole === 'manager';
+  var canEdit = role === 'admin' || role === 'manager';
   document.querySelectorAll('.btn-edit, .add-record-btn, [onclick*="editCTO"], [onclick*="editFMD"], [onclick*="editPNL"]').forEach(function(el) {
     el.style.display = canEdit ? '' : 'none';
   });
@@ -1070,6 +1091,10 @@ function applyRolePermissions() {
   document.querySelectorAll('.add-section').forEach(function(el) {
     el.style.display = canEdit ? '' : 'none';
   });
+  // Export buttons: hide for viewer
+  if (role === 'viewer') {
+    document.querySelectorAll('.export-bar').forEach(function(el) { el.style.display = 'none'; });
+  }
 }
 
 async function handleSignOut() {
