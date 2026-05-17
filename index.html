@@ -1817,7 +1817,7 @@ function startAutoRefresh(){
 var REFRESH_MS=1*60*1000;
 setInterval(async function(){
 try{
-allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;
+allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;allCTO.length=0;
 Object.keys(pnlSummaries).forEach(k=>delete pnlSummaries[k]);
 await fetchAllData();
 }catch(e){console.warn('Auto-refresh error',e);}
