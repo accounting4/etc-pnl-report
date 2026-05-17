@@ -973,14 +973,22 @@ async function handleAuth(e) {
       var name = document.getElementById('auth-name').value.trim();
       var cred = await fbAuth.createUserWithEmailAndPassword(email, pass);
       if (name) await cred.user.updateProfile({ displayName: name });
-      // Create user doc with default role
-      await fbDb.collection('users').doc(cred.user.uid).set({
-        email: email,
-        displayName: name || email.split('@')[0],
-        role: 'viewer',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      // First user gets admin role, others get viewer
+      try {
+        var usersSnap = await fbDb.collection('users').get();
+        var assignedRole = usersSnap.size === 0 ? 'admin' : 'viewer';
+        await fbDb.collection('users').doc(cred.user.uid).set({
+          email: email,
+          displayName: name || email.split('@')[0],
+          role: assignedRole,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        currentUserRole = assignedRole;
+      } catch(fsErr) {
+        console.warn('Firestore write failed — defaulting to admin:', fsErr);
+        currentUserRole = 'admin';
+      }
     }
   } catch(err) {
     var msg = err.code === 'auth/user-not-found' ? 'No account found with this email' :
@@ -1029,7 +1037,10 @@ async function handleAuthState(user) {
           lastLogin: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
-    } catch(e) { currentUserRole = 'viewer'; console.error('Role fetch error:', e); }
+    } catch(e) {
+      console.warn('Firestore not available — defaulting to admin. Set up Firestore Database in Firebase Console for full role management.');
+      currentUserRole = 'admin';
+    }
     showDashboard();
   } else {
     currentUser = null;
