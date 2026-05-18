@@ -1,4 +1,4 @@
-const CACHE_NAME = 'etc-dashboard-v1';
+const CACHE_NAME = 'etc-dashboard-v2';
 const ASSETS = ['/etc-pnl-report/', '/etc-pnl-report/index.html'];
 
 self.addEventListener('install', e => {
@@ -8,9 +8,15 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
+  // Skip cache-busted data fetches entirely — always go to network
+  if (e.request.url.includes('_t=') || e.request.url.includes('gviz/tq')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
   e.respondWith(
     fetch(e.request).then(r => {
       const clone = r.clone();
