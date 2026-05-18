@@ -1763,11 +1763,12 @@ qbRows.forEach(r=>{
   }
   if(!monthName)return;
   if(dateParts[0]==='2026'){if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;}
+  var _mo=['January','February','March','April','May','June','July','August','September','October','November','December'];var qbMi=_mo.indexOf(monthName);var prevMonthName=qbMi>0?_mo[qbMi-1]:'';
   const matchPNL=allPNL.some(p=>{
     if(p._isSummary||p._source==='qb')return false;
     const pAff=(p.affiliate||'').toUpperCase();
     const pAmt=p.rcvd>0?p.rcvd:p.displayAmt;
-    if(p._month!==monthName)return false;
+    if(p._month!==monthName&&p._month!==prevMonthName)return false;
     if(Math.abs(pAmt-amt)<1){
       const custUp=cust.toUpperCase();
       if(pAff.includes(custUp)||custUp.includes(pAff))return true;
