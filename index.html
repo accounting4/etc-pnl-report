@@ -2327,27 +2327,23 @@ function renderOverview(){
     var fcEl=document.getElementById('fc-projected-total');
     if(fcEl)setStat('ov-forecast',fcEl.textContent);
     
-    // PNL total — P&L tab uses QB + user only (accounting sources)
+    // PNL total — P&L tab uses QB + user only, current month
     var pnlTotal=0;
-    allPNL.forEach(function(r){if(r._source==='user'||r._source==='qb')pnlTotal+=(r.displayAmt||0);});
+    allPNL.forEach(function(r){if((r._source==='user'||r._source==='qb')&&r._month===curMonth)pnlTotal+=(r.displayAmt||0);});
     setStat('ov-pnl','$'+pnlTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Expenses — calculate directly from pnlSummaries (don't depend on Revenue tab rendering)
-    var ovExpTotal=0;
-    _ovMonths.forEach(function(mo){
-      var s=pnlSummaries[mo];if(!s)return;
-      ovExpTotal+=(s.totalExpenses||0);
-    });
+    // Expenses — current month from pnlSummaries
+    var ovExpTotal=(pnlSummaries[curMonth]||{}).totalExpenses||0;
     setStat('ov-expenses','$'+ovExpTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Tracking revenue (calculate from allCTO using 'Total Revenue ($)')
+    // Tracking revenue — current month from allCTO
     var ctoTotal=0;
-    allCTO.forEach(function(r){ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});
+    allCTO.forEach(function(r){if(r._month===curMonth)ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});
     setStat('ov-tracking','$'+ctoTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Collection rate — from QB + user (accounting sources)
+    // Collection rate — from QB + user, current month
     var ovPaid=0,ovTotal=0;
-    allPNL.forEach(function(r){if(r._source!=='user'&&r._source!=='qb')return;var a=r.displayAmt||0;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
+    allPNL.forEach(function(r){if((r._source!=='user'&&r._source!=='qb')||r._month!==curMonth)return;var a=r.displayAmt||0;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
