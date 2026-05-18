@@ -1733,7 +1733,7 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 
 ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
-for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)).filter(r=>{var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();return adv!=='interactive offers';}));}
+for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();r._ctoType=adv==='interactive offers'?'IO':'CTO';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)));}
 // CPA data removed — Tracking Dashboard shows CTO Performance Dashboard only
 
 const mNames={'01':'January','02':'February','03':'March','04':'April','05':'May','06':'June','07':'July','08':'August','09':'September','10':'October','11':'November','12':'December'};
