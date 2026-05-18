@@ -809,31 +809,7 @@ Secured with Firebase Authentication
 <div class="chart-card" style="margin-bottom:0"><h3>&#128200; Profit &amp; Expenses by Month</h3><div class="chart-wrap" style="height:320px"><canvas id="pnlProfitChart"></canvas></div></div>
 </div>
 
-<div style="margin-bottom:20px">
-<button onclick="var el=document.getElementById('pnl-audit-section');el.style.display=el.style.display==='none'?'block':'none';this.querySelector('.aud-arrow').textContent=el.style.display==='none'?'&#9654;':'&#9660;'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 18px;cursor:pointer;width:100%;text-align:left;font-size:.9rem;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:8px;transition:all .15s"><span class="aud-arrow">&#9654;</span> &#128203; History <span style="font-weight:400;color:var(--text3);font-size:.78rem;margin-left:auto">Change history, QB sync tracking &amp; traceability</span></button>
-<div id="pnl-audit-section" style="display:none;margin-top:12px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-<div class="stats-row" style="margin-bottom:20px">
-<div class="stat-card"><div class="sc-label">P&amp;L Sheet Base</div><div class="sc-value" id="audit-pnl-base">&mdash;</div><div class="sc-sub" style="color:var(--green);font-size:.7rem">Verified Source</div></div>
-<div class="stat-card"><div class="sc-label">QB Invoices (ref only)</div><div class="sc-value" id="audit-qb-delta">&mdash;</div><div class="sc-sub" style="color:var(--text3);font-size:.7rem">Not in stats</div></div>
-<div class="stat-card"><div class="sc-label">Final Gross Revenue</div><div class="sc-value" id="audit-final-rev">&mdash;</div><div class="sc-sub" style="font-size:.7rem">P&amp;L Sheet only</div></div>
-<div class="stat-card"><div class="sc-label">Last Sync</div><div class="sc-value" id="audit-last-refresh" style="font-size:1rem">&mdash;</div><div class="sc-sub" style="font-size:.7rem">Manual refresh</div></div>
-</div>
-<h4 style="color:var(--navy);margin:0 0 10px">&#128202; Stat Card Composition</h4>
-<div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Stat Card</th><th>P&amp;L Base</th><th>QB Delta</th><th>Final Value</th><th>Source</th></tr></thead><tbody id="audit-composition"></tbody></table></div>
-<h4 style="color:var(--navy);margin:0 0 10px">&#128197; Monthly QB Delta Breakdown</h4>
-<div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Month</th><th>P&amp;L Revenue</th><th>Month Status</th><th>QB Added to Stats</th><th>Delta</th><th>Explanation</th></tr></thead><tbody id="audit-monthly"></tbody></table></div>
-<h4 style="color:var(--navy);margin:0 0 10px">&#128269; New/Changed QB Invoices</h4>
-<div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th><th>Month</th><th>Status in Stats</th></tr></thead><tbody id="audit-qb-detail"></tbody></table></div>
-<h4 style="color:var(--navy);margin:0 0 10px">&#128220; Change History</h4>
-<div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Details</th><th>Before &#8594; After</th></tr></thead><tbody id="audit-history"></tbody></table></div>
-<div style="padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
-<strong style="color:var(--navy)">&#128260; QB Baseline Management</strong>
-<p style="color:var(--text3);font-size:.8rem;margin:4px 0 10px">When you finalize a month in your P&amp;L sheet (add expenses), QB invoices for that month will stop being added to stats automatically.</p>
-<button class="btn-save" onclick="resetQBBaseline()" id="btn-reset-baseline" style="display:none">&#128260; Reset QB Baseline to Current</button>
-<span id="baseline-status" style="margin-left:12px;font-size:.82rem;color:var(--text3)"></span>
-</div>
-</div>
-</div>
+
 
 <div class="section-header">
 <div class="section-title"><div class="icon-circle">&#128181;</div> Invoice Details</div>
@@ -850,6 +826,24 @@ Secured with Firebase Authentication
 <table><thead><tr><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Month</th><th onclick="sortPNL('affiliate')">Affiliate Name</th><th onclick="sortPNL('displayAmt')">Invoice Amount</th><th onclick="sortPNL('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Attachment</th><th>Actions</th></tr></thead>
 <tbody id="pnl-tbody"></tbody></table>
 <div class="pagination" id="pnl-pagination"></div>
+</div>
+
+<!-- History Section - Bottom of P&L Tab -->
+<div style="margin-top:30px;margin-bottom:20px">
+<button onclick="var el=document.getElementById('pnl-audit-section');el.style.display=el.style.display==='none'?'block':'none';this.querySelector('.aud-arrow').textContent=el.style.display==='none'?'&#9654;':'&#9660;'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 18px;cursor:pointer;width:100%;text-align:left;font-size:.9rem;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:8px;transition:all .15s"><span class="aud-arrow">&#9654;</span> &#128203; History <span style="font-weight:400;color:var(--text3);font-size:.78rem;margin-left:auto">Change history &amp; QB invoice tracking</span></button>
+<div id="pnl-audit-section" style="display:none;margin-top:12px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+<div class="stats-row" style="margin-bottom:20px">
+<div class="stat-card"><div class="sc-label">P&amp;L Revenue</div><div class="sc-value" id="audit-pnl-base">&mdash;</div><div class="sc-sub" style="color:var(--green);font-size:.7rem">Source of truth</div></div>
+<div class="stat-card"><div class="sc-label">QB Invoices</div><div class="sc-value" id="audit-qb-delta">&mdash;</div><div class="sc-sub" style="color:var(--text3);font-size:.7rem">Reference only</div></div>
+<div class="stat-card"><div class="sc-label">Last Refresh</div><div class="sc-value" id="audit-last-refresh" style="font-size:1rem">&mdash;</div><div class="sc-sub" style="font-size:.7rem">Manual</div></div>
+</div>
+<h4 style="color:var(--navy);margin:0 0 10px">&#128269; QuickBooks Invoices</h4>
+<div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th><th>Month</th></tr></thead><tbody id="audit-qb-detail"></tbody></table></div>
+<h4 style="color:var(--navy);margin:0 0 10px">&#128197; Monthly Summary</h4>
+<div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Month</th><th>P&amp;L Revenue</th><th>QB Total</th><th>Difference</th></tr></thead><tbody id="audit-monthly"></tbody></table></div>
+<h4 style="color:var(--navy);margin:0 0 10px">&#128220; Change History</h4>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Details</th><th>Before &#8594; After</th></tr></thead><tbody id="audit-history"></tbody></table></div>
+</div>
 </div>
 </div>
 <div id="tab-cto" class="tab-content">
@@ -2109,88 +2103,41 @@ function renderFC(){const f=getFcFilt(),pp=parseInt(document.getElementById('fc-
 function renderFMD(){const f=getFMDFilt(),pp=parseInt(document.getElementById('fmd-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fmdPage=Math.min(fmdPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});setStat('fmd-s-total',$m(tot));setStat('fmd-s-paid',$m(paid));setStat('fmd-s-pend',$m(pend));const fmdExpenses=f.reduce((a,r)=>a+(r.invAmt||0),0)-f.reduce((a,r)=>a+(r.rcvd||0),0);setStat('fmd-s-count',$m(fmdExpenses));setStat('fmd-s-rate',tot>0?Math.round(paid/tot*100)+'%':'0%');const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);document.getElementById('fmd-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(fmdPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="action-cell"><button class="btn-edit" onclick="editFMDRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delFMDRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No Five Minute Daily records found</td></tr>';renderPagination('fmd',fmdPage,tp,pp,f.length);updateFMDCharts(f);}
 
 function renderAudit(){
-var _m=['January','February','March','April','May','June'];
-var pnlTotal=0,qbAddTotal=0;
+var _m=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var pnlTotal=0;
 _m.forEach(function(mo){var s=pnlSummaries[mo];if(s)pnlTotal+=(s.grossRevenue||((s.paymentRcvd||0)+(s.balance||0)));});
-var qbByMonth={};
-allPNL.forEach(function(r){
-if(r._source!=='qb'||r._isSummary)return;
-var dp=(r.date||'').split('/');
-if(dp.length===3&&dp[2]!=='2026')return;
-var sm=pnlSummaries[r._month];
-if(sm&&sm.totalExpenses>0)return;
-var mo=r._month;if(!qbByMonth[mo])qbByMonth[mo]={paid:0,unpaid:0,count:0};
-var amt=r.displayAmt||0;
-if((r.status||'').toLowerCase()==='paid')qbByMonth[mo].paid+=amt;else qbByMonth[mo].unpaid+=amt;
-qbByMonth[mo].count++;
-qbAddTotal+=amt;
-});
+var qbTotal=0;
+allPNL.forEach(function(r){if(r._source==='qb'&&!r._isSummary){var dp=(r.date||'').split('/');if(dp.length===3&&dp[2]==='2026')qbTotal+=(r.displayAmt||0);}});
 setStat('audit-pnl-base',$m(pnlTotal));
-setStat('audit-qb-delta',qbAddTotal>0?'+'+$m(qbAddTotal):'$0.00');
-setStat('audit-final-rev',$m(pnlTotal));
+setStat('audit-qb-delta',qbTotal>0?$m(qbTotal)+' ('+allPNL.filter(function(r){return r._source==='qb'}).length+')':'$0.00');
 document.getElementById('audit-last-refresh').textContent=new Date().toLocaleTimeString();
-/* Stat Composition */
-var pnlPaid=0,pnlBal=0,pnlExp=0,qbPaidAdd=0,qbUnpaidAdd=0;
-_m.forEach(function(mo){var s=pnlSummaries[mo];if(!s)return;pnlPaid+=(s.paymentRcvd||0);pnlBal+=(s.balance||0);pnlExp+=(s.totalExpenses||0);});
-Object.keys(qbByMonth).forEach(function(mo){qbPaidAdd+=qbByMonth[mo].paid;qbUnpaidAdd+=qbByMonth[mo].unpaid;});
-var compRows=[
-{label:'Gross Revenue',pnl:pnlTotal,qb:qbAddTotal,src:'P&L Sheet summary (authoritative)'},
-{label:'Payment Received',pnl:pnlPaid,qb:qbPaidAdd,src:'P&L Sheet summary'},
-{label:'ETC Balance',pnl:pnlBal,qb:qbUnpaidAdd,src:'P&L Sheet summary'},
-{label:'Total Expenses',pnl:pnlExp,qb:0,src:'P&L Summary only'},
-{label:'Net Profit',pnl:pnlTotal-pnlExp,qb:qbAddTotal,src:'Revenue - Expenses'}
-];
-document.getElementById('audit-composition').innerHTML=compRows.map(function(r){
-return '<tr><td><strong>'+r.label+'</strong></td><td>'+$m(r.pnl)+'</td><td style="color:'+(r.qb>0?'var(--green)':r.qb<0?'var(--red)':'var(--text3)')+'">'+((r.qb>0?'+':'')+$m(r.qb))+'</td><td><strong>'+$m(r.pnl+r.qb)+'</strong></td><td style="font-size:.78rem;color:var(--text3)">'+r.src+'</td></tr>';
-}).join('');
-/* Monthly Breakdown */
-document.getElementById('audit-monthly').innerHTML=_m.map(function(mo){
+/* QB Invoice Detail - show ALL QB invoices */
+var qbInvs=allPNL.filter(function(r){return r._source==='qb';});
+qbInvs.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+document.getElementById('audit-qb-detail').innerHTML=qbInvs.length?qbInvs.map(function(r){
+return '<tr><td>'+r.invId+'</td><td>'+r.date+'</td><td>'+r.affiliate+'</td><td>'+$m(r.displayAmt)+'</td><td>'+r.status+'</td><td>'+r._month+'</td></tr>';
+}).join(''):'<tr><td colspan="6" class="empty-state">No QuickBooks invoices found</td></tr>';
+/* Monthly Summary - PNL vs QB comparison */
+document.getElementById('audit-monthly').innerHTML=_m.filter(function(mo){return pnlSummaries[mo]||qbInvs.some(function(r){return r._month===mo;});}).map(function(mo){
 var s=pnlSummaries[mo]||{};
 var pnlRev=s.grossRevenue||((s.paymentRcvd||0)+(s.balance||0));
-var isComplete=s.totalExpenses>0;
-var qb=qbByMonth[mo]||{paid:0,unpaid:0,count:0};
-var qbTotal=qb.paid+qb.unpaid;
-return '<tr'+(qbTotal>0?' style="background:rgba(37,99,235,.06)"':'')+'><td><strong>'+mo+'</strong></td><td>'+$m(pnlRev)+'</td><td>'+(isComplete?'<span style="color:var(--green)">✅ Complete</span>':'<span style="color:var(--yellow)">⏳ In Progress</span>')+'</td><td>'+(qbTotal>0?qb.count+' invoices — '+$m(qbTotal):'—')+'</td><td style="color:'+(qbTotal>0?'var(--green)':'var(--text3)')+'">'+((qbTotal>0?'+':'')+$m(qbTotal))+'</td><td style="font-size:.78rem">'+(isComplete?'PNL is finalized — QB not added':'QB invoices shown for reference only')+'</td></tr>';
+var qbMo=0;qbInvs.forEach(function(r){if(r._month===mo)qbMo+=(r.displayAmt||0);});
+var diff=pnlRev-qbMo;
+return '<tr><td><strong>'+mo+'</strong></td><td>'+$m(pnlRev)+'</td><td>'+$m(qbMo)+'</td><td style="color:'+(Math.abs(diff)<1?'var(--green)':diff>0?'var(--text3)':'var(--yellow)')+'">'+$m(diff)+'</td></tr>';
 }).join('');
-/* QB Invoice Detail */
-var qbInvs=allPNL.filter(function(r){
-if(r._source!=='qb')return false;
-var dp=(r.date||'').split('/');
-if(dp.length===3&&dp[2]!=='2026')return false;
-var sm=pnlSummaries[r._month];
-return !sm||!sm.totalExpenses;
-});
-document.getElementById('audit-qb-detail').innerHTML=qbInvs.length?qbInvs.slice(0,50).map(function(r){
-return '<tr><td>'+r.invId+'</td><td>'+r.date+'</td><td>'+r.affiliate+'</td><td>'+$m(r.displayAmt)+'</td><td>'+r.status+'</td><td>'+r._month+'</td><td style="color:var(--text3)">Reference only</td></tr>';
-}).join(''):'<tr><td colspan="7" class="empty-state">No QB additions for incomplete months</td></tr>';
 /* Change History from Firebase */
 if(fbDb){
 fbDb.ref('/auditLog').orderByChild('ts').limitToLast(50).once('value').then(function(snap){
 var events=[];snap.forEach(function(child){events.push(child.val());});events.reverse();
 var hEl=document.getElementById('audit-history');if(!hEl)return;
 hEl.innerHTML=events.length?events.map(function(e){
-return '<tr><td style="white-space:nowrap;font-size:.78rem">'+new Date(e.ts).toLocaleString()+'</td><td>'+e.source+'</td><td>'+e.event+'</td><td style="font-size:.82rem">'+e.details+'</td><td style="font-size:.82rem">'+(e.before||'—')+' → '+(e.after||'—')+'</td></tr>';
+return '<tr><td style="white-space:nowrap;font-size:.78rem">'+new Date(e.ts).toLocaleString()+'</td><td>'+e.source+'</td><td>'+e.event+'</td><td style="font-size:.82rem">'+e.details+'</td><td style="font-size:.82rem">'+(e.before||'\u2014')+' \u2192 '+(e.after||'\u2014')+'</td></tr>';
 }).join(''):'<tr><td colspan="5" class="empty-state">No change events recorded yet</td></tr>';
 }).catch(function(e){console.warn('Audit log read error',e);});
 }
-var resetBtn=document.getElementById('btn-reset-baseline');
-if(resetBtn&&window._userRole==='admin')resetBtn.style.display='inline-block';
 }
 
-function resetQBBaseline(){
-if(!confirm('Reset QB Baseline to current values?\nThis means QB deltas will return to zero.\nOnly do this AFTER updating your P&L sheet.'))return;
-window._qbBaseline=JSON.parse(JSON.stringify(qbRawTotals));
-if(fbDb)fbDb.ref('/config/qbBaseline').set(qbRawTotals);
-var curInvIds={};
-allPNL.filter(function(r){return r._source==='qb';}).forEach(function(r){
-var dp=(r.date||'').split('/');
-if(dp.length===3&&dp[2]!=='2026')return;
-curInvIds[r.invId||'']=r.status;
-});
-localStorage.setItem('qbBaselineInvIds',JSON.stringify(curInvIds));
-document.getElementById('baseline-status').textContent='✅ Baseline reset at '+new Date().toLocaleTimeString();
-renderAll();
-}
+
 
 function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}}
 </script><script>
