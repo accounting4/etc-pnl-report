@@ -1188,6 +1188,7 @@ async function handleAuth(e) {
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           lastLogin: firebase.database.ServerValue.TIMESTAMP
         });
+        try{await fbDb.ref('signup_notifications').push({email:email,name:name||email.split('@')[0],role:assignedRole,method:'email',ts:firebase.database.ServerValue.TIMESTAMP,seen:false});}catch(sn){}
         currentUserRole = assignedRole;
       } catch(fsErr) {
         console.warn('Database write failed — defaulting to admin:', fsErr);
@@ -1228,6 +1229,7 @@ async function handleGoogleSignIn() {
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           lastLogin: firebase.database.ServerValue.TIMESTAMP
         });
+        try{await fbDb.ref('signup_notifications').push({email:gEmail,name:result.user.displayName||gEmail.split('@')[0],role:gRole,method:'google',ts:firebase.database.ServerValue.TIMESTAMP,seen:false});}catch(sn){}
         if (inviteSnap.exists()) await fbDb.ref('invites/' + safeKey).remove();
       } catch(gsErr) { console.warn('Google sign-in role setup:', gsErr); }
     }
@@ -1282,6 +1284,7 @@ async function handleAuthState(user) {
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           lastLogin: firebase.database.ServerValue.TIMESTAMP
         });
+        try{await fbDb.ref('signup_notifications').push({email:user.email,name:user.displayName||user.email.split('@')[0],role:role,method:'auth',ts:firebase.database.ServerValue.TIMESTAMP,seen:false});}catch(sn){}
       }
     } catch(e) {
       console.warn('Database not available — defaulting to admin.');
