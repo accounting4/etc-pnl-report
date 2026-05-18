@@ -3532,25 +3532,7 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 </div>
 </div>
 
-<div class="stat-card"><div class="sc-label">QB Delta (+new)</div><div class="sc-value" id="audit-qb-delta">—</div><div class="sc-sub" style="color:var(--accent);font-size:.7rem">Auto-synced</div></div>
-<div class="stat-card"><div class="sc-label">Final Gross Revenue</div><div class="sc-value" id="audit-final-rev">—</div><div class="sc-sub" style="font-size:.7rem">P&amp;L + QB Δ</div></div>
-<div class="stat-card"><div class="sc-label">Last Data Refresh</div><div class="sc-value" id="audit-last-refresh" style="font-size:1rem">—</div><div class="sc-sub" style="font-size:.7rem">Auto every 1 min</div></div>
-</div>
-<h3 style="color:var(--navy);margin:0 0 12px">📊 Stat Card Composition</h3>
-<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Stat Card</th><th>P&amp;L Base</th><th>QB Delta</th><th>Final Value</th><th>Source</th></tr></thead><tbody id="audit-composition"></tbody></table></div>
-<h3 style="color:var(--navy);margin:0 0 12px">📅 Monthly QB Delta Breakdown</h3>
-<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Month</th><th>P&amp;L Revenue</th><th>QB Baseline (Paid/Unpaid)</th><th>QB Current (Paid/Unpaid)</th><th>Delta</th><th>Impact on Stats</th></tr></thead><tbody id="audit-monthly"></tbody></table></div>
-<h3 style="color:var(--navy);margin:0 0 12px">🔍 QB Invoice Detail (New/Changed)</h3>
-<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th><th>In Baseline?</th><th>Change Type</th></tr></thead><tbody id="audit-qb-detail"></tbody></table></div>
-<h3 style="color:var(--navy);margin:0 0 12px">📜 Change History</h3>
-<div class="table-wrap" style="margin-bottom:28px"><table class="data-table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Details</th><th>Before → After</th></tr></thead><tbody id="audit-history"></tbody></table></div>
-<div style="margin-top:16px;padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-<strong style="color:var(--navy)">🔄 QB Baseline Management</strong>
-<p style="color:var(--text3);font-size:.82rem;margin:6px 0 12px">After updating your P&amp;L sheet to include new QB invoices, reset the baseline so deltas return to zero and prevent double-counting.</p>
-<button class="btn-save" onclick="resetQBBaseline()" id="btn-reset-baseline" style="display:none">🔄 Reset QB Baseline to Current</button>
-<span id="baseline-status" style="margin-left:12px;font-size:.82rem;color:var(--text3)"></span>
-</div>
-</div>
+
 
 <div id="tab-admin" class="tab-content">
 <div class="stats-row">
