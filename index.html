@@ -1758,6 +1758,7 @@ qbRows.forEach(r=>{
   const dateParts=date.split('-');
   let monthName='';
   if(dateParts.length===3){
+    if(dateParts[0]!=='2026')return;
     const mm=dateParts[1];
     monthName=mNames[mm]||'';
   }
