@@ -1661,7 +1661,7 @@ function gv(id,s){return'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?t
 function gvg(id,g){return'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:csv&gid='+g;}
 </script><script>
 async function fetchAllData(){
-
+allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;allCTO.length=0;Object.keys(pnlSummaries).forEach(k=>delete pnlSummaries[k]);Object.keys(qbRawTotals).forEach(k=>delete qbRawTotals[k]);
 const ss=s=>{const e=document.getElementById('loadingStatus');if(e)e.textContent=s;};
 const months=['January','February','March','April','May','June'];
 ss('Loading Profit & Loss data...');
