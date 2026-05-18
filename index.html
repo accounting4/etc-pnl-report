@@ -1771,10 +1771,25 @@ qbRows.forEach(r=>{
     if(p._month!==monthName&&p._month!==prevMonthName)return false;
     if(Math.abs(pAmt-amt)<1){
       const custUp=cust.toUpperCase();
+      if(doc&&p.invId&&p.invId===doc)return true;
+      var cN=custUp.replace(/[\s\-\.]/g,''),pN=pAff.replace(/[\s\-\.]/g,'');
+      if(pN.includes(cN)||cN.includes(pN))return true;
       if(pAff.includes(custUp)||custUp.includes(pAff))return true;
+      if((custUp.includes('LIFEWAT')||custUp.includes('LWM'))&&(pAff.includes('LIFEWAT')||pAff.includes('LWM')))return true;
       if(custUp.includes('EMPIRE')&&pAff.includes('EMPIRE'))return true;
       if(custUp.includes('SPARKLOOP')&&pAff.includes('SPARKLOOP'))return true;
       if(custUp.includes('PLATFORM')&&pAff.includes('PLATFORM'))return true;
+      if(custUp.includes('NETEFFECT')&&pAff.includes('NETEFFECT'))return true;
+      if(custUp.includes('CRYPTO')&&pAff.includes('CRYPTO'))return true;
+      if(custUp.includes('OXFORD')&&pAff.includes('OXFORD'))return true;
+      if(custUp.includes('INTERACTIVE')&&pAff.includes('INTERACTIVE'))return true;
+      if(custUp.includes('MARKETWISE')&&pAff.includes('MARKETWISE'))return true;
+      if(custUp.includes('GOLDEN')&&pAff.includes('GOLDEN'))return true;
+      if(custUp.includes('SELLET')&&pAff.includes('SELLET'))return true;
+      if(custUp.includes('GUYSTOCKS')&&pAff.includes('GUYSTOCKS'))return true;
+      if(custUp.includes('MILLIONAIRE')&&pAff.includes('MILLIONAIRE'))return true;
+      if(custUp.includes('STOCK TO TRADE')&&pAff.includes('STOCK'))return true;
+      if(custUp.includes('INVESTINGCHANNEL')&&pAff.includes('INVESTING CHANNEL'))return true;
     }
     return false;
   });
