@@ -2113,7 +2113,7 @@ setStat('audit-qb-delta',qbTotal>0?$m(qbTotal)+' ('+allPNL.filter(function(r){re
 document.getElementById('audit-last-refresh').textContent=new Date().toLocaleTimeString();
 /* QB Invoice Detail - show ALL QB invoices */
 var qbInvs=allPNL.filter(function(r){return r._source==='qb';});
-qbInvs.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+qbInvs.sort(function(a,b){var da=(a.date||'').split('/'),db=(b.date||'').split('/');var ya=parseInt(da[2]||'0'),yb=parseInt(db[2]||'0');if(ya!==yb)return yb-ya;var ma=parseInt(da[0]||'0'),mb=parseInt(db[0]||'0');if(ma!==mb)return mb-ma;return parseInt(db[1]||'0')-parseInt(da[1]||'0');});
 document.getElementById('audit-qb-detail').innerHTML=qbInvs.length?qbInvs.map(function(r){
 return '<tr><td>'+r.invId+'</td><td>'+r.date+'</td><td>'+r.affiliate+'</td><td>'+$m(r.displayAmt)+'</td><td>'+r.status+'</td><td>'+r._month+'</td></tr>';
 }).join(''):'<tr><td colspan="6" class="empty-state">No QuickBooks invoices found</td></tr>';
