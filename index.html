@@ -697,6 +697,29 @@ Secured with Firebase Authentication
 <span id="goal-remaining" style="font-weight:600;color:var(--text2)">$200,000 remaining</span>
 <span id="goal-target-label">$200,000</span>
 </div>
+<div id="daily-goal-section" style="margin-top:14px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:1.3rem">📅</span>
+<div>
+<div style="font-size:.75rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Daily Goal</div>
+<div id="daily-goal-amount" style="font-size:1.25rem;font-weight:800;color:var(--accent)">—</div>
+</div>
+</div>
+<div style="display:flex;gap:20px;flex-wrap:wrap">
+<div style="text-align:center">
+<div style="font-size:.7rem;color:var(--text3);font-weight:600">EARNED TODAY</div>
+<div id="daily-goal-earned" style="font-size:.95rem;font-weight:700;color:var(--green)">—</div>
+</div>
+<div style="text-align:center">
+<div style="font-size:.7rem;color:var(--text3);font-weight:600">DAYS LEFT</div>
+<div id="daily-goal-days" style="font-size:.95rem;font-weight:700;color:var(--text)">—</div>
+</div>
+<div style="text-align:center">
+<div style="font-size:.7rem;color:var(--text3);font-weight:600">ON TRACK?</div>
+<div id="daily-goal-status" style="font-size:.95rem;font-weight:700">—</div>
+</div>
+</div>
+</div>
 </div>
 <!-- Alerts Section -->
 <div id="alerts-section" style="margin-bottom:24px"></div>
@@ -2413,6 +2436,20 @@ function updateGoalTracker(){
     else if(pct>=75&&bar)bar.style.background='linear-gradient(90deg,var(--accent),var(--green))';
     else if(pct>=50&&bar)bar.style.background='linear-gradient(90deg,var(--accent),var(--yellow))';
     else if(bar)bar.style.background='linear-gradient(90deg,var(--yellow),var(--accent))';
+    // Daily goal calc
+    var now=new Date();var dayOfMonth=now.getDate();
+    var daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+    var daysLeft=daysInMonth-dayOfMonth+1;
+    var dailyGoal=remaining>0?(remaining/daysLeft):0;
+    var avgSoFar=dayOfMonth>1?(revTotal/(dayOfMonth-1)):revTotal;
+    var dgAmt=document.getElementById('daily-goal-amount');
+    var dgDays=document.getElementById('daily-goal-days');
+    var dgStatus=document.getElementById('daily-goal-status');
+    var dgEarned=document.getElementById('daily-goal-earned');
+    if(dgAmt)dgAmt.textContent='$'+dailyGoal.toLocaleString('en',{maximumFractionDigits:0})+'/day';
+    if(dgDays)dgDays.textContent=daysLeft+' days';
+    if(dgEarned)dgEarned.textContent='$'+avgSoFar.toLocaleString('en',{maximumFractionDigits:0})+'/day avg';
+    if(dgStatus){if(pct>=100){dgStatus.textContent='🎉 Goal Met!';dgStatus.style.color='var(--green)';}else if(avgSoFar>=dailyGoal){dgStatus.textContent='✅ Yes';dgStatus.style.color='var(--green)';}else{dgStatus.textContent='⚠️ Behind';dgStatus.style.color='var(--yellow)';}}
   }catch(e){}
 }
 (function(){var saved=localStorage.getItem('etc_goal_target');if(saved){var gi=document.getElementById('goal-input');if(gi)gi.value=saved;}})();
