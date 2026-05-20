@@ -7,6 +7,8 @@
 <meta http-equiv="Expires" content="0">
 <title>ETC PNL Report Dashboard</title>
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
 <meta name="theme-color" content="#1a2340">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2408,6 +2410,9 @@ function renderOverview(){
     // Goal tracker
     updateGoalTracker();
     
+    // Sparklines
+    renderStatSparklines(curMonth);
+    
     // Alerts
     renderAlerts(revTotal);
     
@@ -2417,6 +2422,60 @@ function renderOverview(){
     // Breakdown
     renderBreakdown(curMonth);
   }catch(e){console.warn('Overview render:',e);}
+}
+
+// ===== SPARKLINES =====
+function renderStatSparklines(curMonth){
+  try{
+    var months=['January','February','March','April','May','June'];
+    var curIdx=months.indexOf(curMonth);if(curIdx<0)curIdx=months.length-1;
+    var activeMonths=months.slice(0,curIdx+1);
+    // Gather monthly data for each metric
+    var revByM={},pnlByM={},ctoByM={},fmdByM={};
+    activeMonths.forEach(function(m){revByM[m]=0;pnlByM[m]=0;ctoByM[m]=0;fmdByM[m]=0;});
+    allRev.forEach(function(r){if(revByM.hasOwnProperty(r._month))revByM[r._month]+=parseFloat(r.amount)||0;});
+    activeMonths.forEach(function(m){pnlByM[m]=(pnlSummaries[m]||{}).grossRevenue||0;});
+    allCTO.forEach(function(r){var m=r._month||'';if(ctoByM.hasOwnProperty(m))ctoByM[m]+=parseMoney(r['Total Revenue ($)'])||0;});
+    allFMD.forEach(function(r){var m=r._month||r.Month||'';if(fmdByM.hasOwnProperty(m))fmdByM[m]+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
+    
+    var sparkMap={
+      'ov-revenue':activeMonths.map(function(m){return revByM[m];}),
+      'ov-pnl':activeMonths.map(function(m){return pnlByM[m];}),
+      'ov-tracking':activeMonths.map(function(m){return ctoByM[m];}),
+      'ov-fmd':activeMonths.map(function(m){return fmdByM[m];})
+    };
+    Object.keys(sparkMap).forEach(function(id){
+      var card=document.getElementById(id);if(!card)return;
+      var parent=card.closest('.stat-card');if(!parent)return;
+      var old=parent.querySelector('.sparkline-wrap');if(old)old.remove();
+      var vals=sparkMap[id];if(vals.length<2)return;
+      var svg=buildSparkSVG(vals);
+      var wrap=document.createElement('div');
+      wrap.className='sparkline-wrap';
+      wrap.style.cssText='margin-top:6px;height:28px;opacity:0.7;';
+      wrap.innerHTML=svg;
+      parent.appendChild(wrap);
+    });
+  }catch(e){console.warn('Sparklines:',e);}
+}
+function buildSparkSVG(vals){
+  var w=100,h=24,pad=2;
+  var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);
+  if(mx===mn)mx=mn+1;
+  var pts=vals.map(function(v,i){
+    var x=pad+i*(w-2*pad)/(vals.length-1);
+    var y=h-pad-(v-mn)/(mx-mn)*(h-2*pad);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  var last=vals[vals.length-1],prev=vals[vals.length-2];
+  var color=last>=prev?'var(--green)':'var(--yellow)';
+  var gradId='sg'+Math.random().toString(36).substr(2,5);
+  return '<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:100%" preserveAspectRatio="none">'
+    +'<defs><linearGradient id="'+gradId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity="0.3"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>'
+    +'<polygon points="'+pad+','+h+' '+pts.join(' ')+' '+(w-pad)+','+h+'" fill="url(#'+gradId+')"/>'
+    +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="'+pts[pts.length-1].split(',')[0]+'" cy="'+pts[pts.length-1].split(',')[1]+'" r="2" fill="'+color+'"/>'
+    +'</svg>';
 }
 
 // ===== GOAL TRACKING =====
