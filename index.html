@@ -9,6 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a2340">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ETC Dashboard">
 
@@ -677,6 +678,10 @@ Secured with Firebase Authentication
 <div class="stat-card green" onclick="showTab('revenue')" style="cursor:pointer" title="Click to view Forecast"><div class="sc-label">MONTH-END FORECAST</div><div class="sc-value" id="ov-forecast">$0</div><div class="sc-sub">Projected total →</div></div>
 <div class="stat-card purple" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view Profit & Loss"><div class="sc-label">TOTAL INVOICED (PNL)</div><div class="sc-value" id="ov-pnl">$0</div><div class="sc-sub">All invoices →</div></div>
 <div class="stat-card red" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view P&L expenses"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary →</div></div>
+<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">TRACKING REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">CTO + IO + Everflow →</div></div>
+<div class="stat-card" style="border-left:3px solid #14b8a6"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid vs Total (QB)</div></div>
+<div class="stat-card" onclick="showTab('fmd')" style="cursor:pointer;border-left:3px solid #f59e0b" title="Click to view FMD"><div class="sc-label">FMD REVENUE</div><div class="sc-value" id="ov-fmd">$0</div><div class="sc-sub">Five Minute Daily →</div></div>
+<div class="stat-card" style="border-left:3px solid #8b5cf6"><div class="sc-label">ACTIVE AFFILIATES</div><div class="sc-value" id="ov-affiliates">0</div><div class="sc-sub">This month</div></div>
 </div>
 <!-- Goal Tracking -->
 <div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px;box-shadow:var(--shadow)">
@@ -2172,7 +2177,7 @@ var hEl=document.getElementById('audit-history');if(!hEl)return;
 hEl.innerHTML=events.length?events.map(function(e){
 return '<tr><td style="white-space:nowrap;font-size:.78rem">'+new Date(e.ts).toLocaleString()+'</td><td>'+e.source+'</td><td>'+e.event+'</td><td style="font-size:.82rem">'+e.details+'</td><td style="font-size:.82rem">'+(e.before||'\u2014')+' \u2192 '+(e.after||'\u2014')+'</td></tr>';
 }).join(''):'<tr><td colspan="5" class="empty-state">No change events recorded yet</td></tr>';
-}).catch(function(e){console.warn('Audit log read error',e);});
+}).catch(function(){});
 }
 }
 
