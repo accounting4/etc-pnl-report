@@ -608,6 +608,48 @@ table tbody tr:last-child td{border-bottom:none}
 /* === LAST UPDATED BADGES === */
 .last-upd-badge{display:inline-block;padding:3px 8px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:.75rem;font-weight:500;white-space:nowrap;color:var(--text2)}
 .adv-child .last-upd-badge{background:transparent;border:none;padding:0}
+
+/* === QUARTERLY P&L CARDS === */
+.q-ytd-bar{display:flex;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.q-ytd-item{flex:1;min-width:160px;padding:16px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--border);text-align:center}
+.q-ytd-item .q-ytd-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:6px}
+.q-ytd-item .q-ytd-val{font-size:1.35rem;font-weight:800;letter-spacing:-.5px}
+.q-ytd-item.gross .q-ytd-val{color:var(--green)}
+.q-ytd-item.expense .q-ytd-val{color:var(--red)}
+.q-ytd-item.net .q-ytd-val{color:#6366f1}
+.dark .q-ytd-item.net .q-ytd-val{color:#818cf8}
+.q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:768px){.q-grid{grid-template-columns:1fr}}
+.q-card{border-radius:16px;border:1px solid var(--border);background:var(--surface);overflow:hidden;transition:box-shadow .2s,border-color .2s}
+.q-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.06);border-color:rgba(99,102,241,.3)}
+.q-card-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;cursor:pointer;user-select:none}
+.q-card-head:hover{background:var(--surface2)}
+.q-card-left{display:flex;align-items:center;gap:14px}
+.q-badge{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;color:#fff}
+.q-badge.q1{background:linear-gradient(135deg,#6366f1,#818cf8)}
+.q-badge.q2{background:linear-gradient(135deg,#10b981,#34d399)}
+.q-badge.q3{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
+.q-badge.q4{background:linear-gradient(135deg,#ef4444,#f87171)}
+.q-card-title{font-size:1rem;font-weight:700;color:var(--text)}
+.q-card-sub{font-size:.78rem;color:var(--text3);margin-top:2px}
+.q-card-right{display:flex;align-items:center;gap:20px}
+.q-card-metric{text-align:right}
+.q-card-metric .q-m-val{font-size:1.15rem;font-weight:700}
+.q-card-metric .q-m-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-top:1px}
+.q-expand-icon{width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:transform .25s,background .15s}
+.q-card.expanded .q-expand-icon{transform:rotate(180deg);background:#6366f1;color:#fff;border-color:#6366f1}
+.q-card-body{display:none;padding:0 22px 22px}
+.q-card.expanded .q-card-body{display:block}
+.q-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.q-detail-card{padding:14px 16px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+.q-detail-card .q-d-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:4px}
+.q-detail-card .q-d-val{font-size:1.3rem;font-weight:800;letter-spacing:-.3px}
+.q-months-table{width:100%;border-collapse:collapse;margin-bottom:14px}
+.q-months-table th{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:8px 12px;text-align:left;border-bottom:2px solid var(--border)}
+.q-months-table td{padding:10px 12px;font-size:.88rem;border-bottom:1px solid var(--border)}
+.q-months-table tr:last-child td{border-bottom:none}
+.q-chart-wrap{height:200px;position:relative}
+.q-no-data{padding:40px 20px;text-align:center;color:var(--text3);font-size:.9rem}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -923,13 +965,10 @@ Secured with Firebase Authentication
 <div class="chart-card" style="margin-bottom:0"><h3>&#128200; Profit &amp; Expenses by Month</h3><div class="chart-wrap" style="height:320px"><canvas id="pnlProfitChart"></canvas></div></div>
 </div>
 
-<div class="table-card" style="margin-bottom:20px">
-<div class="section-title" style="margin-bottom:12px"><div class="icon-circle">&#128202;</div> Quarterly P&L Summary</div>
-<table id="pnl-quarterly-table">
-<thead><tr style="background:var(--surface2)"><th>Quarter</th><th>Gross Revenue</th><th>Expenses</th><th>Net P&L</th></tr></thead>
-<tbody id="pnl-quarterly-tbody"></tbody>
-<tfoot id="pnl-quarterly-tfoot"></tfoot>
-</table>
+<div style="margin-bottom:20px">
+<div class="section-title" style="margin-bottom:16px"><div class="icon-circle">&#128202;</div> Quarterly P&L Summary</div>
+<div class="q-ytd-bar" id="q-ytd-bar"></div>
+<div class="q-grid" id="q-grid"></div>
 </div>
 
 <div class="section-header">
@@ -2559,44 +2598,127 @@ return'<tr><td><strong>'+n+'</strong></td><td>'+badges+'</td><td><strong>'+$m(d.
 if(tfoot)tfoot.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL ('+entries.length+' advertisers)</td><td></td><td>'+$m(tRev)+'</td><td>'+tLeads.toLocaleString()+'</td><td>'+tCount+'</td><td>'+$m(tCount>0?tRev/tCount:0)+'</td></tr>';
 }
 
-// === CHANGE 6: Quarterly P&L Summary ===
-function renderQuarterlySummary(){
-var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+// === Quarterly P&L — Expandable Cards with Charts ===
+var _qCharts={};
+function toggleQuarter(qi){
+var card=document.getElementById('q-card-'+qi);
+if(!card)return;
+card.classList.toggle('expanded');
+if(card.classList.contains('expanded')){
+setTimeout(function(){renderQChart(qi);},50);
+}
+}
+function renderQChart(qi){
+var canvas=document.getElementById('q-chart-'+qi);
+if(!canvas)return;
+if(_qCharts[qi]){_qCharts[qi].destroy();}
 var quarters=[
-{name:'Q1 (Jan-Mar)',months:['January','February','March']},
-{name:'Q2 (Apr-Jun)',months:['April','May','June']},
-{name:'Q3 (Jul-Sep)',months:['July','August','September']},
-{name:'Q4 (Oct-Dec)',months:['October','November','December']}
+{months:['January','February','March'],labels:['Jan','Feb','Mar']},
+{months:['April','May','June'],labels:['Apr','May','Jun']},
+{months:['July','August','September'],labels:['Jul','Aug','Sep']},
+{months:['October','November','December'],labels:['Oct','Nov','Dec']}
 ];
-var tbody=document.getElementById('pnl-quarterly-tbody');
-var tfoot=document.getElementById('pnl-quarterly-tfoot');
-if(!tbody)return;
-var ytdGross=0,ytdExp=0,ytdNet=0;
-var rowsHtml='';
-quarters.forEach(function(q){
-var qGross=0,qExp=0;
-var hasData=false;
+var q=quarters[qi];
+var grossData=[],expData=[],netData=[];
 q.months.forEach(function(m){
+var ps=pnlSummaries[m]||{};
+grossData.push(ps.grossRevenue||0);
+expData.push(ps.totalExpenses||0);
+netData.push((ps.grossRevenue||0)-(ps.totalExpenses||0));
+});
+var isDark=document.documentElement.classList.contains('dark');
+var gridColor=isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)';
+var txtColor=isDark?'#94a3b8':'#64748b';
+_qCharts[qi]=new Chart(canvas,{
+type:'bar',
+data:{labels:q.labels,datasets:[
+{label:'Gross Revenue',data:grossData,backgroundColor:'rgba(16,185,129,.7)',borderRadius:6,borderSkipped:false},
+{label:'Expenses',data:expData,backgroundColor:'rgba(239,68,68,.7)',borderRadius:6,borderSkipped:false},
+{label:'Net P&L',data:netData,backgroundColor:'rgba(99,102,241,.7)',borderRadius:6,borderSkipped:false}
+]},
+options:{responsive:true,maintainAspectRatio:false,
+plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,padding:12,font:{size:11},color:txtColor}}},
+scales:{
+x:{grid:{display:false},ticks:{color:txtColor,font:{size:11,weight:'600'}}},
+y:{grid:{color:gridColor},ticks:{color:txtColor,font:{size:10},callback:function(v){return v>=1000?'$'+Math.round(v/1000)+'K':'$'+v;}}}
+}
+}
+});
+}
+function renderQuarterlySummary(){
+var quarters=[
+{name:'Q1',full:'Q1 — January to March',badge:'q1',months:['January','February','March'],labels:['Jan','Feb','Mar']},
+{name:'Q2',full:'Q2 — April to June',badge:'q2',months:['April','May','June'],labels:['Apr','May','Jun']},
+{name:'Q3',full:'Q3 — July to September',badge:'q3',months:['July','August','September'],labels:['Jul','Aug','Sep']},
+{name:'Q4',full:'Q4 — October to December',badge:'q4',months:['October','November','December'],labels:['Oct','Nov','Dec']}
+];
+var grid=document.getElementById('q-grid');
+var ytdBar=document.getElementById('q-ytd-bar');
+if(!grid)return;
+var ytdGross=0,ytdExp=0;
+var qData=[];
+quarters.forEach(function(q,qi){
+var qGross=0,qExp=0,hasData=false,monthData=[];
+q.months.forEach(function(m,mi){
 var ps=pnlSummaries[m]||{};
 var g=ps.grossRevenue||0;
 var e=ps.totalExpenses||0;
 if(g||e)hasData=true;
 qGross+=g;qExp+=e;
-// Add monthly sub-row
-if(g||e){
-var mn=qGross-qExp;
-rowsHtml+='<tr style="font-size:.85rem;color:var(--text2)"><td style="padding-left:28px">'+m+'</td><td>'+$m(g)+'</td><td style="color:var(--red)">'+$m(e)+'</td><td style="color:var(--'+(g-e>=0?'green':'red')+')">'+$m(g-e)+'</td></tr>';
+monthData.push({name:q.labels[mi],full:m,gross:g,exp:e,net:g-e});
+});
+ytdGross+=qGross;ytdExp+=qExp;
+qData.push({qi:qi,q:q,qGross:qGross,qExp:qExp,qNet:qGross-qExp,hasData:hasData,monthData:monthData});
+});
+var ytdNet=ytdGross-ytdExp;
+if(ytdBar){
+ytdBar.innerHTML='<div class="q-ytd-item gross"><div class="q-ytd-label">YTD Gross Revenue</div><div class="q-ytd-val">'+$m(ytdGross)+'</div></div>'+
+'<div class="q-ytd-item expense"><div class="q-ytd-label">YTD Expenses</div><div class="q-ytd-val">'+$m(ytdExp)+'</div></div>'+
+'<div class="q-ytd-item net"><div class="q-ytd-label">YTD Net P&L</div><div class="q-ytd-val">'+$m(ytdNet)+'</div></div>';
+}
+var cardsHtml='';
+qData.forEach(function(d){
+var pctOfYtd=ytdGross>0?Math.round(d.qGross/ytdGross*100):0;
+var isExp=document.getElementById('q-card-'+d.qi)&&document.getElementById('q-card-'+d.qi).classList.contains('expanded');
+cardsHtml+='<div class="q-card'+(isExp?' expanded':'')+'" id="q-card-'+d.qi+'">';
+cardsHtml+='<div class="q-card-head" onclick="toggleQuarter('+d.qi+')">';
+cardsHtml+='<div class="q-card-left"><div class="q-badge '+d.q.badge+'">'+d.q.name+'</div><div><div class="q-card-title">'+d.q.full+'</div><div class="q-card-sub">'+(d.hasData?pctOfYtd+'% of YTD revenue • '+d.monthData.filter(function(m){return m.gross||m.exp;}).length+' months with data':'No data yet')+'</div></div></div>';
+cardsHtml+='<div class="q-card-right">';
+if(d.hasData){
+cardsHtml+='<div class="q-card-metric"><div class="q-m-val" style="color:var(--green)">'+$m(d.qGross)+'</div><div class="q-m-label">Gross</div></div>';
+cardsHtml+='<div class="q-card-metric"><div class="q-m-val" style="color:'+(d.qNet>=0?'#6366f1':'var(--red)')+'">'+$m(d.qNet)+'</div><div class="q-m-label">Net</div></div>';
+}
+cardsHtml+='<div class="q-expand-icon">&#9660;</div>';
+cardsHtml+='</div></div>';
+cardsHtml+='<div class="q-card-body">';
+if(d.hasData){
+cardsHtml+='<div class="q-detail-grid">';
+cardsHtml+='<div class="q-detail-card"><div class="q-d-label">Gross Revenue</div><div class="q-d-val" style="color:var(--green)">'+$m(d.qGross)+'</div></div>';
+cardsHtml+='<div class="q-detail-card"><div class="q-d-label">Total Expenses</div><div class="q-d-val" style="color:var(--red)">'+$m(d.qExp)+'</div></div>';
+cardsHtml+='<div class="q-detail-card"><div class="q-d-label">Net P&L</div><div class="q-d-val" style="color:'+(d.qNet>=0?'#6366f1':'var(--red)')+'">'+$m(d.qNet)+'</div></div>';
+cardsHtml+='<div class="q-detail-card"><div class="q-d-label">% of YTD</div><div class="q-d-val" style="color:#6366f1">'+pctOfYtd+'%</div></div>';
+cardsHtml+='</div>';
+cardsHtml+='<table class="q-months-table"><thead><tr><th>Month</th><th>Gross Revenue</th><th>Expenses</th><th>Net P&L</th></tr></thead><tbody>';
+d.monthData.forEach(function(m){
+if(m.gross||m.exp){
+cardsHtml+='<tr><td><strong>'+m.full+'</strong></td><td style="color:var(--green)">'+$m(m.gross)+'</td><td style="color:var(--red)">'+$m(m.exp)+'</td><td style="color:var(--'+(m.net>=0?'green':'red')+')">'+$m(m.net)+'</td></tr>';
 }
 });
-var qNet=qGross-qExp;
-ytdGross+=qGross;ytdExp+=qExp;ytdNet+=qNet;
-if(hasData){
-var cls=qNet>=0?'positive':'negative';
-rowsHtml+='<tr class="quarter-row '+cls+'"><td><strong>'+q.name+'</strong></td><td><strong>'+$m(qGross)+'</strong></td><td style="color:var(--red)"><strong>'+$m(qExp)+'</strong></td><td><strong>'+$m(qNet)+'</strong></td></tr>';
+cardsHtml+='</tbody></table>';
+cardsHtml+='<div class="q-chart-wrap"><canvas id="q-chart-'+d.qi+'"></canvas></div>';
+}else{
+cardsHtml+='<div class="q-no-data">No financial data recorded for this quarter yet</div>';
+}
+cardsHtml+='</div></div>';
+});
+grid.innerHTML=cardsHtml;
+// Re-render charts for expanded cards
+qData.forEach(function(d){
+var card=document.getElementById('q-card-'+d.qi);
+if(card&&card.classList.contains('expanded')&&d.hasData){
+renderQChart(d.qi);
 }
 });
-tbody.innerHTML=rowsHtml||'<tr><td colspan="4" class="empty-state">No quarterly data</td></tr>';
-if(tfoot)tfoot.innerHTML='<tr style="font-weight:700;background:var(--surface2);font-size:1rem"><td>YTD TOTAL</td><td>'+$m(ytdGross)+'</td><td style="color:var(--red)">'+$m(ytdExp)+'</td><td style="color:var(--green)">'+$m(ytdNet)+'</td></tr>';
 }
 
 function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderAdvSummary();}catch(e){}}
