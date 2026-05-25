@@ -1201,27 +1201,7 @@ Secured with Firebase Authentication
 <div class="psb-title">&#128176; Monthly Financial Summary</div>
 <div class="psb-row" id="cto-summary-content"></div>
 </div>
-<div class="section-toggle" onclick="toggleSec('cto-pnl-body',this)"><h3>💰 Monthly P&L Summary — Revenue by Source</h3><span class="t-arrow">▾</span></div>
-<div id="cto-pnl-body" class="section-toggle-body closed">
-<div style="padding:16px">
-<div class="stats-row" id="cto-pnl-stats">
-<div class="stat-card"><div class="sc-label">Gross Revenue</div><div class="sc-value" id="ctopnl-gross">$0</div><div class="sc-sub">All P&L sources</div></div>
-<div class="stat-card green"><div class="sc-label">Payment Received</div><div class="sc-value" id="ctopnl-paid">$0</div><div class="sc-sub">Collected</div></div>
-<div class="stat-card" style="--accent-card:#f59e0b"><div class="sc-label">ETC Balance</div><div class="sc-value" id="ctopnl-balance">$0</div><div class="sc-sub">Outstanding</div></div>
-<div class="stat-card purple"><div class="sc-label">Total Expenses</div><div class="sc-value" id="ctopnl-expenses">$0</div><div class="sc-sub">Monthly costs</div></div>
-<div class="stat-card green"><div class="sc-label">Net P&L</div><div class="sc-value" id="ctopnl-net">$0</div><div class="sc-sub">Revenue - Expenses</div></div>
-</div>
-<div class="two-col" style="margin-top:16px">
-<div class="chart-card"><h3>📊 Revenue by Source</h3>
-<div id="ctopnl-source-breakdown" style="padding:12px"></div>
-<div class="chart-wrap" style="height:260px"><canvas id="ctoPnlSourceChart"></canvas></div>
-</div>
-<div class="chart-card"><h3>📈 Monthly P&L Trend</h3>
-<div class="chart-wrap" style="height:300px"><canvas id="ctoPnlTrendChart"></canvas></div>
-</div>
-</div>
-</div>
-</div>
+<!-- Monthly P&L Summary removed per Riena -->
 <div class="section-toggle" onclick="toggleSec('cto-charts-body',this)"><h3>📊 Charts — Revenue & Rankings</h3><span class="t-arrow">▾</span></div>
 <div id="cto-charts-body" class="section-toggle-body closed">
 <div class="two-col" style="margin-top:12px;margin-bottom:20px">
@@ -3259,102 +3239,128 @@ mkChart('ctoRankChart','bar',ranked.map(function(r){return'#'+r._rank+' '+(r._of
 }
 // Initialize auth system (or load data directly if auth is skipped)
 
-/* === Firebase Data Sync Layer === */
-function fbUserPath(sub){if(!fbAuth||!fbAuth.currentUser)return null;return 'userdata/'+fbAuth.currentUser.uid+'/'+sub;}
+/* === Firebase Shared Data Sync Layer === */
+var _fbListenersActive=false;
+var _fbSuppressListener=false;
+
+function fbPath(sub){if(!fbDb||!fbAuth||!fbAuth.currentUser)return null;return 'shared/'+sub;}
+function _safeKey(k){return(k||'').replace(/[.#$/\[\]]/g,'_');}
 
 function fbSave(sub,data){
-  var p=fbUserPath(sub);
-  if(!p||!fbDb)return Promise.resolve();
-  return fbDb.ref(p).set(data).catch(function(e){console.warn('FB save error ('+sub+'):',e.message);});
+  var p=fbPath(sub);if(!p)return Promise.resolve();
+  _fbSuppressListener=true;
+  return fbDb.ref(p).set(data).then(function(){setTimeout(function(){_fbSuppressListener=false;},500);}).catch(function(e){_fbSuppressListener=false;console.warn('FB save ('+sub+'):',e.message);});
 }
 
 function fbSaveKey(sub,key,data){
-  var p=fbUserPath(sub+'/'+key);
-  if(!p||!fbDb)return Promise.resolve();
-  return fbDb.ref(p).set(data).catch(function(e){console.warn('FB save error:',e.message);});
+  var p=fbPath(sub+'/'+_safeKey(key));if(!p)return Promise.resolve();
+  _fbSuppressListener=true;
+  return fbDb.ref(p).set(data).then(function(){setTimeout(function(){_fbSuppressListener=false;},500);}).catch(function(e){_fbSuppressListener=false;console.warn('FB save:',e.message);});
 }
 
 function fbRemoveKey(sub,key){
-  var p=fbUserPath(sub+'/'+key);
-  if(!p||!fbDb)return Promise.resolve();
-  return fbDb.ref(p).remove().catch(function(e){console.warn('FB remove error:',e.message);});
+  var p=fbPath(sub+'/'+_safeKey(key));if(!p)return Promise.resolve();
+  return fbDb.ref(p).remove().catch(function(e){console.warn('FB remove:',e.message);});
 }
 
 async function fbLoadUserData(){
-  var base=fbUserPath('');
-  if(!base||!fbDb)return;
+  if(!fbDb||!fbAuth||!fbAuth.currentUser)return;
   try{
-    var snap=await fbDb.ref(base).once('value');
+    // Migrate: move old per-user data to shared (one-time)
+    var oldBase='userdata/'+fbAuth.currentUser.uid;
+    var oldSnap=await fbDb.ref(oldBase).once('value');
+    if(oldSnap.exists()){
+      var od=oldSnap.val();
+      var sharedSnap=await fbDb.ref('shared').once('value');
+      if(!sharedSnap.exists()){await fbDb.ref('shared').set(od);console.log('✅ Migrated per-user data to shared');}
+      await fbDb.ref(oldBase).remove();
+    }
+
+    var snap=await fbDb.ref('shared').once('value');
     if(!snap.exists())return;
     var d=snap.val();
 
-    // Load PNL invoices from Firebase
     if(d.pnl){
-      var fbInvoices=Object.values(d.pnl);
-      if(fbInvoices.length){
-        // Merge: Firebase is source of truth, localStorage is backup
-        var localKeys=new Set(userPNL.map(function(r){return r._key;}));
-        var fbKeys=new Set(fbInvoices.map(function(r){return r._key;}));
-        // Add any Firebase entries not in local
-        fbInvoices.forEach(function(r){
-          if(!localKeys.has(r._key)){userPNL.push(r);}
-          else{
-            // Update local with Firebase version
-            var idx=userPNL.findIndex(function(x){return x._key===r._key;});
-            if(idx>-1)userPNL[idx]=r;
-          }
-        });
-        localStorage.setItem('uPNL',JSON.stringify(userPNL));
-      }
+      var fbInv=Object.values(d.pnl);
+      var localKeys=new Set(userPNL.map(function(r){return r._key;}));
+      fbInv.forEach(function(r){
+        if(!localKeys.has(r._key))userPNL.push(r);
+        else{var i=userPNL.findIndex(function(x){return x._key===r._key;});if(i>-1)userPNL[i]=r;}
+      });
+      localStorage.setItem('uPNL',JSON.stringify(userPNL));
     }
-
-    // Load expenses from Firebase
     if(d.expenses){
       var fbExp=Object.values(d.expenses);
-      if(fbExp.length){
-        var localExpKeys=new Set(userExpenses.map(function(e){return e._key;}));
-        fbExp.forEach(function(e){
-          if(!localExpKeys.has(e._key)){userExpenses.push(e);}
-          else{
-            var idx=userExpenses.findIndex(function(x){return x._key===e._key;});
-            if(idx>-1)userExpenses[idx]=e;
-          }
-        });
-        localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
-      }
+      var lExpK=new Set(userExpenses.map(function(e){return e._key;}));
+      fbExp.forEach(function(e){
+        if(!lExpK.has(e._key))userExpenses.push(e);
+        else{var i=userExpenses.findIndex(function(x){return x._key===e._key;});if(i>-1)userExpenses[i]=e;}
+      });
+      localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
     }
-
-    // Load deletes from Firebase
-    if(d.pnlDeletes){
-      Object.keys(d.pnlDeletes).forEach(function(k){pnlDeletes.add(k);});
-      localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));
-    }
-    if(d.expDeletes){
-      Object.keys(d.expDeletes).forEach(function(k){expDeletes.add(k);});
-      localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));
-    }
-
-    // Load status/remarks overrides
+    if(d.pnlDeletes){Object.keys(d.pnlDeletes).forEach(function(k){pnlDeletes.add(k);});localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));}
+    if(d.expDeletes){Object.keys(d.expDeletes).forEach(function(k){expDeletes.add(k);});localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));}
     if(d.uStatus){Object.assign(uStatus,d.uStatus);localStorage.setItem('uStatus',JSON.stringify(uStatus));}
     if(d.uRemarks){Object.assign(uRemarks,d.uRemarks);localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
 
-    // Clean userPNL against pnlDeletes after all data loaded
-    var beforeLen=userPNL.length;
+    // Clean against deletes
+    var b1=userPNL.length;
     userPNL=userPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});
-    if(userPNL.length!==beforeLen){localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSave('pnl',userPNL.reduce(function(o,r){if(r._key)o[r._key.replace(/[.#$/\[\]]/g,'_')]=r;return o;},{}));}
-    // Clean userExpenses against expDeletes
-    var beforeExpLen=userExpenses.length;
+    if(userPNL.length!==b1)localStorage.setItem('uPNL',JSON.stringify(userPNL));
+    var b2=userExpenses.length;
     userExpenses=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
-    if(userExpenses.length!==beforeExpLen){localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSave('expenses',userExpenses.reduce(function(o,e){if(e._key)o[e._key.replace(/[.#$/\[\]]/g,'_')]=e;return o;},{}));}
+    if(userExpenses.length!==b2)localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
 
-    console.log('✅ Firebase user data loaded, cleaned '+beforeLen+'→'+userPNL.length+' invoices');
+    console.log('✅ Shared data loaded');
+
+    // Start real-time listeners for other users' changes
+    if(!_fbListenersActive)fbStartListeners();
   }catch(e){console.warn('Firebase load error:',e.message);}
 }
 
-function fbSyncAllPNL(){fbSave('pnl',userPNL.reduce(function(o,r){if(r._key)o[r._key.replace(/[.#$/\[\]]/g,'_')]=r;return o;},{}));}
-function fbSyncAllExpenses(){fbSave('expenses',userExpenses.reduce(function(o,e){if(e._key)o[e._key.replace(/[.#$/\[\]]/g,'_')]=e;return o;},{}));}
-function fbSyncDeletes(){fbSave('pnlDeletes',[...pnlDeletes].reduce(function(o,k){o[k.replace(/[.#$/\[\]]/g,'_')]=true;return o;},{}));}
-function fbSyncExpDeletes(){fbSave('expDeletes',[...expDeletes].reduce(function(o,k){o[k.replace(/[.#$/\[\]]/g,'_')]=true;return o;},{}));}
+function fbStartListeners(){
+  if(_fbListenersActive||!fbDb)return;
+  _fbListenersActive=true;
+  fbDb.ref('shared').on('value',function(snap){
+    if(_fbSuppressListener)return;
+    if(!snap.exists())return;
+    var d=snap.val();
+    // Rebuild userPNL from Firebase
+    userPNL=d.pnl?Object.values(d.pnl):[];
+    localStorage.setItem('uPNL',JSON.stringify(userPNL));
+    // Rebuild expenses
+    userExpenses=d.expenses?Object.values(d.expenses):[];
+    localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+    // Rebuild deletes
+    pnlDeletes=new Set(d.pnlDeletes?Object.keys(d.pnlDeletes):[]);
+    localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));
+    expDeletes=new Set(d.expDeletes?Object.keys(d.expDeletes):[]);
+    localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));
+    // Status & remarks
+    if(d.uStatus){uStatus=d.uStatus;localStorage.setItem('uStatus',JSON.stringify(uStatus));}
+    if(d.uRemarks){uRemarks=d.uRemarks;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
+    // Clean deleted
+    userPNL=userPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});
+    userExpenses=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
+    // Re-render everything
+    try{
+      allPNL=allPNL.filter(function(r){return r._source!=='user';});
+      allPNL.push(...userPNL.map(function(r){return Object.assign({},r,{displayAmt:r.invAmt>0?r.invAmt:r.rcvd});}));
+      for(var di=allPNL.length-1;di>=0;di--){var dk=allPNL[di]._key||allPNL[di].invId||'';if(dk&&pnlDeletes.has(dk))allPNL.splice(di,1);}
+      mergeUserInvoices();mergeUserExpenses();
+      renderPNL();try{renderOverview();}catch(e){}
+      try{renderExpenses();}catch(e){}
+      var mb=document.querySelector('#pnl-month-buttons button.active');
+      if(mb&&mb.textContent!=='All Months')try{showMonthlySummary(mb.textContent);}catch(e){}
+      console.log('🔄 Real-time sync update applied');
+    }catch(e){console.warn('Re-render error:',e);}
+  });
+}
+
+function fbSyncAllPNL(){fbSave('pnl',userPNL.reduce(function(o,r){if(r._key)o[_safeKey(r._key)]=r;return o;},{}));}
+function fbSyncAllExpenses(){fbSave('expenses',userExpenses.reduce(function(o,e){if(e._key)o[_safeKey(e._key)]=e;return o;},{}));}
+function fbSyncDeletes(){fbSave('pnlDeletes',[...pnlDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
+function fbSyncExpDeletes(){fbSave('expDeletes',[...expDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
 function fbSyncStatus(){fbSave('uStatus',uStatus);}
 function fbSyncRemarks(){fbSave('uRemarks',uRemarks);}
 function loadAllData(){fbLoadUserData().then(function(){return fetchAllData();}).then(function(){try{loadManualCTOEntries();loadCTOEditsLocal();}catch(e){}}).catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
