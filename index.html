@@ -20,6 +20,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1053,9 +1054,12 @@ Secured with Firebase Authentication
 </div><!-- /sec-rev-records -->
 </div>
 <div id="tab-pnl" class="tab-content">
-<div class="export-bar">
+<div class="export-bar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
 <button class="btn-export pdf" onclick="exportPDF('pnl')">📄 Export PDF</button>
 <button class="btn-export excel" onclick="exportExcel('pnl')">📊 Export Excel</button>
+<div style="border-left:1px solid var(--border);height:24px;margin:0 4px"></div>
+<button class="btn-export" onclick="downloadPNLReport('csv')" style="background:#10b981;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem">📥 P&L Report (CSV)</button>
+<button class="btn-export" onclick="downloadPNLReport('pdf')" style="background:#6366f1;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem">📥 P&L Report (PDF)</button>
 </div>
 <div class="stats-row">
 <div class="stat-card"><div class="sc-label">Gross Revenue</div><div class="sc-value" id="pnl-s-total">$0</div><div class="sc-sub">P&L invoices</div></div>
@@ -1165,6 +1169,27 @@ Secured with Firebase Authentication
 <div id="cto-summary-banner" class="pnl-summary-banner">
 <div class="psb-title">&#128176; Monthly Financial Summary</div>
 <div class="psb-row" id="cto-summary-content"></div>
+</div>
+<div class="section-toggle" onclick="toggleSec('cto-pnl-body',this)"><h3>💰 Monthly P&L Summary — Revenue by Source</h3><span class="t-arrow">▾</span></div>
+<div id="cto-pnl-body" class="section-toggle-body closed">
+<div style="padding:16px">
+<div class="stats-row" id="cto-pnl-stats">
+<div class="stat-card"><div class="sc-label">Gross Revenue</div><div class="sc-value" id="ctopnl-gross">$0</div><div class="sc-sub">All P&L sources</div></div>
+<div class="stat-card green"><div class="sc-label">Payment Received</div><div class="sc-value" id="ctopnl-paid">$0</div><div class="sc-sub">Collected</div></div>
+<div class="stat-card" style="--accent-card:#f59e0b"><div class="sc-label">ETC Balance</div><div class="sc-value" id="ctopnl-balance">$0</div><div class="sc-sub">Outstanding</div></div>
+<div class="stat-card purple"><div class="sc-label">Total Expenses</div><div class="sc-value" id="ctopnl-expenses">$0</div><div class="sc-sub">Monthly costs</div></div>
+<div class="stat-card green"><div class="sc-label">Net P&L</div><div class="sc-value" id="ctopnl-net">$0</div><div class="sc-sub">Revenue - Expenses</div></div>
+</div>
+<div class="two-col" style="margin-top:16px">
+<div class="chart-card"><h3>📊 Revenue by Source</h3>
+<div id="ctopnl-source-breakdown" style="padding:12px"></div>
+<div class="chart-wrap" style="height:260px"><canvas id="ctoPnlSourceChart"></canvas></div>
+</div>
+<div class="chart-card"><h3>📈 Monthly P&L Trend</h3>
+<div class="chart-wrap" style="height:300px"><canvas id="ctoPnlTrendChart"></canvas></div>
+</div>
+</div>
+</div>
 </div>
 <div class="section-toggle" onclick="toggleSec('cto-charts-body',this)"><h3>📊 Charts — Revenue & Rankings</h3><span class="t-arrow">▾</span></div>
 <div id="cto-charts-body" class="section-toggle-body closed">
@@ -2994,7 +3019,7 @@ for(var _sm in pnlSummaries){
 window._sheetExpenseSnapshot[_sm]={totalExpenses:pnlSummaries[_sm].totalExpenses||0,salary:pnlSummaries[_sm].salary||0,ads:pnlSummaries[_sm].ads||0};
 }
 mergeUserExpenses();
-renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}}
+renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
@@ -3089,7 +3114,7 @@ function applyRevFilters(){revPage=1;renderRevenue();}
 function clearRevFilters(){['rev-search','rev-date-from','rev-date-to'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});var rmf=document.getElementById('rev-month-f');if(rmf)rmf.value='';var tf=document.getElementById('rev-type-f');if(tf)tf.value='';document.getElementById('rev-entries').value='25';applyRevFilters();}
 function applyPNLFilters(){pnlPage=1;renderPNL();var smb=document.querySelector('#pnl-month-buttons button.active');if(smb&&smb.textContent!=='All Months')showMonthlySummary(smb.textContent);}
 function clearPNLFilters(){['pnl-search'].forEach(id=>document.getElementById(id).value='');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-status-f').value='';document.getElementById('pnl-entries').value='10';document.querySelectorAll('#pnl-month-buttons .month-btn').forEach((b,i)=>b.classList.toggle('active',i===0));document.getElementById('pnl-summary-banner').style.display='none';applyPNLFilters();}
-function applyCTOFilters(){ctoPage=1;renderCTO();}
+function applyCTOFilters(){ctoPage=1;renderCTO();try{renderCTOPnlSummary();}catch(e){}}
 function clearCTOFilters(){document.getElementById('cto-search').value='';var mf=document.getElementById('cto-month-f');if(mf)mf.value='May';var tf=document.getElementById('cto-type-f');if(tf)tf.value='';document.getElementById('cto-entries').value='25';applyCTOFilters();}
 function applyFcFilters(){fcPage=1;renderFC();}
 function clearFcFilters(){document.getElementById('fc-search').value='';document.getElementById('fc-period-f').value='';document.getElementById('fc-entries').value='10';applyFcFilters();}
@@ -3121,7 +3146,8 @@ cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue by So
 '<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Conversions: '+efLeads.toLocaleString()+'</span></div>'+
 '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">'+
 '<div class="psb-line"><span class="psb-key"><strong>Combined Total</strong></span><span class="psb-value gold"><strong>'+$m(totRev)+'</strong></span></div>'+
-'</div><div class="psb-group"><div class="psb-group-title">Top Affiliates</div>'+topHtml+'</div>';
+'</div><div class="psb-group"><div class="psb-group-title">P&L Revenue by Source</div>'+
+(function(){var sm2=(document.getElementById('cto-month-f')||{}).value||'';var ir3=0,ps3=0,cpc3=0;allPNL.filter(function(r){if(r._isSummary)return false;if(sm2&&r._month!==sm2)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')ir3+=tot;else if(cat==='Platform Softwares')ps3+=tot;else cpc3+=tot;});return '<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#6366f1;color:#fff">IR</span> Investor Relations</span><span class="psb-value" style="color:#6366f1">'+$m(ir3)+'</span></div><div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#10b981;color:#fff">PS</span> Platform Softwares</span><span class="psb-value" style="color:#10b981">'+$m(ps3)+'</span></div><div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#f59e0b;color:#fff">CPC</span> Newsletter Ads</span><span class="psb-value" style="color:#f59e0b">'+$m(cpc3)+'</span></div>';})()+'</div><div class="psb-group"><div class="psb-group-title">Top Affiliates</div>'+topHtml+'</div>';
 }
 function updateCTOCharts(rows,affRevMap){
 var sorted=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
@@ -3974,6 +4000,231 @@ function showMoreOverviewRecords(){
 }
 
 // ===== EXPORT PDF =====
+
+// ===== P&L SOURCE CLASSIFICATION =====
+function classifyPNLSource(aff){
+  var a=(aff||'').toUpperCase();
+  if(a.startsWith('IR ')||a.startsWith('IR-')||a.startsWith('IR -')||a==='IR'||a.indexOf(' IR ')>-1||a.indexOf(' IR-')>-1||a.startsWith('NATE')||a.indexOf('3 WEEKS IR')>-1)return 'IR';
+  if(a.indexOf('PLATFORM')>-1||a.indexOf('SOFTWARE')>-1)return 'Platform Softwares';
+  return 'CPC';
+}
+
+// ===== DOWNLOADABLE P&L REPORT =====
+function downloadPNLReport(format){
+  var f=getPNLFilt();
+  var selMonth=(document.getElementById('pnl-month-f')||{}).value||'All Months';
+  var rows=f.map(function(r){
+    var invAmt=r.displayAmt||r.invAmt||0;
+    var rcvd=r.rcvd||0;
+    if(r.status==='Paid'){rcvd=r.rcvd||r.invAmt||r.displayAmt||0;invAmt=rcvd;}
+    else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){invAmt=r.invAmt||r.displayAmt||0;rcvd=0;}
+    return {
+      invId:r.invId||'—',
+      date:r.date||'—',
+      company:'Elite Trade Club',
+      affiliate:r.affiliate||'—',
+      invAmt:invAmt,
+      rcvd:rcvd,
+      status:r.status||'—',
+      remarks:r.remarks||'',
+      source:classifyPNLSource(r.affiliate)
+    };
+  });
+
+  if(format==='csv'){
+    var csv='Invoice ID,Invoice Date,Company,Affiliate Name,Invoice Amount,Amount Received,Status,Remarks,Source\n';
+    rows.forEach(function(r){
+      csv+='"'+(r.invId||'').replace(/"/g,'""')+'","'+r.date+'","'+r.company+'","'+(r.affiliate||'').replace(/"/g,'""')+'",'+r.invAmt.toFixed(2)+','+r.rcvd.toFixed(2)+',"'+r.status+'","'+(r.remarks||'').replace(/"/g,'""')+'","'+r.source+'"\n';
+    });
+    // Add summary
+    var totInv=rows.reduce(function(a,r){return a+r.invAmt;},0);
+    var totRcvd=rows.reduce(function(a,r){return a+r.rcvd;},0);
+    csv+='\n,,,TOTALS,'+totInv.toFixed(2)+','+totRcvd.toFixed(2)+',,,\n';
+    csv+=',,,Balance,'+(totInv-totRcvd).toFixed(2)+',,,\n';
+    // Source breakdown
+    csv+='\nREVENUE BY SOURCE\n';
+    var sources={};rows.forEach(function(r){if(!sources[r.source])sources[r.source]={inv:0,rcvd:0,count:0};sources[r.source].inv+=r.invAmt;sources[r.source].rcvd+=r.rcvd;sources[r.source].count++;});
+    csv+='Source,Invoices,Total Amount,Amount Received\n';
+    Object.keys(sources).forEach(function(s){csv+='"'+s+'",'+sources[s].count+','+sources[s].inv.toFixed(2)+','+sources[s].rcvd.toFixed(2)+'\n';});
+
+    var blob=new Blob([csv],{type:'text/csv'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='ETC_PNL_Report_'+selMonth.replace(/\s/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.csv';
+    a.click();URL.revokeObjectURL(a.href);
+  }
+  else if(format==='pdf'){
+    try{
+      var pdf=new jspdf.jsPDF('l','mm','a4');
+      var pw=pdf.internal.pageSize.getWidth();
+      // Header
+      pdf.setFontSize(18);pdf.setTextColor(99,102,241);
+      pdf.text('ETC Monthly P&L Breakdown Report',14,18);
+      pdf.setFontSize(10);pdf.setTextColor(100);
+      pdf.text('Month: '+selMonth+'  |  Generated: '+new Date().toLocaleString('en-US',{timeZone:'America/New_York'})+' EST',14,26);
+
+      // Summary line
+      var totInv2=rows.reduce(function(a,r){return a+r.invAmt;},0);
+      var totRcvd2=rows.reduce(function(a,r){return a+r.rcvd;},0);
+      var ps=pnlSummaries[selMonth==='All Months'?'':selMonth];
+      var lrv2=0,lr2=0,lb2=0,ltexp2=0;
+      if(selMonth!=='All Months'&&ps){lrv2=ps.grossRevenue||0;lr2=ps.paymentRcvd||0;lb2=ps.balance||0;ltexp2=ps.totalExpenses||0;}
+      else{for(var mk in pnlSummaries){var p2=pnlSummaries[mk];lrv2+=(p2.grossRevenue||0);lr2+=(p2.paymentRcvd||0);lb2+=(p2.balance||0);ltexp2+=(p2.totalExpenses||0);}}
+
+      pdf.setFontSize(11);pdf.setTextColor(40);
+      pdf.text('Gross Revenue: $'+lrv2.toLocaleString(undefined,{minimumFractionDigits:2})+'   |   Payment Received: $'+lr2.toLocaleString(undefined,{minimumFractionDigits:2})+'   |   ETC Balance: $'+lb2.toLocaleString(undefined,{minimumFractionDigits:2})+'   |   Expenses: $'+ltexp2.toLocaleString(undefined,{minimumFractionDigits:2})+'   |   Net P&L: $'+(lrv2-ltexp2).toLocaleString(undefined,{minimumFractionDigits:2}),14,34);
+
+      // Invoice table
+      var tableData=rows.map(function(r){return[r.invId,r.date,r.company,r.affiliate,'$'+r.invAmt.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+r.rcvd.toLocaleString(undefined,{minimumFractionDigits:2}),r.status,r.remarks.substring(0,40),r.source];});
+
+      pdf.autoTable({
+        startY:40,
+        head:[['Invoice ID','Date','Company','Affiliate','Invoice Amt','Amt Received','Status','Remarks','Source']],
+        body:tableData,
+        styles:{fontSize:7.5,cellPadding:2},
+        headStyles:{fillColor:[99,102,241],textColor:255,fontStyle:'bold',fontSize:8},
+        alternateRowStyles:{fillColor:[245,247,250]},
+        columnStyles:{4:{halign:'right'},5:{halign:'right'}},
+        margin:{left:14,right:14},
+        didDrawPage:function(data){
+          pdf.setFontSize(7);pdf.setTextColor(150);
+          pdf.text('ETC P&L Report — Page '+pdf.internal.getCurrentPageInfo().pageNumber,pw-40,pdf.internal.pageSize.getHeight()-8);
+        }
+      });
+
+      // Source breakdown table on new page or after
+      var finalY=pdf.lastAutoTable.finalY+12;
+      if(finalY>180){pdf.addPage();finalY=20;}
+      pdf.setFontSize(13);pdf.setTextColor(99,102,241);
+      pdf.text('Revenue by Source Breakdown',14,finalY);
+      var sources2={};rows.forEach(function(r){if(!sources2[r.source])sources2[r.source]={inv:0,rcvd:0,count:0};sources2[r.source].inv+=r.invAmt;sources2[r.source].rcvd+=r.rcvd;sources2[r.source].count++;});
+      var srcData=Object.keys(sources2).map(function(s){return[s,sources2[s].count.toString(),'$'+sources2[s].inv.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+sources2[s].rcvd.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+(sources2[s].inv-sources2[s].rcvd).toLocaleString(undefined,{minimumFractionDigits:2})];});
+      pdf.autoTable({
+        startY:finalY+4,
+        head:[['Source','Invoices','Total Amount','Amount Received','Balance']],
+        body:srcData,
+        styles:{fontSize:9,cellPadding:3},
+        headStyles:{fillColor:[16,185,129],textColor:255,fontStyle:'bold'},
+        columnStyles:{2:{halign:'right'},3:{halign:'right'},4:{halign:'right'}},
+        margin:{left:14,right:14}
+      });
+
+      pdf.save('ETC_PNL_Report_'+selMonth.replace(/\s/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.pdf');
+    }catch(e){alert('PDF generation failed: '+e.message);}
+  }
+}
+
+// ===== MONTHLY P&L SUMMARY IN TRACKING DASHBOARD =====
+function renderCTOPnlSummary(){
+  var selMonth=(document.getElementById('cto-month-f')||{}).value||'';
+  // Get P&L data for selected month
+  var lrv=0,lr=0,lb=0,ltexp=0;
+  if(selMonth){
+    var ps=pnlSummaries[selMonth]||{};
+    lrv=ps.grossRevenue||0;lr=ps.paymentRcvd||0;lb=ps.balance||0;ltexp=ps.totalExpenses||0;
+  }else{
+    for(var mk in pnlSummaries){var ps=pnlSummaries[mk];lrv+=(ps.grossRevenue||0);lr+=(ps.paymentRcvd||0);lb+=(ps.balance||0);ltexp+=(ps.totalExpenses||0);}
+  }
+  setStat('ctopnl-gross',$m(lrv));
+  setStat('ctopnl-paid',$m(lr));
+  setStat('ctopnl-balance',$m(lb));
+  setStat('ctopnl-expenses',$m(ltexp));
+  setStat('ctopnl-net',$m(lrv-ltexp));
+
+  // Classify invoices by source (IR / Platform Softwares / CPC)
+  var irRev=0,irBal=0,irPaid=0,irCount=0;
+  var psRev=0,psBal=0,psPaid=0,psCount=0;
+  var cpcRev=0,cpcBal=0,cpcPaid=0,cpcCount=0;
+  allPNL.filter(function(r){
+    if(r._isSummary)return false;
+    if(selMonth&&r._month!==selMonth)return false;
+    var amt=r.displayAmt||r.invAmt||0;var rc=r.rcvd||0;
+    return(amt>0||rc>0);
+  }).forEach(function(r){
+    var cat=classifyPNLSource(r.affiliate);
+    var invAmt=r.invAmt||r.displayAmt||0;
+    var rcvd=r.rcvd||0;
+    var total=invAmt>0?invAmt:rcvd;
+    var bal=(r.status==='Paid')?0:(r.displayAmt||0);
+    var paid=(r.status==='Paid')?(rcvd||invAmt):rcvd;
+    if(cat==='IR'){irRev+=total;irBal+=bal;irPaid+=paid;irCount++;}
+    else if(cat==='Platform Softwares'){psRev+=total;psBal+=bal;psPaid+=paid;psCount++;}
+    else{cpcRev+=total;cpcBal+=bal;cpcPaid+=paid;cpcCount++;}
+  });
+
+  // Source breakdown HTML
+  var bdEl=document.getElementById('ctopnl-source-breakdown');
+  if(bdEl){
+    bdEl.innerHTML=
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">'+
+      '<div style="background:var(--surface2);border-radius:12px;padding:14px;border-left:4px solid #6366f1">'+
+        '<div style="font-size:.75rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">IR (Investor Relations)</div>'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#6366f1;margin:4px 0">'+$m(irRev)+'</div>'+
+        '<div style="font-size:.75rem;color:var(--text3)">Paid: '+$m(irPaid)+' · Balance: '+$m(irBal)+' · '+irCount+' invoices</div>'+
+      '</div>'+
+      '<div style="background:var(--surface2);border-radius:12px;padding:14px;border-left:4px solid #10b981">'+
+        '<div style="font-size:.75rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Platform Softwares</div>'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#10b981;margin:4px 0">'+$m(psRev)+'</div>'+
+        '<div style="font-size:.75rem;color:var(--text3)">Paid: '+$m(psPaid)+' · Balance: '+$m(psBal)+' · '+psCount+' invoices</div>'+
+      '</div>'+
+      '<div style="background:var(--surface2);border-radius:12px;padding:14px;border-left:4px solid #f59e0b">'+
+        '<div style="font-size:.75rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">CPC (Newsletter Ads)</div>'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#f59e0b;margin:4px 0">'+$m(cpcRev)+'</div>'+
+        '<div style="font-size:.75rem;color:var(--text3)">Paid: '+$m(cpcPaid)+' · Balance: '+$m(cpcBal)+' · '+cpcCount+' invoices</div>'+
+      '</div>'+
+      '</div>';
+  }
+
+  // Source pie/doughnut chart
+  try{
+    var ctx1=document.getElementById('ctoPnlSourceChart');
+    if(ctx1){
+      var ex1=Chart.getChart('ctoPnlSourceChart');if(ex1)ex1.destroy();
+      new Chart(ctx1,{type:'doughnut',data:{
+        labels:['IR','Platform Softwares','CPC'],
+        datasets:[{data:[irRev,psRev,cpcRev],backgroundColor:['#6366f1','#10b981','#f59e0b'],borderWidth:3,borderColor:'var(--surface)'}]
+      },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:12,weight:'600'},padding:16,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.label+': '+$m(c.raw)+' ('+(lrv>0?((c.raw/lrv)*100).toFixed(1):0)+'%)';}}}}}}); 
+    }
+  }catch(e){}
+
+  // Monthly P&L trend chart
+  try{
+    var ctx2=document.getElementById('ctoPnlTrendChart');
+    if(ctx2){
+      var ex2=Chart.getChart('ctoPnlTrendChart');if(ex2)ex2.destroy();
+      var trendMonths=['January','February','March','April','May','June'];
+      var revData=trendMonths.map(function(m){return(pnlSummaries[m]||{}).grossRevenue||0;});
+      var expData=trendMonths.map(function(m){return(pnlSummaries[m]||{}).totalExpenses||0;});
+      var netData=trendMonths.map(function(m){var p=pnlSummaries[m]||{};return(p.grossRevenue||0)-(p.totalExpenses||0);});
+      var activeMonths=trendMonths.filter(function(m,i){return revData[i]>0||expData[i]>0;});
+      var aRevData=activeMonths.map(function(m){return(pnlSummaries[m]||{}).grossRevenue||0;});
+      var aExpData=activeMonths.map(function(m){return(pnlSummaries[m]||{}).totalExpenses||0;});
+      var aNetData=activeMonths.map(function(m){var p=pnlSummaries[m]||{};return(p.grossRevenue||0)-(p.totalExpenses||0);});
+      // IR/Platform/CPC per month
+      var irByMonth=[],psByMonth=[],cpcByMonth=[];
+      activeMonths.forEach(function(m){
+        var ir2=0,ps2=0,cpc2=0;
+        allPNL.filter(function(r){return!r._isSummary&&r._month===m&&((r.displayAmt||0)>0||(r.rcvd||0)>0);}).forEach(function(r){
+          var cat=classifyPNLSource(r.affiliate);
+          var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
+          if(cat==='IR')ir2+=tot;else if(cat==='Platform Softwares')ps2+=tot;else cpc2+=tot;
+        });
+        irByMonth.push(ir2);psByMonth.push(ps2);cpcByMonth.push(cpc2);
+      });
+
+      new Chart(ctx2,{type:'bar',data:{
+        labels:activeMonths.map(function(m){return m.substring(0,3);}),
+        datasets:[
+          {label:'IR',data:irByMonth,backgroundColor:'#6366f1cc',borderColor:'#6366f1',borderWidth:2,borderRadius:6,borderSkipped:false},
+          {label:'Platform Softwares',data:psByMonth,backgroundColor:'#10b981cc',borderColor:'#10b981',borderWidth:2,borderRadius:6,borderSkipped:false},
+          {label:'CPC',data:cpcByMonth,backgroundColor:'#f59e0bcc',borderColor:'#f59e0b',borderWidth:2,borderRadius:6,borderSkipped:false},
+          {label:'Expenses',data:aExpData,backgroundColor:'#ef4444cc',borderColor:'#ef4444',borderWidth:2,borderRadius:6,borderSkipped:false}
+        ]
+      },options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'}}},plugins:{legend:{position:'top',labels:{font:{size:11,weight:'600'},padding:14,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}}}});
+    }
+  }catch(e){}
+}
+
+
 function exportPDF(tabId){
   var el=document.getElementById('tab-'+tabId);
   if(!el){alert('Tab not found');return;}
@@ -3996,8 +4247,12 @@ function exportExcel(tabId){
       headers=['Affiliate','Amount','Month','Week','Status','Remarks','Source'];
       allRev.forEach(function(r){data.push([r.affiliate,r.amount,r._month,r._week,r.status,r.remarks,r._srcLabel]);});
     }else if(tabId==='pnl'){
-      headers=['Affiliate','Amount','Status','Remarks','Source'];
-      allPNL.forEach(function(r){data.push([r.affiliate||r.name,r.amount||r.revenue,r.status,r.remarks,r._srcLabel||'PNL']);});
+      headers=['Invoice ID','Invoice Date','Company','Affiliate Name','Invoice Amount','Amount Received','Status','Remarks','Source Category'];
+      getPNLFilt().forEach(function(r){
+        var invA=r.displayAmt||r.invAmt||0;var rc=r.rcvd||0;
+        if(r.status==='Paid'){rc=r.rcvd||r.invAmt||r.displayAmt||0;invA=rc;}
+        data.push([r.invId||'',r.date||'','Elite Trade Club',r.affiliate||'',invA,rc,r.status||'',r.remarks||'',classifyPNLSource(r.affiliate)]);
+      });
     }else if(tabId==='cto'){
       headers=['Affiliate','Revenue','Leads','Month','Type','Source'];
       allCTO.forEach(function(r){data.push([r.affiliate||r.name,r.revenue||r.amount,r.leads||r.conversions,r._month||r.Month,r.type,r._srcLabel||'CTO']);});
