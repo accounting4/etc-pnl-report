@@ -2201,7 +2201,7 @@ for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
-ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':'Interactive Offers','Advertiser/Offer':'Interactive Offers ('+camp+')','Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{timeZone:'America/New_York'})});});
+ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';var ioClicks=parseInt((r['Clicks']||'0').replace(/,/g,''))||0;var ioLeads=parseInt((r['Leads']||'0').replace(/,/g,''))||0;allCTO.push({'Advertiser':'Interactive Offers','Advertiser/Offer':'Interactive Offers ('+camp+')','Offers':camp,'Current Lead Count':ioClicks.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt,'_ioClicks':ioClicks,'_ioLeads':ioLeads,'_lastUpdated':dt||new Date().toLocaleString('en-US',{timeZone:'America/New_York'})});});
 ss('Loading ETC Everflow CPA data...');
 const etcEfRows=await fetchCSV(gv(EF_ID,'Everflow CPA'));
 etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'CPA','_month':monthName,'_source':'sheet','_ctoType':'CPA','_efDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{timeZone:'America/New_York'})});});
@@ -2537,7 +2537,7 @@ var cpaType=r._cpaType||r['CPA Type']||'';
 if(!cpaType){if(type.toUpperCase()==='IO')cpaType='CPL';else if(type.toUpperCase()==='CPA')cpaType='CPA';else if(type.toUpperCase()==='CTO')cpaType='CTO';else cpaType='—';}
 var notes=[];if(growth&&growth!=='0')notes.push('Growth: +'+growth);if(goal)notes.push('Cap: '+goal);
 var lastUpdated=r._lastUpdated||r['Since Last Update']||r['Since Last Updated']||r._ioDate||r._efDate||r._saleDate||'';
-var _metricLabel=(type.toUpperCase()==='IO')?'Clicks':'Leads';return{_name:name,_offer:offer,_leads:leads,_rate:rate,_flat:flat,_revenue:revenue,_rank:rank?parseInt(rank):999,_type:type,_cpaType:cpaType,_saleDate:saleDate,_lastUpdated:lastUpdated,_notes:notes.join(' | '),_metricLabel:_metricLabel,_raw:r};
+var _metricLabel=(type.toUpperCase()==='IO')?'Clicks':'Leads';var _ioClicks=r._ioClicks||0;var _ioLeads=r._ioLeads||0;return{_name:name,_offer:offer,_leads:leads,_rate:rate,_flat:flat,_revenue:revenue,_rank:rank?parseInt(rank):999,_type:type,_cpaType:cpaType,_saleDate:saleDate,_lastUpdated:lastUpdated,_notes:notes.join(' | '),_metricLabel:_metricLabel,_ioClicks:_ioClicks,_ioLeads:_ioLeads,_raw:r};
 }
 var _ctoEditIdx=-1;
 function editCTORow(idx){var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);var row=sorted[idx];if(!row)return;_ctoEditIdx=idx;document.getElementById('cto-ed-name').value=row._name;document.getElementById('cto-ed-offer').value=row._offer;document.getElementById('cto-ed-leads').value=row._leads;
@@ -2678,7 +2678,7 @@ var tc=typeColors[(r._type||'').toUpperCase()]||'cto';
 
 gHtml+='<tr class="adv-child'+(r._raw&&r._raw._userEdited?' user-edited':'')+'">';
 gHtml+='<td></td>';
-gHtml+='<td style="padding-left:46px"><strong>'+(r._offer||r._name)+'</strong><br><span style="font-size:.75rem;color:var(--text3)">'+r._leads.toLocaleString()+' '+(r._metricLabel||'leads').toLowerCase()+' @ '+$m(r._rate)+'</span></td>';
+var _childMetric=r._leads.toLocaleString()+' '+(r._metricLabel||'leads').toLowerCase();if(r._ioLeads>0)_childMetric+=' · '+r._ioLeads.toLocaleString()+' leads';gHtml+='<td style="padding-left:46px"><strong>'+(r._offer||r._name)+'</strong><br><span style="font-size:.75rem;color:var(--text3)">'+_childMetric+(r._rate?' @ '+$m(r._rate):'')+'</span></td>';
 gHtml+='<td><span class="source-badge '+tc+'" style="font-size:.7rem">'+r._type+'</span>'+(r._raw&&r._raw._userEdited?' <span style="font-size:.6rem;color:#6366f1;font-weight:700">✎ EDITED</span>':'')+'</td>';
 gHtml+='<td style="font-size:.82rem">'+(r._cpaType||'—')+'</td>';
 gHtml+='<td style="font-size:.82rem">'+(r._saleDate||'—')+'</td>';
