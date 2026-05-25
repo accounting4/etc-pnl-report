@@ -662,6 +662,13 @@ table tbody tr:last-child td{border-bottom:none}
 #sync-status{animation:fadeIn .5s}
 @keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.4}}
 #sync-dot[style*="f59e0b"]{animation:syncPulse 1s infinite}
+
+/* Collapsible sections */
+.section-collapsible{cursor:pointer;user-select:none}
+.section-collapsible .collapse-icon{display:inline-block;transition:transform .2s;margin-left:8px;font-size:.75rem;color:var(--text3)}
+.section-collapsible.collapsed .collapse-icon{transform:rotate(-90deg)}
+.section-body{transition:max-height .3s ease,opacity .2s ease;overflow:hidden}
+.section-body.collapsed{max-height:0!important;opacity:0;pointer-events:none;margin:0;padding:0}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -769,6 +776,7 @@ Secured with Firebase Authentication
 <div class="form-row"><label>Month</label><select id="fe-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Category</label><select id="fe-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
 <div class="form-row"><label>Description</label><input id="fe-desc" placeholder="e.g. Google Ads - May"></div>
+<div class="form-row"><label>Linked Advertiser (optional)</label><input id="fe-advertiser" placeholder="e.g. Investors Alley"></div>
 <div class="form-row"><label>Amount ($)</label><input id="fe-amount" type="number" step="0.01" placeholder="0.00"></div>
 <div class="form-row"><label>Recurring?</label><select id="fe-recurring"><option value="No">No</option><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Annual">Annual</option></select></div>
 <div class="form-row"><label>Notes</label><textarea id="fe-notes" placeholder="Optional notes..."></textarea></div>
@@ -780,6 +788,7 @@ Secured with Firebase Authentication
 <div class="form-row"><label>Month</label><select id="fee-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Category</label><select id="fee-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
 <div class="form-row"><label>Description</label><input id="fee-desc" placeholder="e.g. Google Ads - May"></div>
+<div class="form-row"><label>Linked Advertiser (optional)</label><input id="fee-advertiser" placeholder="e.g. Investors Alley"></div>
 <div class="form-row"><label>Amount ($)</label><input id="fee-amount" type="number" step="0.01" placeholder="0.00"></div>
 <div class="form-row"><label>Recurring?</label><select id="fee-recurring"><option value="No">No</option><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Annual">Annual</option></select></div>
 <div class="form-row"><label>Notes</label><textarea id="fee-notes" placeholder="Optional notes..."></textarea></div>
@@ -944,7 +953,8 @@ Secured with Firebase Authentication
 <div class="fg"><label>Forecast Method</label><select id="fc-method" onchange="updateForecasts()"><option value="linear">Linear Trend</option><option value="movavg">3-Month Moving Avg</option><option value="weighted">Weighted Moving Avg</option></select></div>
 <div class="fg"><label>Project Ahead</label><select id="fc-ahead" onchange="updateForecasts()"><option value="3">3 Months</option><option value="6" selected>6 Months</option><option value="12">12 Months</option></select></div>
 </div>
-<div class="section-header" style="margin-top:1rem"><div class="section-title"><div class="icon-circle">📋</div> Revenue Records</div></div>
+<div class="section-header section-collapsible" style="margin-top:1rem" onclick="toggleSection('sec-rev-records')"><div class="section-title"><div class="icon-circle">📋</div> Revenue Records <span class="collapse-icon">&#9660;</span></div></div>
+<div id="sec-rev-records" class="section-body">
 <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;align-items:end">
 <div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
 <div class="fg"><label>Month</label><select id="rev-month-f" onchange="applyRevFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
@@ -968,6 +978,7 @@ Secured with Firebase Authentication
 </div>
 </div>
 </div>
+</div><!-- /sec-rev-records -->
 </div>
 <div id="tab-pnl" class="tab-content">
 <div class="export-bar">
@@ -1006,10 +1017,11 @@ Secured with Firebase Authentication
 </div>
 
 
-<div class="section-header">
-<div class="section-title"><div class="icon-circle">&#128181;</div> Invoice Details</div>
-<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
+<div class="section-header section-collapsible" onclick="toggleSection('sec-invoices')">
+<div class="section-title"><div class="icon-circle">&#128181;</div> Invoice Details <span class="collapse-icon">&#9660;</span></div>
+<div class="action-bar"><button class="btn-add" onclick="event.stopPropagation();document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
 </div>
+<div id="sec-invoices" class="section-body">
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="pnl-search" type="search" placeholder="Search..." oninput="applyPNLFilters()"></div>
 <div class="fg"><label>Month</label><select id="pnl-month-f" onchange="applyPNLFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
@@ -1034,12 +1046,14 @@ Secured with Firebase Authentication
 <div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Month</th><th>P&amp;L Revenue</th><th>QB Total</th><th>Difference</th></tr></thead><tbody id="audit-monthly"></tbody></table></div>
 <h4 style="color:var(--navy);margin:0 0 10px">&#128220; Change History</h4>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Details</th><th>Before &#8594; After</th></tr></thead><tbody id="audit-history"></tbody></table></div>
+</div><!-- /sec-invoices -->
 
 <!-- EXPENSE TRACKER -->
-<div class="section-header">
-<div class="section-title"><div class="icon-circle">&#128184;</div> Expense Tracker</div>
-<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Add Expense</button></div>
+<div class="section-header section-collapsible" onclick="toggleSection('sec-expenses')">
+<div class="section-title"><div class="icon-circle">&#128184;</div> Expense Tracker <span class="collapse-icon">&#9660;</span></div>
+<div class="action-bar"><button class="btn-add" onclick="event.stopPropagation();document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Add Expense</button></div>
 </div>
+<div id="sec-expenses" class="section-body">
 <div class="stats-row" style="margin-bottom:14px">
 <div class="stat-card red"><div class="sc-label">Total Expenses (All)</div><div class="sc-value" id="exp-s-total">$0</div><div class="sc-sub">All months combined</div></div>
 <div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="exp-s-month">$0</div><div class="sc-sub" id="exp-s-month-label">Current month</div></div>
@@ -1052,10 +1066,11 @@ Secured with Firebase Authentication
 <div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
 </div>
 <div class="table-card" style="margin-bottom:20px;overflow-x:auto">
-<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Description</th><th>Amount</th><th>Recurring</th><th>Notes</th><th style="width:100px">Actions</th></tr></thead>
+<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Description</th><th>Advertiser</th><th>Amount</th><th>Recurring</th><th>Notes</th><th style="width:100px">Actions</th></tr></thead>
 <tbody id="exp-tbody"></tbody>
 </table>
 </div>
+</div><!-- /sec-expenses -->
 </div>
 </div>
 </div>
@@ -1982,7 +1997,7 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 
 ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
-for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});var _fetchStamp=new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true});rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)).filter(r=>{var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();return adv!=='interactive offers';}));}
+for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});var _fetchStamp=new Date().toISOString();rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)).filter(r=>{var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();return adv!=='interactive offers';}));}
 // CPA data removed — Tracking Dashboard shows CTO Performance Dashboard only
 
 const mNames={'01':'January','02':'February','03':'March','04':'April','05':'May','06':'June','07':'July','08':'August','09':'September','10':'October','11':'November','12':'December'};
@@ -2058,10 +2073,10 @@ for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
-ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':camp,'Advertiser/Offer':camp,'Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true})});});
+ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':camp,'Advertiser/Offer':camp,'Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt,'_lastUpdated':dt||new Date().toISOString()});});
 ss('Loading ETC Everflow CPA data...');
 const etcEfRows=await fetchCSV(gv(EF_ID,'Everflow CPA'));
-etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'CPA','_month':monthName,'_source':'sheet','_ctoType':'CPA','_efDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true})});});
+etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'CPA','_month':monthName,'_source':'sheet','_ctoType':'CPA','_efDate':dt,'_lastUpdated':dt||new Date().toISOString()});});
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
@@ -2394,7 +2409,7 @@ return{_name:name,_offer:offer,_leads:leads,_rate:rate,_flat:flat,_revenue:reven
 }
 var _ctoEditIdx=-1;
 function editCTORow(idx){var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);var row=sorted[idx];if(!row)return;_ctoEditIdx=idx;document.getElementById('cto-ed-name').value=row._name;document.getElementById('cto-ed-offer').value=row._offer;document.getElementById('cto-ed-leads').value=row._leads;document.getElementById('cto-ed-rate').value=row._rate;document.getElementById('cto-ed-type').value=row._type;document.getElementById('cto-ed-cpatype').value=row._cpaType||'—';document.getElementById('cto-ed-saledate').value=row._saleDate||'';document.getElementById('cto-ed-notes').value=row._notes;document.getElementById('ctoEditModal').style.display='flex';}
-function saveCTOEdit(){var row=null;if(_ctoEditRaw){row={_raw:_ctoEditRaw};}else{var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);row=sorted[_ctoEditIdx];}if(!row||!row._raw)return;var r=row._raw;r['Advertiser']=document.getElementById('cto-ed-name').value;r['Offers']=document.getElementById('cto-ed-offer').value;r['Current Lead Count']=document.getElementById('cto-ed-leads').value;r['Rate/Lead ($)']=document.getElementById('cto-ed-rate').value;var newLeads=parseInt(document.getElementById('cto-ed-leads').value)||0;var newRate=parseFloat(document.getElementById('cto-ed-rate').value)||0;r['Total Revenue ($)']=(newLeads*newRate).toString();r['Type']=document.getElementById('cto-ed-type').value;r._ctoType=document.getElementById('cto-ed-type').value;r._cpaType=document.getElementById('cto-ed-cpatype').value;r._saleDate=document.getElementById('cto-ed-saledate').value;r._userNotes=document.getElementById('cto-ed-notes').value;r._lastUpdated=new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true});r._userEdited=true;_ctoEditRaw=null;document.getElementById('ctoEditModal').style.display='none';saveCTOEditsLocal();renderCTO();}
+function saveCTOEdit(){var row=null;if(_ctoEditRaw){row={_raw:_ctoEditRaw};}else{var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);row=sorted[_ctoEditIdx];}if(!row||!row._raw)return;var r=row._raw;r['Advertiser']=document.getElementById('cto-ed-name').value;r['Offers']=document.getElementById('cto-ed-offer').value;r['Current Lead Count']=document.getElementById('cto-ed-leads').value;r['Rate/Lead ($)']=document.getElementById('cto-ed-rate').value;var newLeads=parseInt(document.getElementById('cto-ed-leads').value)||0;var newRate=parseFloat(document.getElementById('cto-ed-rate').value)||0;r['Total Revenue ($)']=(newLeads*newRate).toString();r['Type']=document.getElementById('cto-ed-type').value;r._ctoType=document.getElementById('cto-ed-type').value;r._cpaType=document.getElementById('cto-ed-cpatype').value;r._saleDate=document.getElementById('cto-ed-saledate').value;r._userNotes=document.getElementById('cto-ed-notes').value;r._lastUpdated=new Date().toISOString();r._userEdited=true;r._manualUpdate=true;_ctoEditRaw=null;document.getElementById('ctoEditModal').style.display='none';saveCTOEditsLocal();renderCTO();}
 var _ctoEditRaw=null;
 function editCTOFromGrouped(advName,offerName,month){
 var found=null;
@@ -2439,18 +2454,17 @@ if(!d)return'—';
 try{
 var dt=new Date(d);
 if(isNaN(dt.getTime())){
-// Try parsing "May 21, 2026" format
 var parts=d.match(/(\w+)\s+(\d+),?\s*(\d{4})/);
 if(parts)dt=new Date(parts[1]+' '+parts[2]+', '+parts[3]);
 else return d;
 }
 if(isNaN(dt.getTime()))return d;
+var yr=dt.getFullYear();
 var mo=String(dt.getMonth()+1).padStart(2,'0');
 var dy=String(dt.getDate()).padStart(2,'0');
-var yr=String(dt.getFullYear()).slice(-2);
 var hr=dt.getHours();var ampm=hr>=12?'PM':'AM';hr=hr%12||12;
 var mn=String(dt.getMinutes()).padStart(2,'0');
-return mo+'/'+dy+'/'+yr+' '+hr+':'+mn+' '+ampm;
+return yr+'-'+mo+'-'+dy+' '+hr+':'+mn+' '+ampm;
 }catch(e){return d;}
 }
 function renderCTO(){var f=getCTOFilt();var rows=f.map(getCTORow).filter(function(r){return r._name||r._offer;});var pp=parseInt(document.getElementById('cto-entries').value)||25;var tp=Math.max(1,Math.ceil(rows.length/pp));ctoPage=Math.min(ctoPage,tp);
@@ -2503,7 +2517,7 @@ gHtml+='<td><span class="source-badge '+tc+'" style="font-size:.7rem">'+r._type+
 gHtml+='<td style="font-size:.82rem">'+(r._cpaType||'—')+'</td>';
 gHtml+='<td style="font-size:.82rem">'+(r._saleDate||'—')+'</td>';
 gHtml+='<td><strong>'+$m(r._revenue)+'</strong></td>';
-gHtml+='<td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td>';
+gHtml+='<td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+(r._raw&&r._raw._userEdited?'<span style="color:#6366f1;font-size:.65rem">✎ Manual</span> ':'<span style="color:#10b981;font-size:.65rem">🔄 Synced</span> ')+fmtLastUpd(r._lastUpdated)+'</span></td>';
 gHtml+='<td class="action-cell" style="white-space:nowrap"><button class="btn-edit" style="font-size:.75rem;padding:4px 8px" data-adv="'+(r._name||'').replace(/"/g,'&quot;')+'" data-offer="'+(r._offer||'').replace(/"/g,'&quot;')+'" data-month="'+(r._raw?r._raw._month:'')+'" onclick="editCTOFromGrouped(this.dataset.adv,this.dataset.offer,this.dataset.month)">✎</button></td>';
 gHtml+='</tr>';
 });
@@ -2596,7 +2610,7 @@ var newEntry={
 '_cpaType':document.getElementById('cto-add-cpatype').value,
 '_saleDate':document.getElementById('cto-add-saledate').value,
 '_manual':true,
-'_lastUpdated':new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true})
+'_lastUpdated':new Date().toISOString()
 };
 allCTO.push(newEntry);
 saveManualCTOEntries();
@@ -2749,7 +2763,14 @@ var pctOfYtd=ytdGross>0?Math.round(d.qGross/ytdGross*100):0;
 var isExp=document.getElementById('q-card-'+d.qi)&&document.getElementById('q-card-'+d.qi).classList.contains('expanded');
 cardsHtml+='<div class="q-card'+(isExp?' expanded':'')+'" id="q-card-'+d.qi+'">';
 cardsHtml+='<div class="q-card-head" onclick="toggleQuarter('+d.qi+')">';
-cardsHtml+='<div class="q-card-left"><div class="q-badge '+d.q.badge+'">'+d.q.name+'</div><div><div class="q-card-title">'+d.q.full+'</div><div class="q-card-sub">'+(d.hasData?pctOfYtd+'% of YTD revenue • '+d.monthData.filter(function(m){return m.gross||m.exp;}).length+' months with data':'No data yet')+'</div></div></div>';
+var _qoqText='';
+if(d.qi>0&&d.hasData){
+var prevQ=qData[d.qi-1];
+if(prevQ&&prevQ.hasData&&prevQ.qGross>0){
+var qoqPct=Math.round((d.qGross-prevQ.qGross)/prevQ.qGross*100);
+_qoqText=' • <span style="color:'+(qoqPct>=0?'#10b981':'#ef4444')+'">'+((qoqPct>=0?'▲ +':'▼ ')+qoqPct+'% vs '+prevQ.q.name)+'</span>';
+}}
+cardsHtml+='<div class="q-card-left"><div class="q-badge '+d.q.badge+'">'+d.q.name+'</div><div><div class="q-card-title">'+d.q.full+'</div><div class="q-card-sub">'+(d.hasData?pctOfYtd+'% of YTD revenue • '+d.monthData.filter(function(m){return m.gross||m.exp;}).length+' months with data'+_qoqText:'No data yet')+'</div></div></div>';
 cardsHtml+='<div class="q-card-right">';
 if(d.hasData){
 cardsHtml+='<div class="q-card-metric"><div class="q-m-val" style="color:var(--green)">'+$m(d.qGross)+'</div><div class="q-m-label">Gross</div></div>';
@@ -2764,6 +2785,15 @@ cardsHtml+='<div class="q-detail-card"><div class="q-d-label">Gross Revenue</div
 cardsHtml+='<div class="q-detail-card"><div class="q-d-label">Total Expenses</div><div class="q-d-val" style="color:var(--red)">'+$m(d.qExp)+'</div></div>';
 cardsHtml+='<div class="q-detail-card"><div class="q-d-label">Net P&L</div><div class="q-d-val" style="color:'+(d.qNet>=0?'#6366f1':'var(--red)')+'">'+$m(d.qNet)+'</div></div>';
 cardsHtml+='<div class="q-detail-card"><div class="q-d-label">% of YTD</div><div class="q-d-val" style="color:#6366f1">'+pctOfYtd+'%</div></div>';
+if(d.qi>0){
+var _prevQ=qData[d.qi-1];
+if(_prevQ&&_prevQ.hasData&&_prevQ.qGross>0){
+var _qoqGross=Math.round((d.qGross-_prevQ.qGross)/_prevQ.qGross*100);
+var _qoqNet=_prevQ.qNet!==0?Math.round((d.qNet-_prevQ.qNet)/Math.abs(_prevQ.qNet)*100):0;
+cardsHtml+='<div class="q-detail-card"><div class="q-d-label">vs '+_prevQ.q.name+' Revenue</div><div class="q-d-val" style="color:'+(_qoqGross>=0?'#10b981':'#ef4444')+'">'+(_qoqGross>=0?'+':'')+_qoqGross+'%</div></div>';
+cardsHtml+='<div class="q-detail-card"><div class="q-d-label">vs '+_prevQ.q.name+' Net P&L</div><div class="q-d-val" style="color:'+(_qoqNet>=0?'#10b981':'#ef4444')+'">'+(_qoqNet>=0?'+':'')+_qoqNet+'%</div></div>';
+}
+}
 cardsHtml+='</div>';
 cardsHtml+='<table class="q-months-table"><thead><tr><th>Month</th><th>Gross Revenue</th><th>Expenses</th><th>Net P&L</th></tr></thead><tbody>';
 d.monthData.forEach(function(m){
@@ -3025,7 +3055,7 @@ setStat('exp-s-count',userExpenses.filter(function(e){return!expDeletes.has(e._k
 var catColors={'Salary':'#2563eb','Ads / Leads':'#dc2626','Beehiiv':'#7c3aed','Software':'#0ea5e9','Contractors':'#ec4899','Office':'#14b8a6','Other':'#f97316'};
 var tbody=document.getElementById('exp-tbody');
 if(!tbody)return;
-if(!f.length){tbody.innerHTML='<tr><td colspan="8" class="empty-state">No expenses recorded yet. Click "+ Add Expense" to start tracking.</td></tr>';return;}
+if(!f.length){tbody.innerHTML='<tr><td colspan="9" class="empty-state">No expenses recorded yet. Click "+ Add Expense" to start tracking.</td></tr>';return;}
 var rows=f.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
 tbody.innerHTML=rows.map(function(e,i){
 var cc=catColors[e.category]||'#64748b';
@@ -3034,6 +3064,7 @@ return'<tr>'+
 '<td>'+(e.month||'—')+'</td>'+
 '<td><span style="display:inline-block;padding:3px 10px;border-radius:20px;background:'+cc+'18;color:'+cc+';font-size:.78rem;font-weight:600;border:1px solid '+cc+'30">'+(e.category||'Other')+'</span></td>'+
 '<td><strong>'+(e.description||'—')+'</strong></td>'+
+'<td style="font-size:.82rem">'+(e.advertiser||'—')+'</td>'+
 '<td style="color:var(--red);font-weight:700">$'+(e.amount||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
 '<td style="font-size:.82rem">'+(e.recurring||'No')+'</td>'+
 '<td style="font-size:.82rem;color:var(--text3)">'+(e.notes||'')+'</td>'+
@@ -3052,6 +3083,7 @@ date:date,
 month:month,
 category:document.getElementById('fe-category').value||'Other',
 description:document.getElementById('fe-desc').value||'',
+advertiser:document.getElementById('fe-advertiser').value||'',
 amount:parseFloat(document.getElementById('fe-amount').value)||0,
 recurring:document.getElementById('fe-recurring').value||'No',
 notes:document.getElementById('fe-notes').value||'',
@@ -3061,7 +3093,7 @@ if(!ex.amount){alert('Please enter an amount.');return;}
 userExpenses.push(ex);
 localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
 document.getElementById('addExpenseModal').classList.remove('open');
-['fe-date','fe-desc','fe-amount','fe-notes'].forEach(function(id){document.getElementById(id).value='';});
+['fe-date','fe-desc','fe-amount','fe-notes','fe-advertiser'].forEach(function(id){document.getElementById(id).value='';});
 document.getElementById('fe-month').value='';
 document.getElementById('fe-category').value='Salary';
 document.getElementById('fe-recurring').value='No';
@@ -3077,6 +3109,7 @@ document.getElementById('fee-date').value=ex.date||'';
 document.getElementById('fee-month').value=ex.month||'';
 document.getElementById('fee-category').value=ex.category||'Other';
 document.getElementById('fee-desc').value=ex.description||'';
+document.getElementById('fee-advertiser').value=ex.advertiser||'';
 document.getElementById('fee-amount').value=ex.amount||'';
 document.getElementById('fee-recurring').value=ex.recurring||'No';
 document.getElementById('fee-notes').value=ex.notes||'';
@@ -3093,6 +3126,7 @@ ex.date=date;
 ex.month=month;
 ex.category=document.getElementById('fee-category').value||'Other';
 ex.description=document.getElementById('fee-desc').value||'';
+ex.advertiser=document.getElementById('fee-advertiser').value||'';
 ex.amount=parseFloat(document.getElementById('fee-amount').value)||0;
 ex.recurring=document.getElementById('fee-recurring').value||'No';
 ex.notes=document.getElementById('fee-notes').value||'';
@@ -3170,6 +3204,25 @@ setTimeout(function(){updateSyncIndicator('done');},5000);
 setInterval(autoSyncData,900000);
 // Show initial sync time
 setTimeout(function(){updateSyncIndicator('done');},1000);
+
+
+// === COLLAPSIBLE SECTIONS ===
+function toggleSection(sectionId){
+var body=document.getElementById(sectionId);
+var header=body?body.previousElementSibling:null;
+if(!body)return;
+if(body.classList.contains('collapsed')){
+body.classList.remove('collapsed');
+body.style.maxHeight=body.scrollHeight+'px';
+setTimeout(function(){body.style.maxHeight='none';},300);
+if(header)header.classList.remove('collapsed');
+}else{
+body.style.maxHeight=body.scrollHeight+'px';
+requestAnimationFrame(function(){body.style.maxHeight='0px';});
+body.classList.add('collapsed');
+if(header)header.classList.add('collapsed');
+}
+}
 
 // ===== DARK MODE =====
 function toggleDarkMode(){
