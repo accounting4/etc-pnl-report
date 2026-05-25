@@ -669,6 +669,60 @@ table tbody tr:last-child td{border-bottom:none}
 .section-collapsible.collapsed .collapse-icon{transform:rotate(-90deg)}
 .section-body{transition:max-height .3s ease,opacity .2s ease;overflow:hidden}
 .section-body.collapsed{max-height:0!important;opacity:0;pointer-events:none;margin:0;padding:0}
+
+/* === UI OVERHAUL: Clean SaaS Dashboard === */
+/* Global spacing */
+.stats-row{gap:16px;margin-bottom:24px}
+.stat-card{padding:20px 22px;border-radius:14px;transition:transform .15s,box-shadow .15s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.two-col{gap:20px;margin-bottom:24px}
+.chart-card{border-radius:14px;padding:22px}
+.table-card{border-radius:14px;overflow:hidden}
+.card{border-radius:14px!important}
+.section-header{margin-bottom:20px;padding-bottom:12px}
+.filter-bar{margin-bottom:16px}
+
+/* Section dividers */
+.section-divider{height:1px;background:var(--border);margin:32px 0;opacity:.5}
+
+/* Collapsible section styling */
+.section-collapsible{padding:14px 18px;border-radius:12px;background:var(--surface);border:1px solid var(--border);margin-bottom:4px;transition:background .15s}
+.section-collapsible:hover{background:var(--surface2)}
+.section-body{padding-top:16px}
+
+/* Summary cards - more prominent */
+.summary-hero{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.summary-hero .hero-card{padding:24px;border-radius:16px;background:var(--surface);border:1px solid var(--border);text-align:center;box-shadow:var(--shadow)}
+.summary-hero .hero-card .hero-val{font-size:2rem;font-weight:800;letter-spacing:-.5px;margin:8px 0 4px}
+.summary-hero .hero-card .hero-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)}
+.summary-hero .hero-card .hero-sub{font-size:.78rem;color:var(--text3);margin-top:4px}
+
+/* Compact collapsible header for chart/table sections */
+.section-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:pointer;margin-bottom:4px;user-select:none;transition:background .15s}
+.section-toggle:hover{background:var(--surface2)}
+.section-toggle h3{margin:0;font-size:.88rem;color:var(--text)}
+.section-toggle .t-arrow{font-size:.8rem;color:var(--text3);transition:transform .2s}
+.section-toggle.open .t-arrow{transform:rotate(180deg)}
+.section-toggle-body{overflow:hidden;transition:max-height .35s ease,opacity .25s ease}
+.section-toggle-body.closed{max-height:0!important;opacity:0;padding:0;margin:0;pointer-events:none}
+
+/* Global search bar */
+#global-search-bar{position:sticky;top:0;z-index:90;padding:10px 0;margin-bottom:16px}
+#global-search-bar input{width:100%;padding:12px 20px 12px 44px;border:1px solid var(--border);border-radius:12px;font-size:.9rem;background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.04);transition:border-color .2s,box-shadow .2s}
+#global-search-bar input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+#global-search-bar .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:1rem;pointer-events:none}
+#global-search-results{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.12);max-height:320px;overflow-y:auto;display:none;z-index:91}
+#global-search-results .gs-item{padding:12px 18px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:background .1s}
+#global-search-results .gs-item:hover{background:var(--surface2)}
+#global-search-results .gs-item:last-child{border-bottom:none}
+#global-search-results .gs-badge{font-size:.65rem;padding:2px 8px;border-radius:6px;font-weight:700;text-transform:uppercase}
+#global-search-results .gs-name{font-weight:600;font-size:.88rem}
+#global-search-results .gs-detail{font-size:.75rem;color:var(--text3)}
+
+@media(max-width:768px){
+.summary-hero{grid-template-columns:1fr}
+}
+
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -830,6 +884,12 @@ Secured with Firebase Authentication
 
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
+<!-- Global Search -->
+<div id="global-search-bar" style="position:relative;max-width:600px;margin:0 auto 20px">
+<span class="search-icon">🔍</span>
+<input type="text" id="global-search-input" placeholder="Search advertisers, packages, invoices..." oninput="globalSearch(this.value)" onfocus="if(this.value)globalSearch(this.value)" autocomplete="off">
+<div id="global-search-results"></div>
+</div>
 <div id="tab-overview" class="tab-content active">
 <div class="export-bar">
 <button class="btn-export pdf" onclick="exportPDF('overview')">📄 Export PDF</button>
@@ -895,13 +955,16 @@ Secured with Firebase Authentication
 <!-- Alerts Section -->
 <div id="alerts-section" style="margin-bottom:24px"></div>
 <!-- Month-over-Month Comparison -->
-<div class="two-col">
+<div class="section-toggle" onclick="toggleSec('ov-charts-body',this)"><h3>📊 Charts — Revenue Trends</h3><span class="t-arrow">▾</span></div>
+<div id="ov-charts-body" class="section-toggle-body closed">
+<div class="two-col" style="margin-top:12px">
 <div class="chart-card"><h3>📊 Month-over-Month Revenue</h3><div class="chart-wrap" style="height:280px"><canvas id="momBarChart"></canvas></div></div>
 <div class="chart-card"><h3>📈 Revenue Growth Trend</h3><div class="chart-wrap" style="height:280px"><canvas id="momLineChart"></canvas></div></div>
 </div>
+</div>
 <!-- Quick Stats by Source -->
 <div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:24px">
-<h3 style="margin:0 0 16px;font-size:.95rem;color:var(--text)">💰 Revenue Breakdown by Source <span style="font-size:.75rem;color:var(--text3);font-weight:400">— click any source to drill down</span></h3>
+<h3 style="margin:0 0 16px;font-size:.95rem;color:var(--text)">💰 Revenue Breakdown by Source</h3>
 <div id="ov-breakdown" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px"></div>
 </div>
 <!-- Recent Records Drill-Down Table (collapsible) -->
@@ -953,8 +1016,8 @@ Secured with Firebase Authentication
 <div class="fg"><label>Forecast Method</label><select id="fc-method" onchange="updateForecasts()"><option value="linear">Linear Trend</option><option value="movavg">3-Month Moving Avg</option><option value="weighted">Weighted Moving Avg</option></select></div>
 <div class="fg"><label>Project Ahead</label><select id="fc-ahead" onchange="updateForecasts()"><option value="3">3 Months</option><option value="6" selected>6 Months</option><option value="12">12 Months</option></select></div>
 </div>
-<div class="section-header section-collapsible" style="margin-top:1rem" onclick="toggleSection('sec-rev-records')"><div class="section-title"><div class="icon-circle">📋</div> Revenue Records <span class="collapse-icon">&#9660;</span></div></div>
-<div id="sec-rev-records" class="section-body">
+<div class="section-header section-collapsible collapsed" style="margin-top:1rem" onclick="toggleSection('sec-rev-records')"><div class="section-title"><div class="icon-circle">📋</div> Revenue Records <span class="collapse-icon">&#9660;</span></div></div>
+<div id="sec-rev-records" class="section-body collapsed" style="max-height:0;opacity:0">
 <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;align-items:end">
 <div class="fg"><label>Search</label><input id="rev-search" type="search" placeholder="Search..." oninput="applyRevFilters()"></div>
 <div class="fg"><label>Month</label><select id="rev-month-f" onchange="applyRevFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
@@ -993,12 +1056,14 @@ Secured with Firebase Authentication
 <div class="stat-card green"><div class="sc-label">Net Profit</div><div class="sc-value" id="pnl-s-net">$0</div><div class="sc-sub">Revenue - Expenses</div></div>
 </div>
 
-<div id="pnl-summary-banner" class="pnl-summary-banner" style="display:none">
+<div id="pnl-summary-banner" class="pnl-summary-banner">
 <div class="psb-title">&#128181; Monthly Financial Summary</div>
 <div class="psb-row" id="pnl-summary-content"></div>
 </div>
 <div class="month-selector" id="pnl-month-buttons"></div>
-<div class="two-col" style="margin-bottom:20px;align-items:stretch">
+<div class="section-toggle" onclick="toggleSec('pnl-monthly-body',this)"><h3>📊 Monthly P&L Breakdown</h3><span class="t-arrow">▾</span></div>
+<div id="pnl-monthly-body" class="section-toggle-body closed">
+<div class="two-col" style="margin-bottom:20px;align-items:stretch;margin-top:12px">
 <div class="table-card" style="margin-bottom:0">
 <div class="section-title" style="margin-bottom:12px"><div class="icon-circle">&#128181;</div> Profit and Loss Report</div>
 <table id="pnl-monthly-table">
@@ -1010,6 +1075,8 @@ Secured with Firebase Authentication
 <div class="chart-card" style="margin-bottom:0"><h3>&#128200; Profit &amp; Expenses by Month</h3><div class="chart-wrap" style="height:320px"><canvas id="pnlProfitChart"></canvas></div></div>
 </div>
 
+</div><!-- /pnl-monthly-body -->
+
 <div style="margin-bottom:20px">
 <div class="section-title" style="margin-bottom:16px"><div class="icon-circle">&#128202;</div> Quarterly P&L Summary</div>
 <div class="q-ytd-bar" id="q-ytd-bar"></div>
@@ -1017,11 +1084,11 @@ Secured with Firebase Authentication
 </div>
 
 
-<div class="section-header section-collapsible" onclick="toggleSection('sec-invoices')">
+<div class="section-header section-collapsible collapsed" onclick="toggleSection('sec-invoices')">
 <div class="section-title"><div class="icon-circle">&#128181;</div> Invoice Details <span class="collapse-icon">&#9660;</span></div>
 <div class="action-bar"><button class="btn-add" onclick="event.stopPropagation();document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
 </div>
-<div id="sec-invoices" class="section-body">
+<div id="sec-invoices" class="section-body collapsed" style="max-height:0;opacity:0">
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="pnl-search" type="search" placeholder="Search..." oninput="applyPNLFilters()"></div>
 <div class="fg"><label>Month</label><select id="pnl-month-f" onchange="applyPNLFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
@@ -1049,11 +1116,11 @@ Secured with Firebase Authentication
 </div><!-- /sec-invoices -->
 
 <!-- EXPENSE TRACKER -->
-<div class="section-header section-collapsible" onclick="toggleSection('sec-expenses')">
+<div class="section-header section-collapsible collapsed" onclick="toggleSection('sec-expenses')">
 <div class="section-title"><div class="icon-circle">&#128184;</div> Expense Tracker <span class="collapse-icon">&#9660;</span></div>
 <div class="action-bar"><button class="btn-add" onclick="event.stopPropagation();document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Add Expense</button></div>
 </div>
-<div id="sec-expenses" class="section-body">
+<div id="sec-expenses" class="section-body collapsed" style="max-height:0;opacity:0">
 <div class="stats-row" style="margin-bottom:14px">
 <div class="stat-card red"><div class="sc-label">Total Expenses (All)</div><div class="sc-value" id="exp-s-total">$0</div><div class="sc-sub">All months combined</div></div>
 <div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="exp-s-month">$0</div><div class="sc-sub" id="exp-s-month-label">Current month</div></div>
@@ -1080,24 +1147,28 @@ Secured with Firebase Authentication
 <button class="btn-export excel" onclick="exportExcel('cto')">📊 Export Excel</button>
 </div>
 <div class="stats-row">
-<div class="stat-card"><div class="sc-label">Tracking Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">CTO + IO + EF</div></div>
+<div class="stat-card"><div class="sc-label">Tracking Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">CTO + IO + CPA</div></div>
 <div class="stat-card green"><div class="sc-label">Total Leads</div><div class="sc-value" id="cto-s-leads">0</div><div class="sc-sub">Current count</div></div>
 <div class="stat-card purple"><div class="sc-label">Active Offers</div><div class="sc-value" id="cto-s-count">0</div><div class="sc-sub">With revenue</div></div>
 <div class="stat-card"><div class="sc-label">Top Affiliate</div><div class="sc-value" id="cto-s-top" style="font-size:1rem">—</div><div class="sc-sub">By revenue</div></div>
 </div>
-<div id="cto-summary-banner" class="pnl-summary-banner" style="display:none">
+<div id="cto-summary-banner" class="pnl-summary-banner">
 <div class="psb-title">&#128176; Monthly Financial Summary</div>
 <div class="psb-row" id="cto-summary-content"></div>
 </div>
-<div class="two-col" style="margin-bottom:20px">
+<div class="section-toggle" onclick="toggleSec('cto-charts-body',this)"><h3>📊 Charts — Revenue & Rankings</h3><span class="t-arrow">▾</span></div>
+<div id="cto-charts-body" class="section-toggle-body closed">
+<div class="two-col" style="margin-top:12px;margin-bottom:20px">
 <div class="chart-card"><h3>&#128202; Revenue by Affiliate</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRevChart"></canvas></div></div>
 <div class="chart-card"><h3>&#127942; Affiliate Rankings</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRankChart"></canvas></div></div>
 </div>
-<div class="section-header"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CPA / CTO / CPL / IR <div id="sync-status" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);margin-left:12px"><span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span><span id="sync-text">Synced</span></div></div><div style="display:flex;gap:8px;align-items:center"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
+</div>
+<div class="section-header section-collapsible" onclick="toggleSection('sec-cto-table')"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CPA / CTO / CPL / IR <div id="sync-status" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);margin-left:12px"><span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span><span id="sync-text">Synced</span></div> <span class="collapse-icon">&#9660;</span></div><div style="display:flex;gap:8px;align-items:center" onclick="event.stopPropagation()"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
+<div id="sec-cto-table" class="section-body">
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
 <div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="May">May</option><option value="April">April</option><option value="March">March</option><option value="February">February</option><option value="January">January</option><option value="">All Months</option></select></div>
-<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>IO</option><option value="CPA">CPA</option><option>CPL</option><option>CPA</option></select></div>
+<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>IO</option><option value="CPA">CPA</option><option>CPL</option></select></div>
 <div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="10">10</option></select></div>
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
 </div>
@@ -1110,6 +1181,7 @@ Secured with Firebase Authentication
 <tbody id="cto-tbody"></tbody></table>
 <div class="pagination" id="cto-pagination"></div>
 </div>
+</div><!-- /sec-cto-table -->
 <div id="ctoEditModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
 <div class="modal-box">
 <h3>&#9998; Edit CTO Record</h3>
@@ -3223,6 +3295,107 @@ body.classList.add('collapsed');
 if(header)header.classList.add('collapsed');
 }
 }
+
+
+// === TOGGLE SECTION (for chart/table sections) ===
+function toggleSec(id,btn){
+var body=document.getElementById(id);
+if(!body)return;
+if(body.classList.contains('closed')){
+body.classList.remove('closed');
+body.style.maxHeight=body.scrollHeight+'px';
+setTimeout(function(){body.style.maxHeight='none';},350);
+if(btn)btn.classList.add('open');
+// Trigger chart re-render for newly visible sections
+setTimeout(function(){
+if(id==='ov-charts-body')try{renderOverviewCharts();}catch(e){}
+if(id==='cto-charts-body')try{renderCTO();}catch(e){}
+if(id==='pnl-monthly-body')try{renderMonthlySummary();}catch(e){}
+},50);
+}else{
+body.style.maxHeight=body.scrollHeight+'px';
+requestAnimationFrame(function(){body.style.maxHeight='0px';});
+body.classList.add('closed');
+if(btn)btn.classList.remove('open');
+}
+}
+
+// === GLOBAL SEARCH ===
+
+function gsNav(idx){
+var it=(window._gsItems||[])[idx];
+if(!it)return;
+document.getElementById('global-search-input').value='';
+document.getElementById('global-search-results').style.display='none';
+showTab(it.tab);
+if(it.tab==='cto'){
+var s=document.getElementById('cto-search');
+if(s){s.value=it.name;applyCTOFilters();}
+// Also expand the CTO table section if collapsed
+var secBody=document.getElementById('sec-cto-table');
+if(secBody&&secBody.classList.contains('collapsed')){toggleSection('sec-cto-table');}
+}
+}
+
+function globalSearch(q){
+var results=document.getElementById('global-search-results');
+if(!results)return;
+if(!q||q.length<2){results.style.display='none';return;}
+q=q.toLowerCase();
+var items=[];
+// Search CTO/tracking data
+if(window.allCTO){
+var seen={};
+allCTO.forEach(function(r){
+var adv=(r['Advertiser']||'').trim();
+var offer=(r['Offers']||r['Offer']||'').trim();
+var rev=parseFloat((r['Total Revenue ($)']||'0').replace(/[\$,]/g,''))||0;
+var type=r._ctoType||r['Type']||'CTO';
+if(adv&&adv.toLowerCase().indexOf(q)!==-1&&!seen['adv:'+adv]){
+seen['adv:'+adv]=1;
+items.push({name:adv,detail:'Advertiser • '+type,badge:type,badgeColor:type==='CPA'?'#065f46':type==='IO'?'#9d174d':'#5b21b6',tab:'cto'});
+}
+if(offer&&offer.toLowerCase().indexOf(q)!==-1&&!seen['offer:'+adv+offer]){
+seen['offer:'+adv+offer]=1;
+items.push({name:offer,detail:adv+' • '+$m(rev),badge:type,badgeColor:type==='CPA'?'#065f46':type==='IO'?'#9d174d':'#5b21b6',tab:'cto'});
+}
+});
+}
+// Search PNL invoices
+if(window.pnlRows){
+pnlRows.forEach(function(r){
+var aff=(r.affiliate||'').trim();
+if(aff&&aff.toLowerCase().indexOf(q)!==-1&&!items.some(function(i){return i.name===aff&&i.tab==='pnl';})){
+items.push({name:aff,detail:'Invoice • '+$m(r.invAmt||0),badge:'PNL',badgeColor:'#0369a1',tab:'pnl'});
+}
+});
+}
+// Search expenses
+var exps=JSON.parse(localStorage.getItem('userExpenses')||'[]');
+exps.forEach(function(e){
+var desc=(e.description||'').toLowerCase();
+var adv=(e.advertiser||'').toLowerCase();
+if(desc.indexOf(q)!==-1||adv.indexOf(q)!==-1){
+items.push({name:e.description||'Expense',detail:e.category+' • '+$m(e.amount),badge:'EXP',badgeColor:'#ef4444',tab:'pnl'});
+}
+});
+if(items.length===0){
+results.innerHTML='<div class="gs-item" style="color:var(--text3);justify-content:center;font-size:.82rem">No results found</div>';
+}else{
+results.innerHTML=items.slice(0,10).map(function(it){
+return'<div class="gs-item" onclick="showTab(\''+it.tab+'\');document.getElementById(\'global-search-input\').value=\'\';document.getElementById(\'global-search-results\').style.display=\'none\';'+(it.tab==='cto'?'document.getElementById(\'cto-search\').value=\''+it.name.replace(/'/g,"\\'")+'\';;applyCTOFilters();':'')+'">'+ 
+'<span class="gs-badge" style="background:'+it.badgeColor+'22;color:'+it.badgeColor+'">'+it.badge+'</span>'+
+'<div><div class="gs-name">'+it.name+'</div><div class="gs-detail">'+it.detail+'</div></div></div>';
+}).join('');
+}
+results.style.display='block';
+}
+// Close search results on click outside
+document.addEventListener('click',function(e){
+var sb=document.getElementById('global-search-bar');
+var res=document.getElementById('global-search-results');
+if(sb&&res&&!sb.contains(e.target))res.style.display='none';
+});
 
 // ===== DARK MODE =====
 function toggleDarkMode(){
