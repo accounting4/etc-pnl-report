@@ -3137,6 +3137,9 @@ var ctoRev=0,ioRev=0,efRev=0,ctoLeads=0,ioLeads=0,efLeads=0;
 f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').toUpperCase();if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;}else if(t==='CPA'||t==='EF-ETC'||t==='EF'){efRev+=row._revenue;efLeads+=row._leads;}else{ctoRev+=row._revenue;ctoLeads+=row._leads;}});
 var topAffs=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
 var topHtml=topAffs.map(function(a,i){return'<div class="psb-line"><span class="psb-key">'+(i+1)+'. '+a[0]+'</span><span class="psb-value gold">'+$m(a[1])+'</span></div>';}).join('');
+var _sm2=(document.getElementById('cto-month-f')||{}).value||'';var _ir3=0,_ps3=0,_cpc3=0;
+allPNL.filter(function(r){if(r._isSummary)return false;if(_sm2&&r._month!==_sm2)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_ir3+=tot;else if(cat==='Platform Softwares')_ps3+=tot;else _cpc3+=tot;});
+var grandTotal=totRev+_ir3+_ps3+_cpc3;
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue by Source</div>'+
 '<div class="psb-line"><span class="psb-key"><span class="source-badge purple">CTO</span> Revenue</span><span class="psb-value" style="color:#6366f1">'+$m(ctoRev)+'</span></div>'+
 '<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Leads: '+ctoLeads.toLocaleString()+'</span></div>'+
@@ -3144,8 +3147,11 @@ cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue by So
 '<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Clicks: '+ioLeads.toLocaleString()+'</span> · <span class="psb-key">Campaigns: '+f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length+'</span></div>'+
 '<div class="psb-line"><span class="psb-key"><span class="source-badge everflow">CPA</span> Revenue</span><span class="psb-value" style="color:#f59e0b">'+$m(efRev)+'</span></div>'+
 '<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Conversions: '+efLeads.toLocaleString()+'</span></div>'+
-(function(){var sm2=(document.getElementById('cto-month-f')||{}).value||'';var ir3=0,ps3=0,cpc3=0;allPNL.filter(function(r){if(r._isSummary)return false;if(sm2&&r._month!==sm2)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')ir3+=tot;else if(cat==='Platform Softwares')ps3+=tot;else cpc3+=tot;});return '<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#8b5cf6;color:#fff">IR</span> Investor Relations</span><span class="psb-value" style="color:#8b5cf6">'+$m(ir3)+'</span></div><div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#10b981;color:#fff">PS</span> Platform Softwares</span><span class="psb-value" style="color:#10b981">'+$m(ps3)+'</span></div><div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#0ea5e9;color:#fff">CPC</span> Newsletter Ads</span><span class="psb-value" style="color:#0ea5e9">'+$m(cpc3)+'</span></div>';})()+'<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">'+
-'<div class="psb-line"><span class="psb-key"><strong>Combined Total</strong></span><span class="psb-value gold"><strong>'+$m(totRev)+'</strong></span></div>'+
+'<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#8b5cf6;color:#fff">IR</span> Investor Relations</span><span class="psb-value" style="color:#8b5cf6">'+$m(_ir3)+'</span></div>'+
+'<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#10b981;color:#fff">PS</span> Platform Softwares</span><span class="psb-value" style="color:#10b981">'+$m(_ps3)+'</span></div>'+
+'<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#0ea5e9;color:#fff">CPC</span> Newsletter Ads</span><span class="psb-value" style="color:#0ea5e9">'+$m(_cpc3)+'</span></div>'+
+'<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">'+
+'<div class="psb-line"><span class="psb-key"><strong>Combined Total</strong></span><span class="psb-value gold"><strong>'+$m(grandTotal)+'</strong></span></div>'+
 '</div><div class="psb-group"><div class="psb-group-title">Top Affiliates</div>'+topHtml+'</div>';
 }
 function updateCTOCharts(rows,affRevMap){
