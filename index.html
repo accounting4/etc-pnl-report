@@ -1021,26 +1021,6 @@ Secured with Firebase Authentication
 <div class="chart-card"><h3>&#128202; Revenue by Affiliate</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRevChart"></canvas></div></div>
 <div class="chart-card"><h3>&#127942; Affiliate Rankings</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRankChart"></canvas></div></div>
 </div>
-<div class="table-card" id="cto-advertiser-summary" style="margin-bottom:20px">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-<div class="section-title" style="margin:0"><div class="icon-circle">&#128203;</div> Revenue by Advertiser</div>
-<div style="display:flex;gap:8px;align-items:center">
-<select id="cto-adv-filter" onchange="renderAdvSummary()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);font-size:.85rem">
-<option value="">All Advertisers</option>
-</select>
-<select id="cto-adv-source" onchange="renderAdvSummary()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);font-size:.85rem">
-<option value="">All Sources</option>
-<option value="CTO">CTO</option>
-<option value="IO">IO</option>
-<option value="EF-ETC">Everflow</option>
-</select>
-</div>
-</div>
-<table><thead><tr style="background:var(--surface2)"><th>Advertiser</th><th>Source</th><th>Total Revenue</th><th>Leads / Conv</th><th>Entries</th><th>Avg Revenue</th></tr></thead>
-<tbody id="cto-adv-tbody"></tbody>
-<tfoot id="cto-adv-tfoot"></tfoot>
-</table>
-</div>
 <div class="section-header"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CPA / CTO / CPL / IR</div><div style="display:flex;gap:8px;align-items:center"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
@@ -2449,7 +2429,7 @@ var sl=sortArr(rows,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
 document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td>'+(r._cpaType||'—')+'</td><td style="font-size:.85rem">'+(r._saleDate||'—')+'</td><td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button><button class="btn-del" style="margin-left:4px" onclick="deleteCTORow('+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="12" class="empty-state">No CTO records found</td></tr>';
 renderPagination('cto',ctoPage,tp,pp,rows.length);
 updateCTOCharts(rows,affRevMap);
-try{renderAdvSummary();}catch(e){}
+
 }
 function renderFC(){const f=getFcFilt(),pp=parseInt(document.getElementById('fc-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fcPage=Math.min(fcPage,tp);const tot=f.reduce((s,r)=>s+r.amount,0),filled=f.filter(r=>r.amount>0).length,pf=document.getElementById('fc-period-f').value;setStat('fc-s-total',$m(tot));setStat('fc-s-count',f.length);setStat('fc-s-filled',filled);setStat('fc-s-period',pf||'All');const sl=sortArr(f,fcSort).slice((fcPage-1)*pp,fcPage*pp);document.getElementById('fc-tbody').innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r.date||'&#8212;')+'</td><td>'+(r._period||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.amount?$m(r.amount):'&#8212;')+'</td></tr>').join(''):'<tr><td colspan="4" class="empty-state">No forecast data</td></tr>';renderPagination('fc',fcPage,tp,pp,f.length);updateFcCharts(f);}
 function renderFMD(){const f=getFMDFilt(),pp=parseInt(document.getElementById('fmd-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fmdPage=Math.min(fmdPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});setStat('fmd-s-total',$m(tot));setStat('fmd-s-paid',$m(paid));setStat('fmd-s-pend',$m(pend));const fmdExpenses=f.reduce((a,r)=>a+(r.invAmt||0),0)-f.reduce((a,r)=>a+(r.rcvd||0),0);setStat('fmd-s-count',$m(fmdExpenses));setStat('fmd-s-rate',tot>0?Math.round(paid/tot*100)+'%':'0%');const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);document.getElementById('fmd-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(fmdPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="action-cell"><button class="btn-edit" onclick="editFMDRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delFMDRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No Five Minute Daily records found</td></tr>';renderPagination('fmd',fmdPage,tp,pp,f.length);updateFMDCharts(f);}
@@ -2721,7 +2701,7 @@ renderQChart(d.qi);
 });
 }
 
-function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderAdvSummary();}catch(e){}}
+function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
