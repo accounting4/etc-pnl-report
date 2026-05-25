@@ -650,6 +650,11 @@ table tbody tr:last-child td{border-bottom:none}
 .q-months-table tr:last-child td{border-bottom:none}
 .q-chart-wrap{height:200px;position:relative}
 .q-no-data{padding:40px 20px;text-align:center;color:var(--text3);font-size:.9rem}
+
+/* Expense stat cards */
+.stat-card.amber .sc-value{color:#f59e0b}
+.stat-card.purple .sc-value{color:#7c3aed}
+.stat-card.blue .sc-value{color:#2563eb}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -750,6 +755,28 @@ Secured with Firebase Authentication
 <div class="form-row"><label>Status</label><select id="f-status"><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option><option>No Final Count</option></select></div>
 <div class="form-row"><label>Remarks</label><textarea id="f-remarks" placeholder="Notes..."></textarea></div>
 <div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addPNLModal').classList.remove('open')">Cancel</button><button class="btn-save" onclick="savePNLRecord()">Save</button></div>
+</div></div>
+<div class="modal-overlay" id="addExpenseModal">
+<div class="modal"><h2 style="color:#ef4444">&#128184; Add Expense</h2>
+<div class="form-row"><label>Date</label><input id="fe-date" type="date"></div>
+<div class="form-row"><label>Month</label><select id="fe-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Category</label><select id="fe-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
+<div class="form-row"><label>Description</label><input id="fe-desc" placeholder="e.g. Google Ads - May"></div>
+<div class="form-row"><label>Amount ($)</label><input id="fe-amount" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Recurring?</label><select id="fe-recurring"><option value="No">No</option><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Annual">Annual</option></select></div>
+<div class="form-row"><label>Notes</label><textarea id="fe-notes" placeholder="Optional notes..."></textarea></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addExpenseModal').classList.remove('open')">Cancel</button><button class="btn-save" style="background:#ef4444" onclick="saveExpense()">Save Expense</button></div>
+</div></div>
+<div class="modal-overlay" id="editExpenseModal">
+<div class="modal"><h2 style="color:#ef4444">&#9998; Edit Expense</h2>
+<div class="form-row"><label>Date</label><input id="fee-date" type="date"></div>
+<div class="form-row"><label>Month</label><select id="fee-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Category</label><select id="fee-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
+<div class="form-row"><label>Description</label><input id="fee-desc" placeholder="e.g. Google Ads - May"></div>
+<div class="form-row"><label>Amount ($)</label><input id="fee-amount" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Recurring?</label><select id="fee-recurring"><option value="No">No</option><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Annual">Annual</option></select></div>
+<div class="form-row"><label>Notes</label><textarea id="fee-notes" placeholder="Optional notes..."></textarea></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('editExpenseModal').classList.remove('open')">Cancel</button><button class="btn-save" style="background:#ef4444" onclick="saveEditExpense()">Update</button></div>
 </div></div>
 <div class="modal-overlay" id="addRevModal"><div class="modal"><h2>+ Add Revenue Record</h2>
 <div class="form-row"><label>Date</label><input id="fr-date" type="date"></div>
@@ -969,6 +996,29 @@ Secured with Firebase Authentication
 <div class="section-title" style="margin-bottom:16px"><div class="icon-circle">&#128202;</div> Quarterly P&L Summary</div>
 <div class="q-ytd-bar" id="q-ytd-bar"></div>
 <div class="q-grid" id="q-grid"></div>
+</div>
+
+
+<!-- EXPENSE TRACKER -->
+<div class="section-header">
+<div class="section-title"><div class="icon-circle">&#128184;</div> Expense Tracker</div>
+<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Add Expense</button></div>
+</div>
+<div class="stats-row" style="margin-bottom:14px">
+<div class="stat-card red"><div class="sc-label">Total Expenses (All)</div><div class="sc-value" id="exp-s-total">$0</div><div class="sc-sub">All months combined</div></div>
+<div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="exp-s-month">$0</div><div class="sc-sub" id="exp-s-month-label">Current month</div></div>
+<div class="stat-card purple"><div class="sc-label">Categories</div><div class="sc-value" id="exp-s-cats">0</div><div class="sc-sub">Unique categories</div></div>
+<div class="stat-card blue"><div class="sc-label">Entries</div><div class="sc-value" id="exp-s-count">0</div><div class="sc-sub">Total expense records</div></div>
+</div>
+<div class="filter-bar" style="margin-bottom:8px">
+<div class="fg"><label>Search</label><input id="exp-search" type="search" placeholder="Search expenses..." oninput="renderExpenses()"></div>
+<div class="fg"><label>Month</label><select id="exp-month-f" onchange="renderExpenses()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
+</div>
+<div class="table-card" style="margin-bottom:20px;overflow-x:auto">
+<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Description</th><th>Amount</th><th>Recurring</th><th>Notes</th><th style="width:100px">Actions</th></tr></thead>
+<tbody id="exp-tbody"></tbody>
+</table>
 </div>
 
 <div class="section-header">
@@ -2705,7 +2755,14 @@ renderQChart(d.qi);
 });
 }
 
-function renderAll(){renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}}
+function renderAll(){
+// Snapshot sheet-only expenses before merging user expenses
+window._sheetExpenseSnapshot={};
+for(var _sm in pnlSummaries){
+window._sheetExpenseSnapshot[_sm]={totalExpenses:pnlSummaries[_sm].totalExpenses||0,salary:pnlSummaries[_sm].salary||0,ads:pnlSummaries[_sm].ads||0};
+}
+mergeUserExpenses();
+renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
@@ -2880,6 +2937,171 @@ function delPNLRow(e,gi){
   renderPNL();
   const curMonth=document.getElementById('pnl-month-f').value||'';
   if(curMonth)showMonthlySummary(curMonth);
+}
+
+
+// === EXPENSE TRACKER ===
+var userExpenses=JSON.parse(localStorage.getItem('userExpenses')||'[]');
+var expDeletes=new Set(JSON.parse(localStorage.getItem('expDeletes')||'[]'));
+// Clean deleted from stored
+try{var _ce=userExpenses.filter(function(e){return!expDeletes.has(e._key);});if(_ce.length!==userExpenses.length){userExpenses=_ce;localStorage.setItem('userExpenses',JSON.stringify(userExpenses));}}catch(e){}
+
+function mergeUserExpenses(){
+// Merge user-entered expenses into pnlSummaries so all charts/summaries reflect them
+var catMap={};
+userExpenses.forEach(function(ex){
+if(expDeletes.has(ex._key))return;
+var m=ex.month||'';
+if(!m)return;
+if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
+pnlSummaries[m].totalExpenses=(pnlSummaries[m].totalExpenses||0)+(ex.amount||0);
+var cat=(ex.category||'').toUpperCase();
+if(cat.includes('SALARY'))pnlSummaries[m].salary=(pnlSummaries[m].salary||0)+(ex.amount||0);
+if(cat.includes('ADS'))pnlSummaries[m].ads=(pnlSummaries[m].ads||0)+(ex.amount||0);
+});
+}
+
+function getExpFilt(){
+var q=(document.getElementById('exp-search').value||'').toLowerCase();
+var mf=(document.getElementById('exp-month-f')||{}).value||'';
+var cf=(document.getElementById('exp-cat-f')||{}).value||'';
+return userExpenses.filter(function(e){
+if(expDeletes.has(e._key))return false;
+if(mf&&e.month!==mf)return false;
+if(cf&&e.category!==cf)return false;
+if(q&&!(e.description||'').toLowerCase().includes(q)&&!(e.category||'').toLowerCase().includes(q)&&!(e.notes||'').toLowerCase().includes(q))return false;
+return true;
+});
+}
+
+function renderExpenses(){
+var f=getExpFilt();
+var curMonth=new Date().toLocaleString('en-US',{month:'long'});
+var totalAll=0,totalMonth=0,cats={};
+userExpenses.forEach(function(e){
+if(expDeletes.has(e._key))return;
+totalAll+=e.amount||0;
+if(e.month===curMonth)totalMonth+=e.amount||0;
+cats[e.category||'Other']=true;
+});
+setStat('exp-s-total','$'+totalAll.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+setStat('exp-s-month','$'+totalMonth.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+var smLbl=document.getElementById('exp-s-month-label');if(smLbl)smLbl.textContent=curMonth;
+setStat('exp-s-cats',Object.keys(cats).length.toString());
+setStat('exp-s-count',userExpenses.filter(function(e){return!expDeletes.has(e._key);}).length.toString());
+var catColors={'Salary':'#2563eb','Ads / Leads':'#dc2626','Beehiiv':'#7c3aed','Software':'#0ea5e9','Contractors':'#ec4899','Office':'#14b8a6','Other':'#f97316'};
+var tbody=document.getElementById('exp-tbody');
+if(!tbody)return;
+if(!f.length){tbody.innerHTML='<tr><td colspan="8" class="empty-state">No expenses recorded yet. Click "+ Add Expense" to start tracking.</td></tr>';return;}
+var rows=f.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+tbody.innerHTML=rows.map(function(e,i){
+var cc=catColors[e.category]||'#64748b';
+return'<tr>'+
+'<td>'+fmtDate(e.date)+'</td>'+
+'<td>'+(e.month||'—')+'</td>'+
+'<td><span style="display:inline-block;padding:3px 10px;border-radius:20px;background:'+cc+'18;color:'+cc+';font-size:.78rem;font-weight:600;border:1px solid '+cc+'30">'+(e.category||'Other')+'</span></td>'+
+'<td><strong>'+(e.description||'—')+'</strong></td>'+
+'<td style="color:var(--red);font-weight:700">$'+(e.amount||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+'<td style="font-size:.82rem">'+(e.recurring||'No')+'</td>'+
+'<td style="font-size:.82rem;color:var(--text3)">'+(e.notes||'')+'</td>'+
+'<td class="action-cell"><button class="btn-edit" onclick="editExpense('+i+')">✎</button> <button class="btn-del" onclick="deleteExpense('+i+')">🗑</button></td>'+
+'</tr>';
+}).join('');
+}
+
+function saveExpense(){
+var date=document.getElementById('fe-date').value||'';
+var month=document.getElementById('fe-month').value||'';
+if(!month&&date){var d=new Date(date+'T00:00:00');var mNames=['January','February','March','April','May','June','July','August','September','October','November','December'];month=mNames[d.getMonth()]||'';}
+var ex={
+_key:'exp_'+Date.now(),
+date:date,
+month:month,
+category:document.getElementById('fe-category').value||'Other',
+description:document.getElementById('fe-desc').value||'',
+amount:parseFloat(document.getElementById('fe-amount').value)||0,
+recurring:document.getElementById('fe-recurring').value||'No',
+notes:document.getElementById('fe-notes').value||'',
+createdAt:new Date().toISOString()
+};
+if(!ex.amount){alert('Please enter an amount.');return;}
+userExpenses.push(ex);
+localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+document.getElementById('addExpenseModal').classList.remove('open');
+['fe-date','fe-desc','fe-amount','fe-notes'].forEach(function(id){document.getElementById(id).value='';});
+document.getElementById('fe-month').value='';
+document.getElementById('fe-category').value='Salary';
+document.getElementById('fe-recurring').value='No';
+refreshAfterExpenseChange();
+}
+
+var _editExpIdx=-1;
+function editExpense(i){
+var f=getExpFilt().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+var ex=f[i];if(!ex)return;
+_editExpIdx=userExpenses.indexOf(ex);
+document.getElementById('fee-date').value=ex.date||'';
+document.getElementById('fee-month').value=ex.month||'';
+document.getElementById('fee-category').value=ex.category||'Other';
+document.getElementById('fee-desc').value=ex.description||'';
+document.getElementById('fee-amount').value=ex.amount||'';
+document.getElementById('fee-recurring').value=ex.recurring||'No';
+document.getElementById('fee-notes').value=ex.notes||'';
+document.getElementById('editExpenseModal').classList.add('open');
+}
+
+function saveEditExpense(){
+if(_editExpIdx<0||_editExpIdx>=userExpenses.length)return;
+var ex=userExpenses[_editExpIdx];
+var date=document.getElementById('fee-date').value||'';
+var month=document.getElementById('fee-month').value||'';
+if(!month&&date){var d=new Date(date+'T00:00:00');var mNames=['January','February','March','April','May','June','July','August','September','October','November','December'];month=mNames[d.getMonth()]||'';}
+ex.date=date;
+ex.month=month;
+ex.category=document.getElementById('fee-category').value||'Other';
+ex.description=document.getElementById('fee-desc').value||'';
+ex.amount=parseFloat(document.getElementById('fee-amount').value)||0;
+ex.recurring=document.getElementById('fee-recurring').value||'No';
+ex.notes=document.getElementById('fee-notes').value||'';
+ex.updatedAt=new Date().toISOString();
+localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+document.getElementById('editExpenseModal').classList.remove('open');
+_editExpIdx=-1;
+refreshAfterExpenseChange();
+}
+
+function deleteExpense(i){
+if(!confirm('Permanently delete this expense?'))return;
+var f=getExpFilt().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+var ex=f[i];if(!ex)return;
+expDeletes.add(ex._key);
+localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));
+var idx=userExpenses.indexOf(ex);
+if(idx>-1)userExpenses.splice(idx,1);
+localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+refreshAfterExpenseChange();
+}
+
+function refreshAfterExpenseChange(){
+// Reset pnlSummaries expense fields to sheet-only values, then re-merge
+// We need to recalculate — simplest: subtract old user expenses, re-add new
+// Since pnlSummaries already has sheet data + previously merged user expenses,
+// we store sheet-only expense snapshots
+if(window._sheetExpenseSnapshot){
+for(var m in window._sheetExpenseSnapshot){
+if(pnlSummaries[m]){
+pnlSummaries[m].totalExpenses=window._sheetExpenseSnapshot[m].totalExpenses||0;
+pnlSummaries[m].salary=window._sheetExpenseSnapshot[m].salary||0;
+pnlSummaries[m].ads=window._sheetExpenseSnapshot[m].ads||0;
+}
+}
+}
+mergeUserExpenses();
+renderExpenses();
+renderPNL();
+try{renderQuarterlySummary();}catch(e){}
+try{renderOverview();}catch(e){}
+try{renderExpenseCategories();}catch(e){}
 }
 
 // ===== DARK MODE =====
@@ -3477,12 +3699,19 @@ function renderExpenseCategories(){
   try{
     var monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var cats={};
+    // Sheet-based expenses
     monthsFull.forEach(function(m){
-      var ps=pnlSummaries[m];if(!ps)return;
-      if(ps.salary)cats['Salary']=(cats['Salary']||0)+ps.salary;
-      if(ps.ads)cats['Ads / Leads']=(cats['Ads / Leads']||0)+ps.ads;
-      var other=(ps.totalExpenses||0)-(ps.salary||0)-(ps.ads||0);
-      if(other>0)cats['Other Expenses']=(cats['Other Expenses']||0)+other;
+      var snap=(window._sheetExpenseSnapshot||{})[m];if(!snap)return;
+      if(snap.salary)cats['Salary']=(cats['Salary']||0)+snap.salary;
+      if(snap.ads)cats['Ads / Leads']=(cats['Ads / Leads']||0)+snap.ads;
+      var other=(snap.totalExpenses||0)-(snap.salary||0)-(snap.ads||0);
+      if(other>0)cats['Other (Sheet)']=(cats['Other (Sheet)']||0)+other;
+    });
+    // User-entered expenses by category
+    (typeof userExpenses!=='undefined'?userExpenses:[]).forEach(function(ex){
+      if(typeof expDeletes!=='undefined'&&expDeletes.has(ex._key))return;
+      var c=ex.category||'Other';
+      cats[c]=(cats[c]||0)+(ex.amount||0);
     });
     var labels=Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];});
     var data=labels.map(function(l){return cats[l];});
