@@ -128,34 +128,37 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .psb-value.gold{color:var(--accent)}
 .psb-value.green{color:#4ade80}
 .psb-value.red{color:#f87171}
-.rbs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:12px}
-.rbs-card{background:var(--surface2);border-radius:14px;border:1px solid var(--border);overflow:hidden;transition:box-shadow .2s,transform .15s}
-.rbs-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
-.rbs-card-head{padding:16px 18px 12px;cursor:pointer;display:flex;align-items:center;gap:14px}
-.rbs-card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0}
-.rbs-card-info{flex:1;min-width:0}
-.rbs-card-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--text3);margin-bottom:2px}
-.rbs-card-rev{font-size:1.35rem;font-weight:800;color:var(--text);line-height:1.2}
-.rbs-card-meta{font-size:.72rem;color:var(--text3);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
-.rbs-card-meta span{display:inline-flex;align-items:center;gap:3px}
-.rbs-card-arrow{font-size:.8rem;color:var(--text3);transition:transform .2s;flex-shrink:0}
-.rbs-card.open .rbs-card-arrow{transform:rotate(180deg)}
-.rbs-card-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
-.rbs-card.open .rbs-card-body{max-height:600px;overflow-y:auto}
-.rbs-card-inner{padding:0 18px 14px;border-top:1px solid var(--border)}
-.rbs-card-inner table{width:100%;font-size:.78rem;border-collapse:collapse;margin-top:8px}
-.rbs-card-inner th{text-align:left;font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;padding:4px 6px;border-bottom:1px solid var(--border)}
-.rbs-card-inner td{padding:5px 6px;color:var(--text2);border-bottom:1px solid rgba(0,0,0,.03)}
-.rbs-card-inner td:last-child{text-align:right;font-weight:700;color:var(--text)}
-.rbs-total-card{background:linear-gradient(135deg,var(--navy),var(--navy3));border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px;flex-wrap:wrap}
-.rbs-total-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:rgba(255,255,255,.6)}
-.rbs-total-amt{font-size:1.6rem;font-weight:800;color:#fff}
-.rbs-total-breakdown{display:flex;gap:16px;flex-wrap:wrap}
-.rbs-total-item{text-align:center}
-.rbs-total-item .rbs-ti-val{font-size:.95rem;font-weight:700;color:#fff}
-.rbs-total-item .rbs-ti-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.5);margin-top:1px}
-.rbs-pct-bar{height:4px;background:rgba(0,0,0,.06);border-radius:2px;margin-top:6px;overflow:hidden}
-.rbs-pct-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.rbs-wrap{margin-top:8px}
+.rbs-total{display:flex;align-items:baseline;gap:12px;padding:16px 0 14px;border-bottom:2px solid var(--border)}
+.rbs-total-amt{font-size:1.8rem;font-weight:800;color:var(--text)}
+.rbs-total-lbl{font-size:.75rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.rbs-list{display:flex;flex-direction:column;gap:0}
+.rbs-row{border-bottom:1px solid var(--border);transition:background .15s}
+.rbs-row:last-child{border-bottom:none}
+.rbs-row-head{display:flex;align-items:center;gap:12px;padding:14px 4px;cursor:pointer}
+.rbs-row-head:hover{background:var(--surface2);border-radius:8px}
+.rbs-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.rbs-row-name{font-size:.85rem;font-weight:600;color:var(--text);flex:1;min-width:0}
+.rbs-row-name small{font-weight:400;color:var(--text3);margin-left:6px;font-size:.72rem}
+.rbs-row-amt{font-size:1rem;font-weight:700;color:var(--text);min-width:100px;text-align:right}
+.rbs-row-pct{font-size:.72rem;font-weight:600;min-width:48px;text-align:right;padding:2px 8px;border-radius:10px;background:var(--surface2)}
+.rbs-row-arrow{font-size:.7rem;color:var(--text3);transition:transform .2s;margin-left:4px}
+.rbs-row.open .rbs-row-arrow{transform:rotate(180deg)}
+.rbs-row-detail{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:0 4px}
+.rbs-row.open .rbs-row-detail{max-height:400px;overflow-y:auto}
+.rbs-detail-inner{padding:8px 0 12px 22px}
+.rbs-detail-inner table{width:100%;font-size:.78rem;border-collapse:collapse}
+.rbs-detail-inner th{text-align:left;font-size:.62rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;padding:4px 8px}
+.rbs-detail-inner td{padding:4px 8px;color:var(--text2)}
+.rbs-detail-inner td:last-child{text-align:right;font-weight:600;color:var(--text)}
+.rbs-detail-inner tr:nth-child(even){background:var(--surface2);border-radius:4px}
+.rbs-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:12px;background:var(--surface2)}
+.rbs-bar-seg{height:100%;transition:width .4s ease}
+.rbs-top5{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.rbs-top5-item{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface2);border-radius:8px;font-size:.75rem;border:1px solid var(--border)}
+.rbs-top5-rank{font-weight:800;color:var(--accent)}
+.rbs-top5-name{font-weight:600;color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rbs-top5-val{color:var(--text3)}
 .month-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .month-btn{background:var(--surface2);border:1.5px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .15s}
 .month-btn:hover{border-color:var(--navy);color:var(--navy)}
@@ -1189,7 +1192,7 @@ Secured with Firebase Authentication
 <button class="btn-export excel" onclick="exportExcel('cto')">📊 Export Excel</button>
 </div>
 <div class="stats-row">
-<div class="stat-card"><div class="sc-label">Tracking Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">CTO + IO + CPA</div></div>
+<div class="stat-card"><div class="sc-label">Tracking Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">All sources combined</div></div>
 <div class="stat-card green"><div class="sc-label">Total Leads</div><div class="sc-value" id="cto-s-leads">0</div><div class="sc-sub">Current count</div></div>
 <div class="stat-card purple"><div class="sc-label">Active Offers</div><div class="sc-value" id="cto-s-count">0</div><div class="sc-sub">With revenue</div></div>
 <div class="stat-card"><div class="sc-label">Top Affiliate</div><div class="sc-value" id="cto-s-top" style="font-size:1rem">—</div><div class="sc-sub">By revenue</div></div>
@@ -2692,7 +2695,11 @@ return yr+'-'+mo+'-'+dy+' '+hr+':'+mn+' '+ampm;
 function renderCTO(){var f=getCTOFilt();var rows=f.map(getCTORow).filter(function(r){return r._name||r._offer;});var pp=parseInt(document.getElementById('cto-entries').value)||25;var tp=Math.max(1,Math.ceil(rows.length/pp));ctoPage=Math.min(ctoPage,tp);
 var totRev=0,totLeads=0,activeOffers=0,affRevMap={};
 rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=r._name||'Unknown';affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
-setStat('cto-s-rev',$m(totRev));setStat('cto-s-leads',totLeads.toLocaleString());setStat('cto-s-count',activeOffers);
+// Compute P&L source totals for synced Tracking Revenue
+var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0;
+allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else _pnlCPC+=tot;});
+var syncedTotal=totRev+_pnlIR+_pnlPS+_pnlCPC;
+setStat('cto-s-rev',$m(syncedTotal));setStat('cto-s-leads',totLeads.toLocaleString());setStat('cto-s-count',activeOffers);
 var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
 showCTOSummary(totRev,totLeads,activeOffers,affRevMap);
@@ -3170,93 +3177,74 @@ f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').
 });
 var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length;
 
-// P&L source classification
-var _sm2=(document.getElementById('cto-month-f')||{}).value||'';
-var _ir3=0,_ps3=0,_cpc3=0,irAffs={},psAffs={},cpcAffs={};
-allPNL.filter(function(r){if(r._isSummary)return false;if(_sm2&&r._month!==_sm2)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){
-  var cat=classifyPNLSource(r.affiliate);
-  var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
-  var aff=r.affiliate||'Unknown';
-  if(cat==='IR'){_ir3+=tot;irAffs[aff]=(irAffs[aff]||0)+tot;}
-  else if(cat==='Platform Softwares'){_ps3+=tot;psAffs[aff]=(psAffs[aff]||0)+tot;}
-  else{_cpc3+=tot;cpcAffs[aff]=(cpcAffs[aff]||0)+tot;}
+// P&L sources
+var _sm=(document.getElementById('cto-month-f')||{}).value||'';
+var irRev=0,psRev=0,cpcRev=0,irAffs={},psAffs={},cpcAffs={};
+allPNL.filter(function(r){if(r._isSummary)return false;if(_sm&&r._month!==_sm)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){
+  var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;var aff=r.affiliate||'Unknown';
+  if(cat==='IR'){irRev+=tot;irAffs[aff]=(irAffs[aff]||0)+tot;}
+  else if(cat==='Platform Softwares'){psRev+=tot;psAffs[aff]=(psAffs[aff]||0)+tot;}
+  else{cpcRev+=tot;cpcAffs[aff]=(cpcAffs[aff]||0)+tot;}
 });
-var grandTotal=totRev+_ir3+_ps3+_cpc3;
+var grand=totRev+irRev+psRev+cpcRev;
 
-// Top affiliates (combined)
-var topAffs=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+// Sources config
+var sources=[
+  {id:'cto',name:'CTO',color:'#6366f1',rev:ctoRev,metric:'Leads',metricVal:ctoLeads,affs:ctoAffs},
+  {id:'io',name:'IO (Interactive Offers)',color:'#ec4899',rev:ioRev,metric:'Clicks',metricVal:ioLeads,affs:ioAffs},
+  {id:'cpa',name:'CPA (Everflow)',color:'#f59e0b',rev:efRev,metric:'Conversions',metricVal:efLeads,affs:efAffs},
+  {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
+  {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
+  {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
+].filter(function(s){return s.rev>0;}).sort(function(a,b){return b.rev-a.rev;});
 
-// Helper: build expandable affiliate table
-function affTable(map,metricLabel){
-  var sorted=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
-  if(!sorted.length)return'<div style="padding:8px 0;font-size:.78rem;color:var(--text3)">No data</div>';
+function affTbl(map){
+  var s=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
+  if(!s.length)return'';
   var h='<table><tr><th>Affiliate</th><th style="text-align:right">Revenue</th></tr>';
-  sorted.forEach(function(a){h+='<tr><td>'+a[0]+'</td><td>'+$m(a[1])+'</td></tr>';});
-  h+='</table>';return h;
+  s.forEach(function(a){h+='<tr><td>'+a[0]+'</td><td>'+$m(a[1])+'</td></tr>';});
+  return h+'</table>';
 }
 
-// Helper: build one source card
-function srcCard(id,color,label,icon,rev,metricName,metricVal,extraMeta,affsMap){
-  var pct=grandTotal>0?((rev/grandTotal)*100):0;
-  return '<div class="rbs-card" id="rbs-'+id+'" onclick="this.classList.toggle(\'open\')">'+
-    '<div class="rbs-card-head">'+
-      '<div class="rbs-card-icon" style="background:'+color+'">'+icon+'</div>'+
-      '<div class="rbs-card-info">'+
-        '<div class="rbs-card-label">'+label+'</div>'+
-        '<div class="rbs-card-rev" style="color:'+color+'">'+$m(rev)+'</div>'+
-        '<div class="rbs-pct-bar"><div class="rbs-pct-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+'"></div></div>'+
-        '<div class="rbs-card-meta">'+
-          '<span>'+pct.toFixed(1)+'% of total</span>'+
-          (metricName?'<span>'+metricName+': '+metricVal+'</span>':'')+
-          (extraMeta||'')+
-        '</div>'+
-      '</div>'+
-      '<div class="rbs-card-arrow">▾</div>'+
-    '</div>'+
-    '<div class="rbs-card-body"><div class="rbs-card-inner">'+affTable(affsMap)+'</div></div>'+
-  '</div>';
-}
+var h='<div class="rbs-wrap">';
 
-// Build HTML
-var h='';
+// Total
+h+='<div class="rbs-total"><div class="rbs-total-amt">'+$m(grand)+'</div><div class="rbs-total-lbl">Combined Revenue</div></div>';
 
-// Grand total banner
-h+='<div class="rbs-total-card">'+
-  '<div><div class="rbs-total-label">Combined Revenue — All Sources</div><div class="rbs-total-amt">'+$m(grandTotal)+'</div></div>'+
-  '<div class="rbs-total-breakdown">'+
-    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(ctoRev)+'</div><div class="rbs-ti-lbl">CTO</div></div>'+
-    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(ioRev)+'</div><div class="rbs-ti-lbl">IO</div></div>'+
-    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(efRev)+'</div><div class="rbs-ti-lbl">CPA</div></div>'+
-    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(_ir3)+'</div><div class="rbs-ti-lbl">IR</div></div>'+
-    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(_ps3)+'</div><div class="rbs-ti-lbl">Platform</div></div>'+
-    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(_cpc3)+'</div><div class="rbs-ti-lbl">CPC</div></div>'+
-  '</div>'+
-'</div>';
-
-// Source cards grid
-h+='<div class="rbs-grid">';
-h+=srcCard('cto','#6366f1','CTO','C',ctoRev,'Leads',ctoLeads.toLocaleString(),'<span>'+Object.keys(ctoAffs).length+' affiliates</span>',ctoAffs);
-h+=srcCard('io','#ec4899','Interactive Offers','IO',ioRev,'Clicks',ioLeads.toLocaleString(),'<span>'+ioCamps+' campaigns</span>',ioAffs);
-h+=srcCard('cpa','#f59e0b','CPA (Everflow)','$',efRev,'Conversions',efLeads.toLocaleString(),'<span>'+Object.keys(efAffs).length+' affiliates</span>',efAffs);
-h+=srcCard('ir','#8b5cf6','IR (Investor Relations)','IR',_ir3,'Invoices',Object.keys(irAffs).length.toString(),'',irAffs);
-h+=srcCard('ps','#10b981','Platform Softwares','PS',_ps3,'Invoices',Object.keys(psAffs).length.toString(),'',psAffs);
-h+=srcCard('cpc','#0ea5e9','CPC (Newsletter Ads)','A',_cpc3,'Invoices',Object.keys(cpcAffs).length.toString(),'',cpcAffs);
+// Stacked bar
+h+='<div class="rbs-bar">';
+sources.forEach(function(s){var w=grand>0?((s.rev/grand)*100):0;h+='<div class="rbs-bar-seg" style="width:'+w.toFixed(1)+'%;background:'+s.color+'" title="'+s.name+': '+$m(s.rev)+'"></div>';});
 h+='</div>';
 
-// Top affiliates (compact)
+// Source rows
+h+='<div class="rbs-list">';
+sources.forEach(function(s){
+  var pct=grand>0?((s.rev/grand)*100):0;
+  h+='<div class="rbs-row" onclick="this.classList.toggle(\'open\')">';
+  h+='<div class="rbs-row-head">';
+  h+='<div class="rbs-dot" style="background:'+s.color+'"></div>';
+  h+='<div class="rbs-row-name">'+s.name+'<small>'+s.metric+': '+s.metricVal.toLocaleString()+'</small></div>';
+  h+='<div class="rbs-row-amt" style="color:'+s.color+'">'+$m(s.rev)+'</div>';
+  h+='<div class="rbs-row-pct" style="color:'+s.color+'">'+pct.toFixed(1)+'%</div>';
+  h+='<div class="rbs-row-arrow">▾</div>';
+  h+='</div>';
+  h+='<div class="rbs-row-detail"><div class="rbs-detail-inner">'+affTbl(s.affs)+'</div></div>';
+  h+='</div>';
+});
+h+='</div>';
+
+// Top 5 affiliates
+var topAffs=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
 if(topAffs.length){
-  h+='<div style="margin-top:16px;background:var(--surface2);border-radius:14px;border:1px solid var(--border);padding:14px 18px">'+
-    '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--text3);margin-bottom:10px">🏆 Top Affiliates</div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  h+='<div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--text3);margin-top:16px;margin-bottom:6px">Top Affiliates</div>';
+  h+='<div class="rbs-top5">';
   topAffs.forEach(function(a,i){
-    h+='<div style="display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:10px;padding:8px 14px;border:1px solid var(--border);flex:1;min-width:180px">'+
-      '<span style="font-size:.85rem;font-weight:800;color:var(--accent)">#'+(i+1)+'</span>'+
-      '<div style="flex:1;min-width:0"><div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a[0]+'</div>'+
-      '<div style="font-size:.72rem;color:var(--text3)">'+$m(a[1])+'</div></div></div>';
+    h+='<div class="rbs-top5-item"><span class="rbs-top5-rank">#'+(i+1)+'</span><span class="rbs-top5-name">'+a[0]+'</span><span class="rbs-top5-val">'+$m(a[1])+'</span></div>';
   });
-  h+='</div></div>';
+  h+='</div>';
 }
 
+h+='</div>';
 cEl.innerHTML=h;
 }
 function updateCTOCharts(rows,affRevMap){
