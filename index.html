@@ -128,6 +128,34 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .psb-value.gold{color:var(--accent)}
 .psb-value.green{color:#4ade80}
 .psb-value.red{color:#f87171}
+.rbs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:12px}
+.rbs-card{background:var(--surface2);border-radius:14px;border:1px solid var(--border);overflow:hidden;transition:box-shadow .2s,transform .15s}
+.rbs-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.rbs-card-head{padding:16px 18px 12px;cursor:pointer;display:flex;align-items:center;gap:14px}
+.rbs-card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0}
+.rbs-card-info{flex:1;min-width:0}
+.rbs-card-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--text3);margin-bottom:2px}
+.rbs-card-rev{font-size:1.35rem;font-weight:800;color:var(--text);line-height:1.2}
+.rbs-card-meta{font-size:.72rem;color:var(--text3);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+.rbs-card-meta span{display:inline-flex;align-items:center;gap:3px}
+.rbs-card-arrow{font-size:.8rem;color:var(--text3);transition:transform .2s;flex-shrink:0}
+.rbs-card.open .rbs-card-arrow{transform:rotate(180deg)}
+.rbs-card-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.rbs-card.open .rbs-card-body{max-height:600px;overflow-y:auto}
+.rbs-card-inner{padding:0 18px 14px;border-top:1px solid var(--border)}
+.rbs-card-inner table{width:100%;font-size:.78rem;border-collapse:collapse;margin-top:8px}
+.rbs-card-inner th{text-align:left;font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;padding:4px 6px;border-bottom:1px solid var(--border)}
+.rbs-card-inner td{padding:5px 6px;color:var(--text2);border-bottom:1px solid rgba(0,0,0,.03)}
+.rbs-card-inner td:last-child{text-align:right;font-weight:700;color:var(--text)}
+.rbs-total-card{background:linear-gradient(135deg,var(--navy),var(--navy3));border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px;flex-wrap:wrap}
+.rbs-total-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:rgba(255,255,255,.6)}
+.rbs-total-amt{font-size:1.6rem;font-weight:800;color:#fff}
+.rbs-total-breakdown{display:flex;gap:16px;flex-wrap:wrap}
+.rbs-total-item{text-align:center}
+.rbs-total-item .rbs-ti-val{font-size:.95rem;font-weight:700;color:#fff}
+.rbs-total-item .rbs-ti-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.5);margin-top:1px}
+.rbs-pct-bar{height:4px;background:rgba(0,0,0,.06);border-radius:2px;margin-top:6px;overflow:hidden}
+.rbs-pct-fill{height:100%;border-radius:2px;transition:width .4s ease}
 .month-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .month-btn{background:var(--surface2);border:1.5px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .15s}
 .month-btn:hover{border-color:var(--navy);color:var(--navy)}
@@ -3134,25 +3162,102 @@ if(!bEl||!cEl)return;
 bEl.style.display='block';
 var f=getCTOFilt();
 var ctoRev=0,ioRev=0,efRev=0,ctoLeads=0,ioLeads=0,efLeads=0;
-f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').toUpperCase();if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;}else if(t==='CPA'||t==='EF-ETC'||t==='EF'){efRev+=row._revenue;efLeads+=row._leads;}else{ctoRev+=row._revenue;ctoLeads+=row._leads;}});
-var topAffs=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-var topHtml=topAffs.map(function(a,i){return'<div class="psb-line"><span class="psb-key">'+(i+1)+'. '+a[0]+'</span><span class="psb-value gold">'+$m(a[1])+'</span></div>';}).join('');
-var _sm2=(document.getElementById('cto-month-f')||{}).value||'';var _ir3=0,_ps3=0,_cpc3=0;
-allPNL.filter(function(r){if(r._isSummary)return false;if(_sm2&&r._month!==_sm2)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_ir3+=tot;else if(cat==='Platform Softwares')_ps3+=tot;else _cpc3+=tot;});
+var ctoAffs={},ioAffs={},efAffs={};
+f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').toUpperCase();
+  if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;ioAffs[row._name]=(ioAffs[row._name]||0)+row._revenue;}
+  else if(t==='CPA'||t==='EF-ETC'||t==='EF'){efRev+=row._revenue;efLeads+=row._leads;efAffs[row._name]=(efAffs[row._name]||0)+row._revenue;}
+  else{ctoRev+=row._revenue;ctoLeads+=row._leads;ctoAffs[row._name]=(ctoAffs[row._name]||0)+row._revenue;}
+});
+var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length;
+
+// P&L source classification
+var _sm2=(document.getElementById('cto-month-f')||{}).value||'';
+var _ir3=0,_ps3=0,_cpc3=0,irAffs={},psAffs={},cpcAffs={};
+allPNL.filter(function(r){if(r._isSummary)return false;if(_sm2&&r._month!==_sm2)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){
+  var cat=classifyPNLSource(r.affiliate);
+  var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
+  var aff=r.affiliate||'Unknown';
+  if(cat==='IR'){_ir3+=tot;irAffs[aff]=(irAffs[aff]||0)+tot;}
+  else if(cat==='Platform Softwares'){_ps3+=tot;psAffs[aff]=(psAffs[aff]||0)+tot;}
+  else{_cpc3+=tot;cpcAffs[aff]=(cpcAffs[aff]||0)+tot;}
+});
 var grandTotal=totRev+_ir3+_ps3+_cpc3;
-cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue by Source</div>'+
-'<div class="psb-line"><span class="psb-key"><span class="source-badge purple">CTO</span> Revenue</span><span class="psb-value" style="color:#6366f1">'+$m(ctoRev)+'</span></div>'+
-'<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Leads: '+ctoLeads.toLocaleString()+'</span></div>'+
-'<div class="psb-line"><span class="psb-key"><span class="source-badge pink">IO</span> Revenue</span><span class="psb-value" style="color:#ec4899">'+$m(ioRev)+'</span></div>'+
-'<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Clicks: '+ioLeads.toLocaleString()+'</span> · <span class="psb-key">Campaigns: '+f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length+'</span></div>'+
-'<div class="psb-line"><span class="psb-key"><span class="source-badge everflow">CPA</span> Revenue</span><span class="psb-value" style="color:#f59e0b">'+$m(efRev)+'</span></div>'+
-'<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Conversions: '+efLeads.toLocaleString()+'</span></div>'+
-'<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#8b5cf6;color:#fff">IR</span> Investor Relations</span><span class="psb-value" style="color:#8b5cf6">'+$m(_ir3)+'</span></div>'+
-'<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#10b981;color:#fff">PS</span> Platform Softwares</span><span class="psb-value" style="color:#10b981">'+$m(_ps3)+'</span></div>'+
-'<div class="psb-line"><span class="psb-key"><span class="source-badge" style="background:#0ea5e9;color:#fff">CPC</span> Newsletter Ads</span><span class="psb-value" style="color:#0ea5e9">'+$m(_cpc3)+'</span></div>'+
-'<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">'+
-'<div class="psb-line"><span class="psb-key"><strong>Combined Total</strong></span><span class="psb-value gold"><strong>'+$m(grandTotal)+'</strong></span></div>'+
-'</div><div class="psb-group"><div class="psb-group-title">Top Affiliates</div>'+topHtml+'</div>';
+
+// Top affiliates (combined)
+var topAffs=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+
+// Helper: build expandable affiliate table
+function affTable(map,metricLabel){
+  var sorted=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
+  if(!sorted.length)return'<div style="padding:8px 0;font-size:.78rem;color:var(--text3)">No data</div>';
+  var h='<table><tr><th>Affiliate</th><th style="text-align:right">Revenue</th></tr>';
+  sorted.forEach(function(a){h+='<tr><td>'+a[0]+'</td><td>'+$m(a[1])+'</td></tr>';});
+  h+='</table>';return h;
+}
+
+// Helper: build one source card
+function srcCard(id,color,label,icon,rev,metricName,metricVal,extraMeta,affsMap){
+  var pct=grandTotal>0?((rev/grandTotal)*100):0;
+  return '<div class="rbs-card" id="rbs-'+id+'" onclick="this.classList.toggle(\'open\')">'+
+    '<div class="rbs-card-head">'+
+      '<div class="rbs-card-icon" style="background:'+color+'">'+icon+'</div>'+
+      '<div class="rbs-card-info">'+
+        '<div class="rbs-card-label">'+label+'</div>'+
+        '<div class="rbs-card-rev" style="color:'+color+'">'+$m(rev)+'</div>'+
+        '<div class="rbs-pct-bar"><div class="rbs-pct-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+'"></div></div>'+
+        '<div class="rbs-card-meta">'+
+          '<span>'+pct.toFixed(1)+'% of total</span>'+
+          (metricName?'<span>'+metricName+': '+metricVal+'</span>':'')+
+          (extraMeta||'')+
+        '</div>'+
+      '</div>'+
+      '<div class="rbs-card-arrow">▾</div>'+
+    '</div>'+
+    '<div class="rbs-card-body"><div class="rbs-card-inner">'+affTable(affsMap)+'</div></div>'+
+  '</div>';
+}
+
+// Build HTML
+var h='';
+
+// Grand total banner
+h+='<div class="rbs-total-card">'+
+  '<div><div class="rbs-total-label">Combined Revenue — All Sources</div><div class="rbs-total-amt">'+$m(grandTotal)+'</div></div>'+
+  '<div class="rbs-total-breakdown">'+
+    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(ctoRev)+'</div><div class="rbs-ti-lbl">CTO</div></div>'+
+    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(ioRev)+'</div><div class="rbs-ti-lbl">IO</div></div>'+
+    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(efRev)+'</div><div class="rbs-ti-lbl">CPA</div></div>'+
+    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(_ir3)+'</div><div class="rbs-ti-lbl">IR</div></div>'+
+    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(_ps3)+'</div><div class="rbs-ti-lbl">Platform</div></div>'+
+    '<div class="rbs-total-item"><div class="rbs-ti-val">'+$m(_cpc3)+'</div><div class="rbs-ti-lbl">CPC</div></div>'+
+  '</div>'+
+'</div>';
+
+// Source cards grid
+h+='<div class="rbs-grid">';
+h+=srcCard('cto','#6366f1','CTO','C',ctoRev,'Leads',ctoLeads.toLocaleString(),'<span>'+Object.keys(ctoAffs).length+' affiliates</span>',ctoAffs);
+h+=srcCard('io','#ec4899','Interactive Offers','IO',ioRev,'Clicks',ioLeads.toLocaleString(),'<span>'+ioCamps+' campaigns</span>',ioAffs);
+h+=srcCard('cpa','#f59e0b','CPA (Everflow)','$',efRev,'Conversions',efLeads.toLocaleString(),'<span>'+Object.keys(efAffs).length+' affiliates</span>',efAffs);
+h+=srcCard('ir','#8b5cf6','IR (Investor Relations)','IR',_ir3,'Invoices',Object.keys(irAffs).length.toString(),'',irAffs);
+h+=srcCard('ps','#10b981','Platform Softwares','PS',_ps3,'Invoices',Object.keys(psAffs).length.toString(),'',psAffs);
+h+=srcCard('cpc','#0ea5e9','CPC (Newsletter Ads)','A',_cpc3,'Invoices',Object.keys(cpcAffs).length.toString(),'',cpcAffs);
+h+='</div>';
+
+// Top affiliates (compact)
+if(topAffs.length){
+  h+='<div style="margin-top:16px;background:var(--surface2);border-radius:14px;border:1px solid var(--border);padding:14px 18px">'+
+    '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--text3);margin-bottom:10px">🏆 Top Affiliates</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  topAffs.forEach(function(a,i){
+    h+='<div style="display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:10px;padding:8px 14px;border:1px solid var(--border);flex:1;min-width:180px">'+
+      '<span style="font-size:.85rem;font-weight:800;color:var(--accent)">#'+(i+1)+'</span>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a[0]+'</div>'+
+      '<div style="font-size:.72rem;color:var(--text3)">'+$m(a[1])+'</div></div></div>';
+  });
+  h+='</div></div>';
+}
+
+cEl.innerHTML=h;
 }
 function updateCTOCharts(rows,affRevMap){
 var sorted=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
