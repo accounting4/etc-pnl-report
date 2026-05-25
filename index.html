@@ -3769,12 +3769,14 @@ var header=body?body.previousElementSibling:null;
 if(!body)return;
 if(body.classList.contains('collapsed')){
 body.classList.remove('collapsed');
+body.style.opacity='1';
+body.style.pointerEvents='';
 body.style.maxHeight=body.scrollHeight+'px';
 setTimeout(function(){body.style.maxHeight='none';},300);
 if(header)header.classList.remove('collapsed');
 }else{
 body.style.maxHeight=body.scrollHeight+'px';
-requestAnimationFrame(function(){body.style.maxHeight='0px';});
+requestAnimationFrame(function(){body.style.maxHeight='0px';body.style.opacity='0';body.style.pointerEvents='none';});
 body.classList.add('collapsed');
 if(header)header.classList.add('collapsed');
 }
