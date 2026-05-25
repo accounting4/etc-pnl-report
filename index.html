@@ -1903,6 +1903,8 @@ allFMD.push(...inv.filter(r=>isFMD(r.affiliate)));
 allPNL.push(...inv.filter(r=>!isFMD(r.affiliate)));
 }
 allPNL.push(...userPNL.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
+// Filter out permanently deleted PNL entries
+for(var _di=allPNL.length-1;_di>=0;_di--){var _dk=allPNL[_di]._key||allPNL[_di].invId||'';if(_dk&&pnlDeletes.has(_dk))allPNL.splice(_di,1);}
 allFMD.push(...userFMD.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
 ss('Loading FMD sheet data...');
 const fmdTabs=[{month:'January',gid:'0'},{month:'February',gid:'823222076'},{month:'March',gid:'1187711453'},{month:'April',gid:'1600216981'},{month:'May',gid:'388191126'}];
@@ -1994,6 +1996,8 @@ qbRows.forEach(r=>{
   });
   qbAdded++;
 });
+// Filter deleted PNL from QB additions
+for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].invId||'';if(_qk&&pnlDeletes.has(_qk))allPNL.splice(_qi,1);}
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
@@ -2060,7 +2064,7 @@ function qbIncludeInStats(month){var ps=(pnlSummaries[month]||{}).grossRevenue||
 function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=s.grossRevenue||0;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+(s.totalExpenses?'<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>':'')+(s.salary?'<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>':'')+(s.ads?'<div class="psb-line"><span class="psb-key">Ads</span><span class="psb-value">'+$m(s.ads)+'</span></div>':'')+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
 function getRevFilt(){const q=((document.getElementById('rev-search')||{}).value||'').toLowerCase(),mf=(document.getElementById('rev-month-f')||{}).value||'',tf=(document.getElementById('rev-type-f')||{}).value||'',{from,to}=getDR('rev');var merged=allRev.map(function(r){return Object.assign({},r,{_recType:'revenue'});}).concat(allFC.map(function(r){return{_recType:'forecast',_source:'forecast',_srcLabel:'Forecast',_key:r._key||('fc_'+r.affiliate),date:r.date,_week:r._period||'',_month:r._period?r._period.replace(/\s*week.*/i,'').trim():'',affiliate:r.affiliate,amount:r.amount,status:'',remarks:''};}));return merged.filter(r=>{if(tf==='revenue'&&r._recType!=='revenue')return false;if(tf==='forecast'&&r._recType!=='forecast')return false;if(mf&&r._month!==mf&&!(r._week||'').toLowerCase().includes(mf.toLowerCase().substring(0,3)))return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
-function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{if(r._source!=='qb'&&r._source!=='user')return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
+function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{var dk=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(dk&&pnlDeletes.has(dk))return false;if(r._source!=='qb'&&r._source!=='user')return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
 function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').toLowerCase();const tf=(document.getElementById('cto-type-f')||{}).value||'';const mf=(document.getElementById('cto-month-f')||{}).value||'';return allCTO.filter(r=>{var name=r['Advertiser/Offer']||r['Advertiser']||r['Offers']||'';if(!name||!name.trim())return false;if(mf&&r._month!==mf)return false;if(tf){var t=(r['Type']||r._ctoType||'').toUpperCase();if(!t.includes(tf))return false;}if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getFcFilt(){const q=(document.getElementById('fc-search').value||'').toLowerCase(),pf=document.getElementById('fc-period-f').value;return allFC.filter(r=>{if(pf&&r._period!==pf)return false;if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;return true;});}
 function getFMDFilt(){const q=(document.getElementById('fmd-search').value||'').toLowerCase(),mf=document.getElementById('fmd-month-f').value,sf=document.getElementById('fmd-status-f').value,{from,to}=getDR('fmd');return allFMD.filter(r=>{var k=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(k&&fmdDeletes.has(k))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
@@ -2821,6 +2825,8 @@ function openPNLAttach(gi){const att=JSON.parse(localStorage.getItem('pnlAttachm
 
 let pnlEdits=(function(){try{return JSON.parse(localStorage.getItem('pnlEdits')||'{}')}catch(e){return{}}})();
 let pnlDeletes=new Set(JSON.parse(localStorage.getItem('pnlDeletes')||'[]'));
+// Clean deleted entries from userPNL localStorage
+try{var _uPNL=JSON.parse(localStorage.getItem('uPNL')||'[]');var _cleanPNL=_uPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});if(_cleanPNL.length!==_uPNL.length)localStorage.setItem('uPNL',JSON.stringify(_cleanPNL));}catch(e){}
 let fmdEdits=(function(){try{return JSON.parse(localStorage.getItem('fmdEdits')||'{}')}catch(e){return{}}})();
 let fmdDeletes=new Set(JSON.parse(localStorage.getItem('fmdDeletes')||'[]'));
 function editPNLRow(e,gi){
