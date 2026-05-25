@@ -884,6 +884,21 @@ Secured with Firebase Authentication
 
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
+<!-- Global Sync Status Bar -->
+<div id="global-sync-bar" style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;font-size:.78rem;color:var(--text3);flex-wrap:wrap;gap:8px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:6px">
+<span id="gsync-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span>
+<span id="gsync-status" style="font-weight:600">Synced</span>
+</div>
+<span id="gsync-time" style="color:var(--text3)">—</span>
+<span id="gsync-next" style="color:var(--text3)">Next sync in 15m</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:.7rem;color:var(--text3)">Sources: Perf Dash · Everflow · IO</span>
+<button onclick="manualSync()" id="gsync-btn" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s">⟳ Sync Now</button>
+</div>
+</div>
 <div id="tab-overview" class="tab-content active">
 <div class="export-bar">
 <button class="btn-export pdf" onclick="exportPDF('overview')">📄 Export PDF</button>
@@ -3315,11 +3330,70 @@ var _lastSyncTime=new Date();
 function updateSyncIndicator(status){
 var dot=document.getElementById('sync-dot');
 var txt=document.getElementById('sync-text');
-if(!dot||!txt)return;
-if(status==='syncing'){dot.style.background='#f59e0b';txt.textContent='Syncing...';}
-else if(status==='done'){dot.style.background='#10b981';var now=new Date();var h=now.getHours(),m=now.getMinutes();var ampm=h>=12?'PM':'AM';h=h%12||12;txt.textContent='Synced '+h+':'+String(m).padStart(2,'0')+' '+ampm;_lastSyncTime=now;}
-else if(status==='error'){dot.style.background='#ef4444';txt.textContent='Sync error';}
+var gDot=document.getElementById('gsync-dot');
+var gStatus=document.getElementById('gsync-status');
+var gTime=document.getElementById('gsync-time');
+var gBtn=document.getElementById('gsync-btn');
+if(status==='syncing'){
+if(dot)dot.style.background='#f59e0b';if(txt)txt.textContent='Syncing...';
+if(gDot)gDot.style.background='#f59e0b';if(gStatus){gStatus.textContent='Syncing...';gStatus.style.color='#f59e0b';}
+if(gBtn){gBtn.disabled=true;gBtn.textContent='⏳ Syncing...';}
+_syncCountdown=900;
+}else if(status==='done'){
+var estTime=new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true});
+if(dot)dot.style.background='#10b981';if(txt)txt.textContent='Synced '+estTime+' EST';
+if(gDot)gDot.style.background='#10b981';if(gStatus){gStatus.textContent='Synced';gStatus.style.color='#10b981';}
+if(gTime)gTime.textContent='Last: '+estTime+' EST';
+if(gBtn){gBtn.disabled=false;gBtn.textContent='⟳ Sync Now';}
+_lastSyncTime=new Date();_syncCountdown=900;
+}else if(status==='error'){
+if(dot)dot.style.background='#ef4444';if(txt)txt.textContent='Sync error';
+if(gDot)gDot.style.background='#ef4444';if(gStatus){gStatus.textContent='Sync error';gStatus.style.color='#ef4444';}
+if(gBtn){gBtn.disabled=false;gBtn.textContent='⟳ Retry';}
 }
+}
+var _syncCountdown=900;
+setInterval(function(){
+if(_syncCountdown>0)_syncCountdown--;
+var gNext=document.getElementById('gsync-next');
+if(gNext){
+var m=Math.floor(_syncCountdown/60),s=_syncCountdown%60;
+gNext.textContent=_syncCountdown<=0?'Syncing soon...':'Next sync in '+m+'m '+String(s).padStart(2,'0')+'s';
+}
+},1000);
+
+// === MANUAL SYNC ===
+async function manualSync(){
+try{
+updateSyncIndicator('syncing');
+allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;allCTO.length=0;
+Object.keys(pnlSummaries).forEach(function(k){delete pnlSummaries[k];});
+Object.keys(qbRawTotals).forEach(function(k){delete qbRawTotals[k];});
+await fetchAllData();
+try{loadManualCTOEntries();}catch(e){}
+try{loadCTOEditsLocal();}catch(e){}
+updateSyncIndicator('done');
+// Show toast
+showSyncToast('✅ Sync complete — all sources updated');
+}catch(e){
+console.warn('Manual sync error:',e);
+updateSyncIndicator('error');
+showSyncToast('❌ Sync failed — will retry automatically');
+setTimeout(function(){updateSyncIndicator('done');},5000);
+}
+}
+
+function showSyncToast(msg){
+var existing=document.getElementById('sync-toast');
+if(existing)existing.remove();
+var toast=document.createElement('div');
+toast.id='sync-toast';
+toast.style.cssText='position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 30px rgba(0,0,0,.15);font-size:.82rem;font-weight:600;color:var(--text);z-index:9999;animation:fadeIn .3s ease';
+toast.textContent=msg;
+document.body.appendChild(toast);
+setTimeout(function(){toast.style.opacity='0';toast.style.transition='opacity .3s';setTimeout(function(){toast.remove();},300);},3000);
+}
+
 async function autoSyncData(){
 try{
 updateSyncIndicator('syncing');
