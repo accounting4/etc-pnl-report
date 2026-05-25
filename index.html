@@ -1183,11 +1183,11 @@ Secured with Firebase Authentication
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
 </div>
 <div class="table-card" id="cto-grouped-view">
-<table><thead><tr style="background:var(--surface2)"><th style="width:30px"></th><th>Advertiser</th><th>Source(s)</th><th>CPA Type</th><th>Campaigns</th><th>Total Leads / Clicks</th><th>Total Revenue</th><th>Last Updated</th><th style="width:60px">Edit</th></tr></thead>
+<table><thead><tr style="background:var(--surface2)"><th style="width:30px"></th><th>Advertiser</th><th>Source(s)</th><th>Campaigns</th><th>Total Leads / Clicks</th><th>Total Revenue</th><th>Last Updated</th><th style="width:60px">Edit</th></tr></thead>
 <tbody id="cto-grouped-tbody"></tbody></table>
 </div>
 <div class="table-card" id="cto-flat-view" style="display:none">
-<table><thead><tr><th onclick="sortCTO('_name')">Name</th><th onclick="sortCTO('_offer')">Package / Offer</th><th onclick="sortCTO('_leads')">Leads / Clicks</th><th onclick="sortCTO('_rate')">Rate</th><th onclick="sortCTO('_revenue')">Revenue</th><th onclick="sortCTO('_rank')">Rank</th><th onclick="sortCTO('_type')">Source</th><th onclick="sortCTO('_cpaType')">CPA Type</th><th onclick="sortCTO('_saleDate')">Sale Date</th><th onclick="sortCTO('_lastUpdated')">Last Updated</th><th>Notes</th><th>Actions</th></tr></thead>
+<table><thead><tr><th onclick="sortCTO('_name')">Name</th><th onclick="sortCTO('_offer')">Package / Offer</th><th onclick="sortCTO('_leads')">Leads / Clicks</th><th onclick="sortCTO('_rate')">Rate</th><th onclick="sortCTO('_revenue')">Revenue</th><th onclick="sortCTO('_rank')">Rank</th><th onclick="sortCTO('_type')">Source</th><th onclick="sortCTO('_saleDate')">Sale Date</th><th onclick="sortCTO('_lastUpdated')">Last Updated</th><th>Notes</th><th>Actions</th></tr></thead>
 <tbody id="cto-tbody"></tbody></table>
 <div class="pagination" id="cto-pagination"></div>
 </div>
@@ -1200,7 +1200,7 @@ Secured with Firebase Authentication
 <div class="modal-row"><label>Lead Count</label><input id="cto-ed-leads" type="number" min="0"></div>
 <div class="modal-row"><label>Rate/Lead ($)</label><input id="cto-ed-rate" type="number" step="0.01" min="0"></div>
 <div class="modal-row"><label>Source Type</label><select id="cto-ed-type"><option>CTO</option><option>IO</option><option>CPA</option><option>CPL</option></select></div>
-<div class="modal-row"><label>CPA Type</label><select id="cto-ed-cpatype"><option>CPA</option><option>CPL</option><option>CTO</option><option>Flat</option><option>Rev Share</option><option>Hybrid</option><option>—</option></select></div>
+
 <div class="modal-row"><label>Sale Date</label><input id="cto-ed-saledate" type="text" placeholder="MM/DD/YYYY"></div>
 <div class="modal-row"><label>Notes</label><input id="cto-ed-notes" type="text"></div>
 <div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('ctoEditModal').style.display='none'">Cancel</button><button class="btn-save" onclick="saveCTOEdit()">&#10003; Save</button></div>
@@ -1216,7 +1216,7 @@ Secured with Firebase Authentication
 <div class="modal-row"><label>Rate ($)</label><input id="cto-add-rate" type="number" step="0.01" min="0" value="0"></div>
 <div class="modal-row"><label>Revenue ($)</label><input id="cto-add-revenue" type="number" step="0.01" min="0" value="0" placeholder="Leave 0 to auto-calc from leads x rate"></div>
 <div class="modal-row"><label>Source Type</label><select id="cto-add-type"><option>CTO</option><option>IO</option><option>CPA</option><option>CPL</option></select></div>
-<div class="modal-row"><label>CPA Type</label><select id="cto-add-cpatype"><option>CPA</option><option>CPL</option><option>CTO</option><option>Flat</option><option>Rev Share</option><option>Hybrid</option></select></div>
+
 <div class="modal-row"><label>Month</label><select id="cto-add-month"><option>May</option><option>April</option><option>March</option><option>February</option><option>January</option></select></div>
 <div class="modal-row"><label>Sale Date</label><input id="cto-add-saledate" type="text" placeholder="MM/DD/YYYY"></div>
 <div class="modal-row"><label>Notes</label><input id="cto-add-notes" type="text"></div>
@@ -2664,7 +2664,7 @@ gHtml+='<tr class="adv-parent'+(isExp?' expanded':'')+ '" data-adv="'+adv.name.r
 gHtml+='<td><span class="expand-icon">&#9654;</span></td>';
 gHtml+='<td><strong>'+adv.name+'</strong></td>';
 gHtml+='<td>'+badges+'</td>';
-gHtml+='<td>'+cpaBadges+'</td>';
+/* CPA Type column removed */
 gHtml+='<td><span class="adv-count">'+adv.rows.length+(adv.rows.length===1?' entry':' entries')+'</span></td>';
 var isIO=Object.keys(adv.types).some(function(t){return t.toUpperCase()==='IO';});gHtml+='<td>'+adv.totalLeads.toLocaleString()+' <span style="font-size:.65rem;color:var(--text3)">'+(isIO?'clicks':'leads')+'</span></td>';
 gHtml+='<td class="adv-revenue">'+$m(adv.totalRev)+'</td>';
@@ -2680,7 +2680,7 @@ gHtml+='<tr class="adv-child'+(r._raw&&r._raw._userEdited?' user-edited':'')+'">
 gHtml+='<td></td>';
 var _childMetric=r._leads.toLocaleString()+' '+(r._metricLabel||'leads').toLowerCase();if(r._ioLeads>0)_childMetric+=' · '+r._ioLeads.toLocaleString()+' leads';gHtml+='<td style="padding-left:46px"><strong>'+(r._offer||r._name)+'</strong><br><span style="font-size:.75rem;color:var(--text3)">'+_childMetric+(r._rate?' @ '+$m(r._rate):'')+'</span></td>';
 gHtml+='<td><span class="source-badge '+tc+'" style="font-size:.7rem">'+r._type+'</span>'+(r._raw&&r._raw._userEdited?' <span style="font-size:.6rem;color:#6366f1;font-weight:700">✎ EDITED</span>':'')+'</td>';
-gHtml+='<td style="font-size:.82rem">'+(r._cpaType||'—')+'</td>';
+/* CPA Type column removed */
 gHtml+='<td style="font-size:.82rem">'+(r._saleDate||'—')+'</td>';
 gHtml+='<td><strong>'+$m(r._revenue)+'</strong></td>';
 gHtml+='<td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+(r._raw&&r._raw._userEdited?'<span style="color:#6366f1;font-size:.65rem">✎ Manual</span> ':'<span style="color:#10b981;font-size:.65rem">🔄 Synced</span> ')+fmtLastUpd(r._lastUpdated)+'</span></td>';
@@ -2693,7 +2693,7 @@ var gTbody=document.getElementById('cto-grouped-tbody');
 if(gTbody)gTbody.innerHTML=advEntries.length?gHtml:'<tr><td colspan="9" class="empty-state">No records found</td></tr>';
 /* === FLAT VIEW (original) === */
 var sl=sortArr(rows,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
-document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+(r._metricLabel==='Clicks'?' <span style="font-size:.65rem;color:var(--text3)">clicks</span>':'')+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td>'+(r._cpaType||'—')+'</td><td style="font-size:.85rem">'+(r._saleDate||'—')+'</td><td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button><button class="btn-del" style="margin-left:4px" onclick="deleteCTORow('+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="12" class="empty-state">No CTO records found</td></tr>';
+document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+(r._metricLabel==='Clicks'?' <span style="font-size:.65rem;color:var(--text3)">clicks</span>':'')+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td style="font-size:.85rem">'+(r._saleDate||'—')+'</td><td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button><button class="btn-del" style="margin-left:4px" onclick="deleteCTORow('+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="11" class="empty-state">No CTO records found</td></tr>';
 renderPagination('cto',ctoPage,tp,pp,rows.length);
 updateCTOCharts(rows,affRevMap);
 
