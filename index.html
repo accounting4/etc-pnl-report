@@ -3338,7 +3338,16 @@ async function fbLoadUserData(){
     if(d.uStatus){Object.assign(uStatus,d.uStatus);localStorage.setItem('uStatus',JSON.stringify(uStatus));}
     if(d.uRemarks){Object.assign(uRemarks,d.uRemarks);localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
 
-    console.log('✅ Firebase user data loaded');
+    // Clean userPNL against pnlDeletes after all data loaded
+    var beforeLen=userPNL.length;
+    userPNL=userPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});
+    if(userPNL.length!==beforeLen){localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSave('pnl',userPNL.reduce(function(o,r){if(r._key)o[r._key.replace(/[.#$/\[\]]/g,'_')]=r;return o;},{}));}
+    // Clean userExpenses against expDeletes
+    var beforeExpLen=userExpenses.length;
+    userExpenses=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
+    if(userExpenses.length!==beforeExpLen){localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSave('expenses',userExpenses.reduce(function(o,e){if(e._key)o[e._key.replace(/[.#$/\[\]]/g,'_')]=e;return o;},{}));}
+
+    console.log('✅ Firebase user data loaded, cleaned '+beforeLen+'→'+userPNL.length+' invoices');
   }catch(e){console.warn('Firebase load error:',e.message);}
 }
 
@@ -3356,8 +3365,8 @@ function openPNLAttach(gi){const att=JSON.parse(localStorage.getItem('pnlAttachm
 
 let pnlEdits=(function(){try{return JSON.parse(localStorage.getItem('pnlEdits')||'{}')}catch(e){return{}}})();
 let pnlDeletes=new Set(JSON.parse(localStorage.getItem('pnlDeletes')||'[]'));
-// Clean deleted entries from userPNL localStorage
-try{var _uPNL=JSON.parse(localStorage.getItem('uPNL')||'[]');var _cleanPNL=_uPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});if(_cleanPNL.length!==_uPNL.length)localStorage.setItem('uPNL',JSON.stringify(_cleanPNL));}catch(e){}
+// Clean deleted entries from userPNL localStorage AND memory
+try{var _uPNL=JSON.parse(localStorage.getItem('uPNL')||'[]');var _cleanPNL=_uPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});if(_cleanPNL.length!==_uPNL.length){localStorage.setItem('uPNL',JSON.stringify(_cleanPNL));userPNL=_cleanPNL;}}catch(e){}
 let fmdEdits=(function(){try{return JSON.parse(localStorage.getItem('fmdEdits')||'{}')}catch(e){return{}}})();
 let fmdDeletes=new Set(JSON.parse(localStorage.getItem('fmdDeletes')||'[]'));
 function editPNLRow(e,gi){
