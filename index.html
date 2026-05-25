@@ -1006,28 +1006,6 @@ Secured with Firebase Authentication
 </div>
 
 
-<!-- EXPENSE TRACKER -->
-<div class="section-header">
-<div class="section-title"><div class="icon-circle">&#128184;</div> Expense Tracker</div>
-<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Add Expense</button></div>
-</div>
-<div class="stats-row" style="margin-bottom:14px">
-<div class="stat-card red"><div class="sc-label">Total Expenses (All)</div><div class="sc-value" id="exp-s-total">$0</div><div class="sc-sub">All months combined</div></div>
-<div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="exp-s-month">$0</div><div class="sc-sub" id="exp-s-month-label">Current month</div></div>
-<div class="stat-card purple"><div class="sc-label">Categories</div><div class="sc-value" id="exp-s-cats">0</div><div class="sc-sub">Unique categories</div></div>
-<div class="stat-card blue"><div class="sc-label">Entries</div><div class="sc-value" id="exp-s-count">0</div><div class="sc-sub">Total expense records</div></div>
-</div>
-<div class="filter-bar" style="margin-bottom:8px">
-<div class="fg"><label>Search</label><input id="exp-search" type="search" placeholder="Search expenses..." oninput="renderExpenses()"></div>
-<div class="fg"><label>Month</label><select id="exp-month-f" onchange="renderExpenses()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
-<div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
-</div>
-<div class="table-card" style="margin-bottom:20px;overflow-x:auto">
-<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Description</th><th>Amount</th><th>Recurring</th><th>Notes</th><th style="width:100px">Actions</th></tr></thead>
-<tbody id="exp-tbody"></tbody>
-</table>
-</div>
-
 <div class="section-header">
 <div class="section-title"><div class="icon-circle">&#128181;</div> Invoice Details</div>
 <div class="action-bar"><button class="btn-add" onclick="document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
@@ -1056,6 +1034,28 @@ Secured with Firebase Authentication
 <div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Month</th><th>P&amp;L Revenue</th><th>QB Total</th><th>Difference</th></tr></thead><tbody id="audit-monthly"></tbody></table></div>
 <h4 style="color:var(--navy);margin:0 0 10px">&#128220; Change History</h4>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Details</th><th>Before &#8594; After</th></tr></thead><tbody id="audit-history"></tbody></table></div>
+
+<!-- EXPENSE TRACKER -->
+<div class="section-header">
+<div class="section-title"><div class="icon-circle">&#128184;</div> Expense Tracker</div>
+<div class="action-bar"><button class="btn-add" onclick="document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Add Expense</button></div>
+</div>
+<div class="stats-row" style="margin-bottom:14px">
+<div class="stat-card red"><div class="sc-label">Total Expenses (All)</div><div class="sc-value" id="exp-s-total">$0</div><div class="sc-sub">All months combined</div></div>
+<div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="exp-s-month">$0</div><div class="sc-sub" id="exp-s-month-label">Current month</div></div>
+<div class="stat-card purple"><div class="sc-label">Categories</div><div class="sc-value" id="exp-s-cats">0</div><div class="sc-sub">Unique categories</div></div>
+<div class="stat-card blue"><div class="sc-label">Entries</div><div class="sc-value" id="exp-s-count">0</div><div class="sc-sub">Total expense records</div></div>
+</div>
+<div class="filter-bar" style="margin-bottom:8px">
+<div class="fg"><label>Search</label><input id="exp-search" type="search" placeholder="Search expenses..." oninput="renderExpenses()"></div>
+<div class="fg"><label>Month</label><select id="exp-month-f" onchange="renderExpenses()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
+</div>
+<div class="table-card" style="margin-bottom:20px;overflow-x:auto">
+<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Description</th><th>Amount</th><th>Recurring</th><th>Notes</th><th style="width:100px">Actions</th></tr></thead>
+<tbody id="exp-tbody"></tbody>
+</table>
+</div>
 </div>
 </div>
 </div>
