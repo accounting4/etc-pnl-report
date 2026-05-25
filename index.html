@@ -3059,8 +3059,8 @@ renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit()
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
 function getFMDSorted(){return sortArr(getFMDFilt(),fmdSort);}
-function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else renderRevenue();}
-function updRemark(ta,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.remarks=ta.value;if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));}}}
+function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else renderRevenue();}
+function updRemark(ta,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.remarks=ta.value;if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));fbSyncRemarks();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}}
 function savePNLRecord(){
 var amt=parseFloat(document.getElementById('f-invAmt').value)||0;
 if(!amt){alert('Please enter an amount.');return;}
@@ -3081,6 +3081,7 @@ var att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');att[r._key]={na
 };reader.readAsDataURL(file);
 }
 allPNL.push(r);userPNL.push(r);localStorage.setItem('uPNL',JSON.stringify(userPNL));
+fbSyncAllPNL();
 mergeUserInvoices();
 document.getElementById('addPNLModal').classList.remove('open');
 ['f-invId','f-invDate','f-affiliate','f-invAmt','f-rcvd','f-remarks'].forEach(function(id){document.getElementById(id).value='';});
@@ -3089,7 +3090,7 @@ renderPNL();
 var sm=document.querySelector('#pnl-month-buttons button.active');if(sm)showMonthlySummary(sm.dataset.month||sm.textContent);
 try{renderOverview();}catch(e){}
 }
-function delPNL(gi){const r=getPNLSorted()[gi];if(!r||r._source!=='user')return;allPNL.splice(allPNL.indexOf(r),1);const i=userPNL.indexOf(r);if(i>-1)userPNL.splice(i,1);localStorage.setItem('uPNL',JSON.stringify(userPNL));renderPNL();}
+function delPNL(gi){const r=getPNLSorted()[gi];if(!r||r._source!=='user')return;allPNL.splice(allPNL.indexOf(r),1);const i=userPNL.indexOf(r);if(i>-1)userPNL.splice(i,1);localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSyncAllPNL();renderPNL();}
 function saveRevRecord(){const r={_source:'user',_key:'ur_'+Date.now(),date:document.getElementById('fr-date').value,_month:'Manual',affiliate:document.getElementById('fr-affiliate').value,amount:parseFloat(document.getElementById('fr-amt').value)||0,status:document.getElementById('fr-status').value||'Pending',remarks:document.getElementById('fr-remarks').value};r._week=getWeekLabel(r.date)||'Manual';allRev.push(r);userRev.push(r);localStorage.setItem('uRev',JSON.stringify(userRev));document.getElementById('addRevModal').classList.remove('open');['fr-date','fr-affiliate','fr-amt','fr-remarks'].forEach(id=>document.getElementById(id).value='');renderRevenue();}
 function delRev(gi){const r=getRevSorted()[gi];if(!r||r._source!=='user')return;allRev.splice(allRev.indexOf(r),1);const i=userRev.indexOf(r);if(i>-1)userRev.splice(i,1);localStorage.setItem('uRev',JSON.stringify(userRev));renderRevenue();}
 function saveFMDRecord(){const r={_source:'user',_month:document.getElementById('fm-month').value||'Manual',_key:'ufmd_'+Date.now(),date:document.getElementById('fm-date').value,affiliate:document.getElementById('fm-affiliate').value,invAmt:parseFloat(document.getElementById('fm-invAmt').value)||0,rcvd:parseFloat(document.getElementById('fm-rcvd').value)||0,status:document.getElementById('fm-status').value||'Pending',remarks:document.getElementById('fm-remarks').value};r.displayAmt=r.invAmt>0?r.invAmt:r.rcvd;allFMD.push(r);userFMD.push(r);localStorage.setItem('uFMD',JSON.stringify(userFMD));document.getElementById('addFMDModal').classList.remove('open');['fm-date','fm-affiliate','fm-invAmt','fm-rcvd','fm-remarks'].forEach(id=>document.getElementById(id).value='');renderFMD();}
@@ -3257,7 +3258,97 @@ mkChart('ctoRankChart','bar',ranked.map(function(r){return'#'+r._rank+' '+(r._of
 [{label:'Revenue',data:ranked.map(function(r){return Number(r._revenue)||0;}),backgroundColor:rankColors,borderRadius:6}]);
 }
 // Initialize auth system (or load data directly if auth is skipped)
-function loadAllData(){fetchAllData().then(function(){try{loadManualCTOEntries();loadCTOEditsLocal();}catch(e){}}).catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
+
+/* === Firebase Data Sync Layer === */
+function fbUserPath(sub){if(!fbAuth||!fbAuth.currentUser)return null;return 'userdata/'+fbAuth.currentUser.uid+'/'+sub;}
+
+function fbSave(sub,data){
+  var p=fbUserPath(sub);
+  if(!p||!fbDb)return Promise.resolve();
+  return fbDb.ref(p).set(data).catch(function(e){console.warn('FB save error ('+sub+'):',e.message);});
+}
+
+function fbSaveKey(sub,key,data){
+  var p=fbUserPath(sub+'/'+key);
+  if(!p||!fbDb)return Promise.resolve();
+  return fbDb.ref(p).set(data).catch(function(e){console.warn('FB save error:',e.message);});
+}
+
+function fbRemoveKey(sub,key){
+  var p=fbUserPath(sub+'/'+key);
+  if(!p||!fbDb)return Promise.resolve();
+  return fbDb.ref(p).remove().catch(function(e){console.warn('FB remove error:',e.message);});
+}
+
+async function fbLoadUserData(){
+  var base=fbUserPath('');
+  if(!base||!fbDb)return;
+  try{
+    var snap=await fbDb.ref(base).once('value');
+    if(!snap.exists())return;
+    var d=snap.val();
+
+    // Load PNL invoices from Firebase
+    if(d.pnl){
+      var fbInvoices=Object.values(d.pnl);
+      if(fbInvoices.length){
+        // Merge: Firebase is source of truth, localStorage is backup
+        var localKeys=new Set(userPNL.map(function(r){return r._key;}));
+        var fbKeys=new Set(fbInvoices.map(function(r){return r._key;}));
+        // Add any Firebase entries not in local
+        fbInvoices.forEach(function(r){
+          if(!localKeys.has(r._key)){userPNL.push(r);}
+          else{
+            // Update local with Firebase version
+            var idx=userPNL.findIndex(function(x){return x._key===r._key;});
+            if(idx>-1)userPNL[idx]=r;
+          }
+        });
+        localStorage.setItem('uPNL',JSON.stringify(userPNL));
+      }
+    }
+
+    // Load expenses from Firebase
+    if(d.expenses){
+      var fbExp=Object.values(d.expenses);
+      if(fbExp.length){
+        var localExpKeys=new Set(userExpenses.map(function(e){return e._key;}));
+        fbExp.forEach(function(e){
+          if(!localExpKeys.has(e._key)){userExpenses.push(e);}
+          else{
+            var idx=userExpenses.findIndex(function(x){return x._key===e._key;});
+            if(idx>-1)userExpenses[idx]=e;
+          }
+        });
+        localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+      }
+    }
+
+    // Load deletes from Firebase
+    if(d.pnlDeletes){
+      Object.keys(d.pnlDeletes).forEach(function(k){pnlDeletes.add(k);});
+      localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));
+    }
+    if(d.expDeletes){
+      Object.keys(d.expDeletes).forEach(function(k){expDeletes.add(k);});
+      localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));
+    }
+
+    // Load status/remarks overrides
+    if(d.uStatus){Object.assign(uStatus,d.uStatus);localStorage.setItem('uStatus',JSON.stringify(uStatus));}
+    if(d.uRemarks){Object.assign(uRemarks,d.uRemarks);localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
+
+    console.log('✅ Firebase user data loaded');
+  }catch(e){console.warn('Firebase load error:',e.message);}
+}
+
+function fbSyncAllPNL(){fbSave('pnl',userPNL.reduce(function(o,r){if(r._key)o[r._key.replace(/[.#$/\[\]]/g,'_')]=r;return o;},{}));}
+function fbSyncAllExpenses(){fbSave('expenses',userExpenses.reduce(function(o,e){if(e._key)o[e._key.replace(/[.#$/\[\]]/g,'_')]=e;return o;},{}));}
+function fbSyncDeletes(){fbSave('pnlDeletes',[...pnlDeletes].reduce(function(o,k){o[k.replace(/[.#$/\[\]]/g,'_')]=true;return o;},{}));}
+function fbSyncExpDeletes(){fbSave('expDeletes',[...expDeletes].reduce(function(o,k){o[k.replace(/[.#$/\[\]]/g,'_')]=true;return o;},{}));}
+function fbSyncStatus(){fbSave('uStatus',uStatus);}
+function fbSyncRemarks(){fbSave('uRemarks',uRemarks);}
+function loadAllData(){fbLoadUserData().then(function(){return fetchAllData();}).then(function(){try{loadManualCTOEntries();loadCTOEditsLocal();}catch(e){}}).catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
 initAuth();
 
 function handlePNLAttach(input,gi){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){const att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');att[gi]={name:file.name,data:e.target.result};localStorage.setItem('pnlAttachments',JSON.stringify(att));const sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';input.value='';};reader.readAsDataURL(file);}
@@ -3318,6 +3409,9 @@ function savePNLEdit(){
     const uR=JSON.parse(localStorage.getItem('uRemarks')||'{}');uR[r._key]=edit.remarks;localStorage.setItem('uRemarks',JSON.stringify(uR));
   }
   localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));
+  // Sync edits to Firebase
+  if(r._source==='user'){var _uIdx=userPNL.findIndex(function(x){return x._key===r._key;});if(_uIdx>-1){Object.assign(userPNL[_uIdx],edit);localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSyncAllPNL();}}
+  fbSyncStatus();fbSyncRemarks();
   closePNLModal();
   mergeUserInvoices();mergeUserExpenses();
   renderPNL();
@@ -3331,10 +3425,10 @@ function delPNLRow(e,gi){
   const all=getPNLSorted();const r=all[gi];if(!r)return;
   const k=r._key||r.invId||(r._idx!=null?String(r._idx):'gi'+gi);
   pnlDeletes.add(k);
-  localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));
+  localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));fbSyncDeletes();
   const idx=allPNL.indexOf(r);if(idx>-1)allPNL.splice(idx,1);
   /* Also remove from userPNL if manual */
-  if(r._source==='user'){var ui=userPNL.indexOf(r);if(ui>-1)userPNL.splice(ui,1);localStorage.setItem('uPNL',JSON.stringify(userPNL));}
+  if(r._source==='user'){var ui=userPNL.indexOf(r);if(ui>-1)userPNL.splice(ui,1);localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSyncAllPNL();}
   mergeUserInvoices();mergeUserExpenses();
   renderPNL();
   try{renderOverview();}catch(e){}
@@ -3472,7 +3566,7 @@ createdAt:new Date().toLocaleString('en-US',{timeZone:'America/New_York'})
 };
 if(!ex.amount){alert('Please enter an amount.');return;}
 userExpenses.push(ex);
-localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSyncAllExpenses();
 document.getElementById('addExpenseModal').classList.remove('open');
 ['fe-date','fe-desc','fe-amount','fe-notes','fe-advertiser'].forEach(function(id){document.getElementById(id).value='';});
 document.getElementById('fe-month').value='';
@@ -3512,7 +3606,7 @@ ex.amount=parseFloat(document.getElementById('fee-amount').value)||0;
 ex.recurring=document.getElementById('fee-recurring').value||'No';
 ex.notes=document.getElementById('fee-notes').value||'';
 ex.updatedAt=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
-localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSyncAllExpenses();
 document.getElementById('editExpenseModal').classList.remove('open');
 _editExpIdx=-1;
 refreshAfterExpenseChange();
@@ -3523,10 +3617,10 @@ if(!confirm('Permanently delete this expense?'))return;
 var f=getExpFilt().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
 var ex=f[i];if(!ex)return;
 expDeletes.add(ex._key);
-localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));
+localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));fbSyncExpDeletes();
 var idx=userExpenses.indexOf(ex);
 if(idx>-1)userExpenses.splice(idx,1);
-localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
+localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSyncAllExpenses();
 refreshAfterExpenseChange();
 }
 
