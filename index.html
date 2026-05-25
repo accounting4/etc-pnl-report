@@ -812,17 +812,17 @@ Secured with Firebase Authentication
 <div id="app-container" style="display:none">
 <div id="loadingOverlay"><div class="spinner"></div><div class="load-title">Loading ETC Dashboard</div><div id="loadingStatus">Connecting to Google Sheets...</div></div>
 <div class="modal-overlay" id="addPNLModal">
-
-<div class="modal"><h2>+ Add PNL Invoice Record</h2>
+<div class="modal"><h2>&#128181; Add Invoice</h2>
 <div class="form-row"><label>Invoice ID</label><input id="f-invId" placeholder="e.g. INV-001"></div>
 <div class="form-row"><label>Date</label><input id="f-invDate" type="date"></div>
-<div class="form-row"><label>Month</label><select id="f-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
-<div class="form-row"><label>Affiliate Name</label><input id="f-affiliate" placeholder="Affiliate name"></div>
-<div class="form-row"><label>Invoice Amount</label><input id="f-invAmt" type="number" step="0.01" placeholder="0.00"></div>
-<div class="form-row"><label>Amount Received</label><input id="f-rcvd" type="number" step="0.01" placeholder="0.00"></div>
-<div class="form-row"><label>Status</label><select id="f-status"><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option><option>No Final Count</option></select></div>
-<div class="form-row"><label>Remarks</label><textarea id="f-remarks" placeholder="Notes..."></textarea></div>
-<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addPNLModal').classList.remove('open')">Cancel</button><button class="btn-save" onclick="savePNLRecord()">Save</button></div>
+<div class="form-row"><label>Month</label><select id="f-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Advertiser / Client</label><input id="f-affiliate" placeholder="e.g. Interactive Offers"></div>
+<div class="form-row"><label>Amount ($)</label><input id="f-invAmt" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Status</label><select id="f-status" onchange="toggleInvAmtFields()"><option>Paid</option><option>Unpaid</option><option>Partially Paid</option><option>Pending</option><option>No Final Count</option></select></div>
+<div class="form-row" id="f-rcvd-row" style="display:none"><label>Amount Received</label><input id="f-rcvd" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Notes</label><textarea id="f-remarks" placeholder="Optional comments or details..." rows="2"></textarea></div>
+<div class="form-row"><label>Attachment</label><input id="f-invFile" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="font-size:.85rem"></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addPNLModal').classList.remove('open')">Cancel</button><button class="btn-save" onclick="savePNLRecord()">&#10003; Save Invoice</button></div>
 </div></div>
 <div class="modal-overlay" id="addExpenseModal">
 <div class="modal"><h2 style="color:#ef4444">&#128184; Add Expense</h2>
@@ -1094,10 +1094,16 @@ Secured with Firebase Authentication
 
 
 <div class="section-header section-collapsible collapsed" onclick="toggleSection('sec-invoices')">
-<div class="section-title"><div class="icon-circle">&#128181;</div> Invoice Details <span class="collapse-icon">&#9660;</span></div>
-<div class="action-bar"><button class="btn-add" onclick="event.stopPropagation();document.getElementById('addPNLModal').classList.add('open')">+ Add Invoice</button></div>
+<div class="section-title"><div class="icon-circle">&#128181;</div> Financial Records <span style="font-size:.72rem;font-weight:400;color:var(--text3);margin-left:6px">Invoices + Expenses — Unified P&L System</span> <span class="collapse-icon">&#9660;</span></div>
+<div class="action-bar" style="display:flex;gap:6px" onclick="event.stopPropagation()"><button class="btn-add" onclick="document.getElementById('addPNLModal').classList.add('open')">+ Invoice</button><button class="btn-add" onclick="document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Expense</button></div>
 </div>
 <div id="sec-invoices" class="section-body collapsed" style="max-height:0;opacity:0">
+<!-- Unified sub-tabs -->
+<div id="fin-subtabs" style="display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid var(--border);padding-bottom:8px">
+<button class="fin-tab active" onclick="setFinTab('invoices')" id="fin-tab-invoices" style="padding:6px 16px;border:none;border-radius:8px 8px 0 0;font-size:.82rem;font-weight:600;cursor:pointer;background:#6366f1;color:#fff;transition:all .15s">&#128181; Invoices</button>
+<button class="fin-tab" onclick="setFinTab('expenses')" id="fin-tab-expenses" style="padding:6px 16px;border:none;border-radius:8px 8px 0 0;font-size:.82rem;font-weight:600;cursor:pointer;background:var(--surface2);color:var(--text2);transition:all .15s">&#128184; Expenses</button>
+</div>
+<div id="fin-invoices-panel">
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="pnl-search" type="search" placeholder="Search..." oninput="applyPNLFilters()"></div>
 <div class="fg"><label>Month</label><select id="pnl-month-f" onchange="applyPNLFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
@@ -1122,14 +1128,8 @@ Secured with Firebase Authentication
 <div class="table-wrap" style="margin-bottom:20px"><table class="data-table"><thead><tr><th>Month</th><th>P&amp;L Revenue</th><th>QB Total</th><th>Difference</th></tr></thead><tbody id="audit-monthly"></tbody></table></div>
 <h4 style="color:var(--navy);margin:0 0 10px">&#128220; Change History</h4>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Details</th><th>Before &#8594; After</th></tr></thead><tbody id="audit-history"></tbody></table></div>
-</div><!-- /sec-invoices -->
-
-<!-- EXPENSE TRACKER -->
-<div class="section-header section-collapsible collapsed" onclick="toggleSection('sec-expenses')">
-<div class="section-title"><div class="icon-circle">&#128184;</div> Expense Tracker <span class="collapse-icon">&#9660;</span></div>
-<div class="action-bar"><button class="btn-add" onclick="event.stopPropagation();document.getElementById('addExpenseModal').classList.add('open')" style="background:#ef4444">+ Add Expense</button></div>
-</div>
-<div id="sec-expenses" class="section-body collapsed" style="max-height:0;opacity:0">
+</div><!-- /fin-invoices-panel -->
+<div id="fin-expenses-panel" style="display:none">
 <div class="stats-row" style="margin-bottom:14px">
 <div class="stat-card red"><div class="sc-label">Total Expenses (All)</div><div class="sc-value" id="exp-s-total">$0</div><div class="sc-sub">All months combined</div></div>
 <div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="exp-s-month">$0</div><div class="sc-sub" id="exp-s-month-label">Current month</div></div>
@@ -1146,7 +1146,8 @@ Secured with Firebase Authentication
 <tbody id="exp-tbody"></tbody>
 </table>
 </div>
-</div><!-- /sec-expenses -->
+</div><!-- /fin-expenses-panel -->
+</div><!-- /sec-invoices (unified financial records) -->
 </div>
 </div>
 </div>
@@ -1182,11 +1183,11 @@ Secured with Firebase Authentication
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
 </div>
 <div class="table-card" id="cto-grouped-view">
-<table><thead><tr style="background:var(--surface2)"><th style="width:30px"></th><th>Advertiser</th><th>Source(s)</th><th>CPA Type</th><th>Campaigns</th><th>Total Leads</th><th>Total Revenue</th><th>Last Updated</th><th style="width:60px">Edit</th></tr></thead>
+<table><thead><tr style="background:var(--surface2)"><th style="width:30px"></th><th>Advertiser</th><th>Source(s)</th><th>CPA Type</th><th>Campaigns</th><th>Total Leads / Clicks</th><th>Total Revenue</th><th>Last Updated</th><th style="width:60px">Edit</th></tr></thead>
 <tbody id="cto-grouped-tbody"></tbody></table>
 </div>
 <div class="table-card" id="cto-flat-view" style="display:none">
-<table><thead><tr><th onclick="sortCTO('_name')">Name</th><th onclick="sortCTO('_offer')">Package / Offer</th><th onclick="sortCTO('_leads')">Leads</th><th onclick="sortCTO('_rate')">Rate</th><th onclick="sortCTO('_revenue')">Revenue</th><th onclick="sortCTO('_rank')">Rank</th><th onclick="sortCTO('_type')">Source</th><th onclick="sortCTO('_cpaType')">CPA Type</th><th onclick="sortCTO('_saleDate')">Sale Date</th><th onclick="sortCTO('_lastUpdated')">Last Updated</th><th>Notes</th><th>Actions</th></tr></thead>
+<table><thead><tr><th onclick="sortCTO('_name')">Name</th><th onclick="sortCTO('_offer')">Package / Offer</th><th onclick="sortCTO('_leads')">Leads / Clicks</th><th onclick="sortCTO('_rate')">Rate</th><th onclick="sortCTO('_revenue')">Revenue</th><th onclick="sortCTO('_rank')">Rank</th><th onclick="sortCTO('_type')">Source</th><th onclick="sortCTO('_cpaType')">CPA Type</th><th onclick="sortCTO('_saleDate')">Sale Date</th><th onclick="sortCTO('_lastUpdated')">Last Updated</th><th>Notes</th><th>Actions</th></tr></thead>
 <tbody id="cto-tbody"></tbody></table>
 <div class="pagination" id="cto-pagination"></div>
 </div>
@@ -2086,7 +2087,11 @@ return true;
 allFMD.push(...inv.filter(r=>isFMD(r.affiliate)));
 allPNL.push(...inv.filter(r=>!isFMD(r.affiliate)));
 }
+/* Snapshot sheet-only summaries before merging user data */
+window._sheetInvoiceSnapshot={};window._sheetExpenseSnapshot={};
+for(var _sm in pnlSummaries){window._sheetInvoiceSnapshot[_sm]={grossRevenue:pnlSummaries[_sm].grossRevenue||0,paymentRcvd:pnlSummaries[_sm].paymentRcvd||0,balance:pnlSummaries[_sm].balance||0};window._sheetExpenseSnapshot[_sm]={totalExpenses:pnlSummaries[_sm].totalExpenses||0,salary:pnlSummaries[_sm].salary||0,ads:pnlSummaries[_sm].ads||0};}
 allPNL.push(...userPNL.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
+mergeUserInvoices();
 // Filter out permanently deleted PNL entries
 for(var _di=allPNL.length-1;_di>=0;_di--){var _dk=allPNL[_di]._key||allPNL[_di].invId||'';if(_dk&&pnlDeletes.has(_dk))allPNL.splice(_di,1);}
 allFMD.push(...userFMD.map(r=>({...r,displayAmt:r.invAmt>0?r.invAmt:r.rcvd})));
@@ -2509,7 +2514,11 @@ if(ctEl)ctEl.style.display=range==='custom'?'block':'none';
 computeForecasts();
 }
 
-function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});var targetMonth=selMonthF;let lr=0,lb=0,lrv=0,ltexp=0;if(targetMonth){var ps=pnlSummaries[targetMonth]||{};lrv=ps.grossRevenue||0;lr=ps.paymentRcvd||0;lb=ps.balance||0;ltexp=ps.totalExpenses||0;}else{for(var mk in pnlSummaries){var ps=pnlSummaries[mk];lrv+=(ps.grossRevenue||0);lr+=(ps.paymentRcvd||0);lb+=(ps.balance||0);ltexp+=(ps.totalExpenses||0);}}setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));setStat('pnl-s-count',$m(ltexp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,"+gi+")">&#128206;</label><span id="pnl-att-"+gi+"" class="attach-link" onclick="openPNLAttach("+gi+")" style="display:none">&#128204; View</span></td><td class="action-cell"><button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);try{renderAudit();}catch(e){}const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');Object.keys(pnlAtts).forEach(gi=>{const sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';});}
+function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});var targetMonth=selMonthF;let lr=0,lb=0,lrv=0,ltexp=0;if(targetMonth){var ps=pnlSummaries[targetMonth]||{};lrv=ps.grossRevenue||0;lr=ps.paymentRcvd||0;lb=ps.balance||0;ltexp=ps.totalExpenses||0;}else{for(var mk in pnlSummaries){var ps=pnlSummaries[mk];lrv+=(ps.grossRevenue||0);lr+=(ps.paymentRcvd||0);lb+=(ps.balance||0);ltexp+=(ps.totalExpenses||0);}}setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));setStat('pnl-s-count',$m(ltexp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,"+gi+")">&#128206;</label><span id="pnl-att-"+gi+"" class="attach-link" onclick="openPNLAttach("+gi+")" style="display:none">&#128204; View</span></td><td class="action-cell"><button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);try{renderAudit();}catch(e){}const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');
+/* Show attachment indicators for both index and key-based attachments */
+Object.keys(pnlAtts).forEach(function(k){var sp=document.getElementById('pnl-att-'+k);if(sp)sp.style.display='inline';});
+/* Also check by record key */
+var _pnlSl=sortArr(getPNLFilt(),pnlSort);_pnlSl.forEach(function(r,i){var rk=r._key||r.invId||'';if(rk&&pnlAtts[rk]){var sp=document.getElementById('pnl-att-'+i);if(sp)sp.style.display='inline';}});}
 function getCTORow(r){
 var name=r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'';
 var offer=r['Offers']||'';
@@ -2528,10 +2537,12 @@ var cpaType=r._cpaType||r['CPA Type']||'';
 if(!cpaType){if(type.toUpperCase()==='IO')cpaType='CPL';else if(type.toUpperCase()==='CPA')cpaType='CPA';else if(type.toUpperCase()==='CTO')cpaType='CTO';else cpaType='—';}
 var notes=[];if(growth&&growth!=='0')notes.push('Growth: +'+growth);if(goal)notes.push('Cap: '+goal);
 var lastUpdated=r._lastUpdated||r['Since Last Update']||r['Since Last Updated']||r._ioDate||r._efDate||r._saleDate||'';
-return{_name:name,_offer:offer,_leads:leads,_rate:rate,_flat:flat,_revenue:revenue,_rank:rank?parseInt(rank):999,_type:type,_cpaType:cpaType,_saleDate:saleDate,_lastUpdated:lastUpdated,_notes:notes.join(' | '),_raw:r};
+var _metricLabel=(type.toUpperCase()==='IO')?'Clicks':'Leads';return{_name:name,_offer:offer,_leads:leads,_rate:rate,_flat:flat,_revenue:revenue,_rank:rank?parseInt(rank):999,_type:type,_cpaType:cpaType,_saleDate:saleDate,_lastUpdated:lastUpdated,_notes:notes.join(' | '),_metricLabel:_metricLabel,_raw:r};
 }
 var _ctoEditIdx=-1;
-function editCTORow(idx){var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);var row=sorted[idx];if(!row)return;_ctoEditIdx=idx;document.getElementById('cto-ed-name').value=row._name;document.getElementById('cto-ed-offer').value=row._offer;document.getElementById('cto-ed-leads').value=row._leads;document.getElementById('cto-ed-rate').value=row._rate;document.getElementById('cto-ed-type').value=row._type;document.getElementById('cto-ed-cpatype').value=row._cpaType||'—';document.getElementById('cto-ed-saledate').value=row._saleDate||'';document.getElementById('cto-ed-notes').value=row._notes;document.getElementById('ctoEditModal').style.display='flex';}
+function editCTORow(idx){var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);var row=sorted[idx];if(!row)return;_ctoEditIdx=idx;document.getElementById('cto-ed-name').value=row._name;document.getElementById('cto-ed-offer').value=row._offer;document.getElementById('cto-ed-leads').value=row._leads;
+var leadsLabel=document.querySelector('label[for="cto-ed-leads"]');
+if(leadsLabel)leadsLabel.textContent=(row._type||'').toUpperCase()==='IO'?'Clicks':'Leads';document.getElementById('cto-ed-rate').value=row._rate;document.getElementById('cto-ed-type').value=row._type;document.getElementById('cto-ed-cpatype').value=row._cpaType||'—';document.getElementById('cto-ed-saledate').value=row._saleDate||'';document.getElementById('cto-ed-notes').value=row._notes;document.getElementById('ctoEditModal').style.display='flex';}
 function saveCTOEdit(){var row=null;if(_ctoEditRaw){row={_raw:_ctoEditRaw};}else{var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);row=sorted[_ctoEditIdx];}if(!row||!row._raw)return;var r=row._raw;r['Advertiser']=document.getElementById('cto-ed-name').value;r['Offers']=document.getElementById('cto-ed-offer').value;r['Current Lead Count']=document.getElementById('cto-ed-leads').value;r['Rate/Lead ($)']=document.getElementById('cto-ed-rate').value;var newLeads=parseInt(document.getElementById('cto-ed-leads').value)||0;var newRate=parseFloat(document.getElementById('cto-ed-rate').value)||0;r['Total Revenue ($)']=(newLeads*newRate).toString();r['Type']=document.getElementById('cto-ed-type').value;r._ctoType=document.getElementById('cto-ed-type').value;r._cpaType=document.getElementById('cto-ed-cpatype').value;r._saleDate=document.getElementById('cto-ed-saledate').value;r._userNotes=document.getElementById('cto-ed-notes').value;r._lastUpdated=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});r._userEdited=true;r._manualUpdate=true;_ctoEditRaw=null;document.getElementById('ctoEditModal').style.display='none';saveCTOEditsLocal();renderCTO();}
 var _ctoEditRaw=null;
 function editCTOFromGrouped(advName,offerName,month){
@@ -2548,6 +2559,8 @@ var row=getCTORow(found);
 document.getElementById('cto-ed-name').value=row._name;
 document.getElementById('cto-ed-offer').value=row._offer;
 document.getElementById('cto-ed-leads').value=row._leads;
+var leadsLabel=document.querySelector('label[for="cto-ed-leads"]');
+if(leadsLabel)leadsLabel.textContent=(row._type||'').toUpperCase()==='IO'?'Clicks':'Leads';
 document.getElementById('cto-ed-rate').value=row._rate;
 document.getElementById('cto-ed-type').value=row._type;
 document.getElementById('cto-ed-cpatype').value=row._cpaType||'—';
@@ -2653,7 +2666,7 @@ gHtml+='<td><strong>'+adv.name+'</strong></td>';
 gHtml+='<td>'+badges+'</td>';
 gHtml+='<td>'+cpaBadges+'</td>';
 gHtml+='<td><span class="adv-count">'+adv.rows.length+(adv.rows.length===1?' entry':' entries')+'</span></td>';
-gHtml+='<td>'+adv.totalLeads.toLocaleString()+'</td>';
+var isIO=Object.keys(adv.types).some(function(t){return t.toUpperCase()==='IO';});gHtml+='<td>'+adv.totalLeads.toLocaleString()+' <span style="font-size:.65rem;color:var(--text3)">'+(isIO?'clicks':'leads')+'</span></td>';
 gHtml+='<td class="adv-revenue">'+$m(adv.totalRev)+'</td>';
 gHtml+='<td style="font-size:.8rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(adv.latestUpdate)+'</span></td>';
 gHtml+='<td></td>';
@@ -2665,7 +2678,7 @@ var tc=typeColors[(r._type||'').toUpperCase()]||'cto';
 
 gHtml+='<tr class="adv-child'+(r._raw&&r._raw._userEdited?' user-edited':'')+'">';
 gHtml+='<td></td>';
-gHtml+='<td style="padding-left:46px"><strong>'+(r._offer||r._name)+'</strong><br><span style="font-size:.75rem;color:var(--text3)">'+r._leads.toLocaleString()+' leads @ '+$m(r._rate)+'</span></td>';
+gHtml+='<td style="padding-left:46px"><strong>'+(r._offer||r._name)+'</strong><br><span style="font-size:.75rem;color:var(--text3)">'+r._leads.toLocaleString()+' '+(r._metricLabel||'leads').toLowerCase()+' @ '+$m(r._rate)+'</span></td>';
 gHtml+='<td><span class="source-badge '+tc+'" style="font-size:.7rem">'+r._type+'</span>'+(r._raw&&r._raw._userEdited?' <span style="font-size:.6rem;color:#6366f1;font-weight:700">✎ EDITED</span>':'')+'</td>';
 gHtml+='<td style="font-size:.82rem">'+(r._cpaType||'—')+'</td>';
 gHtml+='<td style="font-size:.82rem">'+(r._saleDate||'—')+'</td>';
@@ -2680,7 +2693,7 @@ var gTbody=document.getElementById('cto-grouped-tbody');
 if(gTbody)gTbody.innerHTML=advEntries.length?gHtml:'<tr><td colspan="9" class="empty-state">No records found</td></tr>';
 /* === FLAT VIEW (original) === */
 var sl=sortArr(rows,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
-document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td>'+(r._cpaType||'—')+'</td><td style="font-size:.85rem">'+(r._saleDate||'—')+'</td><td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button><button class="btn-del" style="margin-left:4px" onclick="deleteCTORow('+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="12" class="empty-state">No CTO records found</td></tr>';
+document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+(r._metricLabel==='Clicks'?' <span style="font-size:.65rem;color:var(--text3)">clicks</span>':'')+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td>'+(r._cpaType||'—')+'</td><td style="font-size:.85rem">'+(r._saleDate||'—')+'</td><td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button><button class="btn-del" style="margin-left:4px" onclick="deleteCTORow('+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="12" class="empty-state">No CTO records found</td></tr>';
 renderPagination('cto',ctoPage,tp,pp,rows.length);
 updateCTOCharts(rows,affRevMap);
 
@@ -2983,9 +2996,36 @@ renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit()
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
 function getFMDSorted(){return sortArr(getFMDFilt(),fmdSort);}
-function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));}}if(tab==='pnl'){renderPNL();var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else renderRevenue();}
+function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else renderRevenue();}
 function updRemark(ta,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.remarks=ta.value;if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));}}}
-function savePNLRecord(){const r={_source:'user',_month:document.getElementById('f-month').value||'Manual',_key:'u_'+Date.now(),invId:document.getElementById('f-invId').value,date:document.getElementById('f-invDate').value,affiliate:document.getElementById('f-affiliate').value,invAmt:parseFloat(document.getElementById('f-invAmt').value)||0,rcvd:parseFloat(document.getElementById('f-rcvd').value)||0,status:document.getElementById('f-status').value||'Pending',remarks:document.getElementById('f-remarks').value,_doc:null};r.displayAmt=r.invAmt>0?r.invAmt:r.rcvd;allPNL.push(r);userPNL.push(r);localStorage.setItem('uPNL',JSON.stringify(userPNL));document.getElementById('addPNLModal').classList.remove('open');['f-invId','f-invDate','f-affiliate','f-invAmt','f-rcvd','f-remarks'].forEach(id=>document.getElementById(id).value='');renderPNL();}
+function savePNLRecord(){
+var amt=parseFloat(document.getElementById('f-invAmt').value)||0;
+if(!amt){alert('Please enter an amount.');return;}
+var status=document.getElementById('f-status').value||'Paid';
+var rcvd=0,invAmt=amt;
+if(status==='Paid'){rcvd=amt;invAmt=0;}
+else if(status==='Partially Paid'){rcvd=parseFloat(document.getElementById('f-rcvd').value)||0;invAmt=amt-rcvd;}
+else{rcvd=0;invAmt=amt;}
+var month=document.getElementById('f-month').value||'';
+var dateVal=document.getElementById('f-invDate').value||'';
+if(!month&&dateVal){var d=new Date(dateVal+'T00:00:00');var mN=['January','February','March','April','May','June','July','August','September','October','November','December'];month=mN[d.getMonth()]||'';}
+var r={_source:'user',_month:month||'Manual',_key:'u_'+Date.now(),invId:document.getElementById('f-invId').value||('MNL-'+Date.now().toString(36).toUpperCase()),date:dateVal,affiliate:document.getElementById('f-affiliate').value,invAmt:amt,rcvd:rcvd,displayAmt:invAmt,status:status,remarks:document.getElementById('f-remarks').value,_doc:null,_manual:true,createdAt:new Date().toLocaleString('en-US',{timeZone:'America/New_York'})};
+/* Handle file attachment */
+var fileInput=document.getElementById('f-invFile');
+if(fileInput&&fileInput.files[0]){
+var file=fileInput.files[0];var reader=new FileReader();reader.onload=function(e){
+var att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');att[r._key]={name:file.name,data:e.target.result};localStorage.setItem('pnlAttachments',JSON.stringify(att));
+};reader.readAsDataURL(file);
+}
+allPNL.push(r);userPNL.push(r);localStorage.setItem('uPNL',JSON.stringify(userPNL));
+mergeUserInvoices();
+document.getElementById('addPNLModal').classList.remove('open');
+['f-invId','f-invDate','f-affiliate','f-invAmt','f-rcvd','f-remarks'].forEach(function(id){document.getElementById(id).value='';});
+if(fileInput)fileInput.value='';document.getElementById('f-month').value='';document.getElementById('f-status').value='Paid';toggleInvAmtFields();
+renderPNL();
+var sm=document.querySelector('#pnl-month-buttons button.active');if(sm)showMonthlySummary(sm.dataset.month||sm.textContent);
+try{renderOverview();}catch(e){}
+}
 function delPNL(gi){const r=getPNLSorted()[gi];if(!r||r._source!=='user')return;allPNL.splice(allPNL.indexOf(r),1);const i=userPNL.indexOf(r);if(i>-1)userPNL.splice(i,1);localStorage.setItem('uPNL',JSON.stringify(userPNL));renderPNL();}
 function saveRevRecord(){const r={_source:'user',_key:'ur_'+Date.now(),date:document.getElementById('fr-date').value,_month:'Manual',affiliate:document.getElementById('fr-affiliate').value,amount:parseFloat(document.getElementById('fr-amt').value)||0,status:document.getElementById('fr-status').value||'Pending',remarks:document.getElementById('fr-remarks').value};r._week=getWeekLabel(r.date)||'Manual';allRev.push(r);userRev.push(r);localStorage.setItem('uRev',JSON.stringify(userRev));document.getElementById('addRevModal').classList.remove('open');['fr-date','fr-affiliate','fr-amt','fr-remarks'].forEach(id=>document.getElementById(id).value='');renderRevenue();}
 function delRev(gi){const r=getRevSorted()[gi];if(!r||r._source!=='user')return;allRev.splice(allRev.indexOf(r),1);const i=userRev.indexOf(r);if(i>-1)userRev.splice(i,1);localStorage.setItem('uRev',JSON.stringify(userRev));renderRevenue();}
@@ -3073,7 +3113,7 @@ cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue by So
 '<div class="psb-line"><span class="psb-key"><span class="source-badge purple">CTO</span> Revenue</span><span class="psb-value" style="color:#6366f1">'+$m(ctoRev)+'</span></div>'+
 '<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Leads: '+ctoLeads.toLocaleString()+'</span></div>'+
 '<div class="psb-line"><span class="psb-key"><span class="source-badge pink">IO</span> Revenue</span><span class="psb-value" style="color:#ec4899">'+$m(ioRev)+'</span></div>'+
-'<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Campaigns: '+f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length+'</span></div>'+
+'<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Clicks: '+ioLeads.toLocaleString()+'</span> · <span class="psb-key">Campaigns: '+f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length+'</span></div>'+
 '<div class="psb-line"><span class="psb-key"><span class="source-badge everflow">CPA</span> Revenue</span><span class="psb-value" style="color:#f59e0b">'+$m(efRev)+'</span></div>'+
 '<div class="psb-line" style="font-size:.8rem;color:var(--text3);padding-left:8px"><span class="psb-key">Conversions: '+efLeads.toLocaleString()+'</span></div>'+
 '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">'+
@@ -3113,6 +3153,12 @@ function editPNLRow(e,gi){
   document.getElementById('med-rcvd').value=r.rcvd||0;
   document.getElementById('med-status').value=r.status||'Unpaid';
   document.getElementById('med-remarks').value=r.remarks||'';
+  /* Show existing attachment indicator */
+  var k=r._key||r.invId||'';
+  var att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');
+  var attLink=document.getElementById('med-att-link');
+  if(attLink)attLink.style.display=(att[k]||att[gi])?'inline':'none';
+  var fileInput=document.getElementById('med-file');if(fileInput)fileInput.value='';
   document.getElementById('pnl-edit-modal').style.display='flex';
 }
 function closePNLModal(){
@@ -3130,6 +3176,14 @@ function savePNLEdit(){
   if(newStatus==='Paid'){newRcvd=total;newInvAmt=0;}
   else if(newStatus==='Unpaid'||newStatus==='Pending'||newStatus==='No Final Count'){newInvAmt=total;newRcvd=0;}
   const edit={date:document.getElementById('med-date').value,affiliate:document.getElementById('med-affiliate').value,invAmt:total,displayAmt:newInvAmt,rcvd:newRcvd,status:newStatus,remarks:document.getElementById('med-remarks').value};
+  /* Handle file attachment */
+  var fileInput=document.getElementById('med-file');
+  if(fileInput&&fileInput.files[0]){
+    var file=fileInput.files[0];var reader=new FileReader();reader.onload=function(e){
+    var att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');att[k]={name:file.name,data:e.target.result};localStorage.setItem('pnlAttachments',JSON.stringify(att));
+    var sp=document.getElementById('pnl-att-'+gi);if(sp)sp.style.display='inline';
+    };reader.readAsDataURL(file);
+  }
   pnlEdits[k]=edit;
   Object.assign(r,edit);
   if(r._key){
@@ -3138,7 +3192,9 @@ function savePNLEdit(){
   }
   localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));
   closePNLModal();
+  mergeUserInvoices();mergeUserExpenses();
   renderPNL();
+  try{renderOverview();}catch(e){}
   const curMonth=document.getElementById('pnl-month-f').value||document.querySelector('#pnl-month-buttons button.active')?.dataset?.month||'';
   if(curMonth)showMonthlySummary(curMonth);
 }
@@ -3150,7 +3206,11 @@ function delPNLRow(e,gi){
   pnlDeletes.add(k);
   localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));
   const idx=allPNL.indexOf(r);if(idx>-1)allPNL.splice(idx,1);
+  /* Also remove from userPNL if manual */
+  if(r._source==='user'){var ui=userPNL.indexOf(r);if(ui>-1)userPNL.splice(ui,1);localStorage.setItem('uPNL',JSON.stringify(userPNL));}
+  mergeUserInvoices();mergeUserExpenses();
   renderPNL();
+  try{renderOverview();}catch(e){}
   const curMonth=document.getElementById('pnl-month-f').value||'';
   if(curMonth)showMonthlySummary(curMonth);
 }
@@ -3161,6 +3221,47 @@ var userExpenses=JSON.parse(localStorage.getItem('userExpenses')||'[]');
 var expDeletes=new Set(JSON.parse(localStorage.getItem('expDeletes')||'[]'));
 // Clean deleted from stored
 try{var _ce=userExpenses.filter(function(e){return!expDeletes.has(e._key);});if(_ce.length!==userExpenses.length){userExpenses=_ce;localStorage.setItem('userExpenses',JSON.stringify(userExpenses));}}catch(e){}
+
+
+// === UNIFIED FINANCIAL SYSTEM ===
+function setFinTab(tab){
+document.getElementById('fin-invoices-panel').style.display=tab==='invoices'?'':'none';
+document.getElementById('fin-expenses-panel').style.display=tab==='expenses'?'':'none';
+document.querySelectorAll('.fin-tab').forEach(function(b){b.style.background='var(--surface2)';b.style.color='var(--text2)';b.classList.remove('active');});
+var btn=document.getElementById('fin-tab-'+tab);if(btn){btn.style.background=tab==='expenses'?'#ef4444':'#6366f1';btn.style.color='#fff';btn.classList.add('active');}
+}
+function toggleInvAmtFields(){
+var st=document.getElementById('f-status').value;
+var row=document.getElementById('f-rcvd-row');
+if(row)row.style.display=(st==='Partially Paid')?'':'none';
+}
+
+
+// === MERGE MANUAL INVOICES INTO P&L SUMMARIES ===
+function mergeUserInvoices(){
+/* Add user-entered invoice amounts to pnlSummaries so stats reflect them */
+var snp=window._sheetInvoiceSnapshot;
+if(snp){for(var m in snp){if(pnlSummaries[m]){pnlSummaries[m].grossRevenue=snp[m].grossRevenue||0;pnlSummaries[m].paymentRcvd=snp[m].paymentRcvd||0;pnlSummaries[m].balance=snp[m].balance||0;}}}
+userPNL.forEach(function(r){
+var k=r._key||'';if(k&&pnlDeletes.has(k))return;
+var m=r._month||'';if(!m||m==='Manual')return;
+if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
+var amt=r.invAmt||r.displayAmt||0;var rcvd=r.rcvd||0;
+var st=(r.status||'').toLowerCase();
+if(st==='paid'){
+pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
+pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+(rcvd||amt);
+}else if(st==='partially paid'){
+pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
+pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+rcvd;
+pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+(amt-rcvd);
+}else{
+/* Unpaid, Pending, No Final Count → all goes to balance */
+pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
+pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+amt;
+}
+});
+}
 
 function mergeUserExpenses(){
 // Merge user-entered expenses into pnlSummaries so all charts/summaries reflect them
@@ -3316,6 +3417,7 @@ pnlSummaries[m].ads=window._sheetExpenseSnapshot[m].ads||0;
 }
 }
 }
+mergeUserInvoices();
 mergeUserExpenses();
 renderExpenses();
 renderPNL();
@@ -4933,11 +5035,12 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 <h3>&#9998; Edit Invoice</h3>
 <div class="modal-row"><label>Invoice #</label><input id="med-invid" type="text" readonly style="background:var(--surface2);color:var(--text3)"></div>
 <div class="modal-row"><label>Date</label><input id="med-date" type="text" placeholder="e.g. January 15, 2026"></div>
-<div class="modal-row"><label>Affiliate Name</label><input id="med-affiliate" type="text"></div>
+<div class="modal-row"><label>Advertiser / Client</label><input id="med-affiliate" type="text"></div>
 <div class="modal-row"><label>Invoice Amount ($)</label><input id="med-invamt" type="number" step="0.01" min="0" placeholder="0.00"></div>
 <div class="modal-row"><label>Amount Received ($)</label><input id="med-rcvd" type="number" step="0.01" min="0" placeholder="0.00"></div>
 <div class="modal-row"><label>Status</label><select id="med-status"><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option><option>No Final Count</option></select></div>
-<div class="modal-row"><label>Remarks</label><input id="med-remarks" type="text"></div>
+<div class="modal-row"><label>Notes</label><textarea id="med-remarks" rows="2" style="font-family:inherit;resize:vertical"></textarea></div>
+<div class="modal-row"><label>Attachment</label><input id="med-file" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="font-size:.85rem"><span id="med-att-link" style="display:none;margin-left:8px;font-size:.82rem;color:#6366f1;cursor:pointer" onclick="openPNLAttach(window._editGi)">&#128204; Current file</span></div>
 <div class="modal-btns"><button class="btn-cancel" onclick="closePNLModal()">Cancel</button><button class="btn-save" onclick="savePNLEdit()">&#10003; Save Changes</button></div>
 </div>
 </div>
