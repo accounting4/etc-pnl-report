@@ -1127,6 +1127,32 @@ Secured with Firebase Authentication
 <div class="q-grid" id="q-grid"></div>
 </div>
 
+<div class="section-toggle" onclick="toggleSec('pnl-expense-breakdown',this)"><h3>💸 Expense Breakdown</h3><span class="t-arrow">▾</span></div>
+<div id="pnl-expense-breakdown" class="section-toggle-body closed">
+<div class="stats-row" style="margin-bottom:14px">
+<div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="expb-total">$0</div><div class="sc-sub">All categories</div></div>
+<div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="expb-month">$0</div><div class="sc-sub" id="expb-month-label">Current month</div></div>
+<div class="stat-card purple"><div class="sc-label">Top Category</div><div class="sc-value" id="expb-top-cat" style="font-size:1rem">—</div><div class="sc-sub">By spend</div></div>
+<div class="stat-card blue"><div class="sc-label">Entries</div><div class="sc-value" id="expb-count">0</div><div class="sc-sub">Total records</div></div>
+</div>
+<div class="two-col" style="margin-bottom:20px;align-items:stretch">
+<div class="table-card" style="margin-bottom:0">
+<div class="section-title" style="margin-bottom:12px"><div class="icon-circle">📋</div> Expenses by Category</div>
+<table><thead><tr><th>Category</th><th>Entries</th><th>Amount</th><th>% of Total</th></tr></thead>
+<tbody id="expb-cat-tbody"></tbody>
+<tfoot id="expb-cat-tfoot"></tfoot>
+</table>
+</div>
+<div class="chart-card" style="margin-bottom:0"><h3>📊 Expense Distribution</h3><div class="chart-wrap" style="height:300px"><canvas id="expBreakdownChart"></canvas></div></div>
+</div>
+<div class="table-card" style="margin-bottom:0">
+<div class="section-title" style="margin-bottom:12px"><div class="icon-circle">📅</div> Monthly Expense Summary</div>
+<table><thead><tr><th>Month</th><th>Entries</th><th>Total</th><th>Top Category</th></tr></thead>
+<tbody id="expb-monthly-tbody"></tbody>
+<tfoot id="expb-monthly-tfoot"></tfoot>
+</table>
+</div>
+</div>
 
 <div class="section-header section-collapsible collapsed" onclick="toggleSection('sec-invoices')">
 <div class="section-title"><div class="icon-circle">&#128181;</div> Financial Records <span style="font-size:.72rem;font-weight:400;color:var(--text3);margin-left:6px">Invoices + Expenses — Unified P&L System</span> <span class="collapse-icon">&#9660;</span></div>
@@ -3034,7 +3060,7 @@ for(var _sm in pnlSummaries){
 window._sheetExpenseSnapshot[_sm]={totalExpenses:pnlSummaries[_sm].totalExpenses||0,salary:pnlSummaries[_sm].salary||0,ads:pnlSummaries[_sm].ads||0};
 }
 mergeUserExpenses();
-renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}}
+renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}try{renderExpenseBreakdown();}catch(e){}}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
@@ -3364,6 +3390,7 @@ function fbStartListeners(){
       try{renderCTO();}catch(e){}
       try{renderFMD();}catch(e){}
       try{renderQuarterlySummary();}catch(e){}
+      try{renderExpenseBreakdown();}catch(e){}
       var mb=document.querySelector('#pnl-month-buttons button.active');
       if(mb&&mb.textContent!=='All Months')try{showMonthlySummary(mb.textContent);}catch(e){}
       console.log('🔄 Real-time sync update applied');
@@ -3691,8 +3718,63 @@ renderPNL();
 try{renderQuarterlySummary();}catch(e){}
 try{renderOverview();}catch(e){}
 try{renderExpenseCategories();}catch(e){}
+try{renderExpenseBreakdown();}catch(e){}
 }
 
+function renderExpenseBreakdown(){
+var catColors={'Salary':'#2563eb','Ads / Leads':'#dc2626','Beehiiv':'#7c3aed','Software':'#0ea5e9','Contractors':'#ec4899','Office':'#14b8a6','Other':'#f97316'};
+var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
+var all=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
+var totalAll=0,totalMonth=0,cats={},byMonth={};
+all.forEach(function(e){
+  var amt=e.amount||0;totalAll+=amt;
+  if(e.month===curMonth)totalMonth+=amt;
+  var c=e.category||'Other';if(!cats[c])cats[c]={amount:0,count:0};cats[c].amount+=amt;cats[c].count++;
+  var m=e.month||'Other';if(!byMonth[m])byMonth[m]={amount:0,count:0,cats:{}};byMonth[m].amount+=amt;byMonth[m].count++;
+  if(!byMonth[m].cats[c])byMonth[m].cats[c]=0;byMonth[m].cats[c]+=amt;
+});
+/* stat cards */
+var setV=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+setV('expb-total','$'+totalAll.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+setV('expb-month','$'+totalMonth.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+setV('expb-month-label',curMonth);
+setV('expb-count',all.length.toString());
+var topCat='—';var topAmt=0;Object.keys(cats).forEach(function(c){if(cats[c].amount>topAmt){topAmt=cats[c].amount;topCat=c;}});
+setV('expb-top-cat',topCat);
+/* category table */
+var catTb=document.getElementById('expb-cat-tbody');var catTf=document.getElementById('expb-cat-tfoot');
+if(catTb){
+  var sorted=Object.keys(cats).sort(function(a,b){return cats[b].amount-cats[a].amount;});
+  catTb.innerHTML=sorted.map(function(c){
+    var cc=catColors[c]||'#64748b';
+    var pct=totalAll>0?(cats[c].amount/totalAll*100).toFixed(1):'0';
+    return'<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+cc+';margin-right:6px;vertical-align:middle"></span><strong>'+c+'</strong></td><td>'+cats[c].count+'</td><td style="color:var(--red);font-weight:600">$'+cats[c].amount.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>'+pct+'%</td></tr>';
+  }).join('');
+}
+if(catTf){catTf.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+all.length+'</td><td style="color:var(--red)">$'+totalAll.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>100%</td></tr>';}
+/* monthly table */
+var mTb=document.getElementById('expb-monthly-tbody');var mTf=document.getElementById('expb-monthly-tfoot');
+if(mTb){
+  var mOrder=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var mKeys=Object.keys(byMonth).sort(function(a,b){var ia=mOrder.indexOf(a),ib=mOrder.indexOf(b);return(ia===-1?99:ia)-(ib===-1?99:ib);});
+  mTb.innerHTML=mKeys.map(function(m){
+    var d=byMonth[m];var topC='—';var topCA=0;Object.keys(d.cats).forEach(function(c){if(d.cats[c]>topCA){topCA=d.cats[c];topC=c;}});
+    return'<tr><td><strong>'+m+'</strong></td><td>'+d.count+'</td><td style="color:var(--red);font-weight:600">$'+d.amount.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>'+topC+'</td></tr>';
+  }).join('');
+  if(mTf){mTf.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+all.length+'</td><td style="color:var(--red)">$'+totalAll.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>'+topCat+'</td></tr>';}
+}
+/* doughnut chart */
+try{
+  var cEl=document.getElementById('expBreakdownChart');
+  if(cEl){
+    var ex=Chart.getChart('expBreakdownChart');if(ex)ex.destroy();
+    var cLabels=Object.keys(cats).sort(function(a,b){return cats[b].amount-cats[a].amount;});
+    var cData=cLabels.map(function(c){return cats[c].amount;});
+    var cColors=cLabels.map(function(c){return catColors[c]||'#64748b';});
+    new Chart(cEl,{type:'doughnut',data:{labels:cLabels,datasets:[{data:cData,backgroundColor:cColors,borderWidth:2,borderColor:'var(--surface)',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle',padding:12}},tooltip:{callbacks:{label:function(c){return c.label+': $'+c.raw.toLocaleString('en',{minimumFractionDigits:2})+' ('+(totalAll>0?(c.raw/totalAll*100).toFixed(1):0)+'%)';}}}}}});
+  }
+}catch(e){console.warn('Expense chart error:',e);}
+}
 
 // === 15-MINUTE AUTO-SYNC ===
 var _lastSyncTime=new Date();
