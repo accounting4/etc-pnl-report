@@ -4287,6 +4287,27 @@ function downloadPNLReport(format){
     csv+='Source,Invoices,Total Amount,Amount Received\n';
     Object.keys(sources).forEach(function(s){csv+='"'+s+'",'+sources[s].count+','+sources[s].inv.toFixed(2)+','+sources[s].rcvd.toFixed(2)+'\n';});
 
+    // Add expense entries
+    csv+='\nEXPENSE ENTRIES\n';
+    csv+='Date,Month,Category,Description,Advertiser,Amount,Recurring,Notes\n';
+    var csvExpRows=userExpenses.filter(function(e){if(expDeletes.has(e._key))return false;if(selMonth!=='All Months'&&e.month!==selMonth)return false;return true;});
+    csvExpRows.forEach(function(e){csv+='"'+(e.date||'')+'",'+(e.month||'')+','+'"'+(e.category||'Other')+'","'+(e.description||'').replace(/"/g,'""')+'","'+(e.advertiser||'').replace(/"/g,'""')+'",'+(e.amount||0).toFixed(2)+',"'+(e.recurring||'No')+'","'+(e.notes||'').replace(/"/g,'""')+'"\n';});
+    var csvExpTotal=csvExpRows.reduce(function(a,e){return a+(e.amount||0);},0);
+    csv+=',,,,,'+csvExpTotal.toFixed(2)+',,TOTAL EXPENSES\n';
+
+    // P&L Summary
+    var psCsv=pnlSummaries[selMonth==='All Months'?'':selMonth];
+    var csvGross=0,csvPaid=0,csvBal=0,csvExp=0;
+    if(selMonth!=='All Months'&&psCsv){csvGross=psCsv.grossRevenue||0;csvPaid=psCsv.paymentRcvd||0;csvBal=psCsv.balance||0;csvExp=psCsv.totalExpenses||0;}
+    else{for(var mk2 in pnlSummaries){var p3=pnlSummaries[mk2];csvGross+=(p3.grossRevenue||0);csvPaid+=(p3.paymentRcvd||0);csvBal+=(p3.balance||0);csvExp+=(p3.totalExpenses||0);}}
+    csv+='\nP&L SUMMARY\n';
+    csv+='Metric,Amount\n';
+    csv+='Gross Revenue,'+csvGross.toFixed(2)+'\n';
+    csv+='Payment Received,'+csvPaid.toFixed(2)+'\n';
+    csv+='ETC Balance,'+csvBal.toFixed(2)+'\n';
+    csv+='Total Expenses,'+csvExp.toFixed(2)+'\n';
+    csv+='Net Profit/Loss,'+(csvGross-csvExp).toFixed(2)+'\n';
+
     var blob=new Blob([csv],{type:'text/csv'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);
     a.download='ETC_PNL_Report_'+selMonth.replace(/\s/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.csv';
@@ -4346,6 +4367,108 @@ function downloadPNLReport(format){
         headStyles:{fillColor:[16,185,129],textColor:255,fontStyle:'bold'},
         columnStyles:{2:{halign:'right'},3:{halign:'right'},4:{halign:'right'}},
         margin:{left:14,right:14}
+      });
+
+      // === EXPENSE ENTRIES SECTION ===
+      var expY=pdf.lastAutoTable.finalY+14;
+      if(expY>180){pdf.addPage();expY=20;}
+      pdf.setFontSize(13);pdf.setTextColor(99,102,241);
+      pdf.text('Expense Entries',14,expY);
+
+      // Get expenses filtered by selected month
+      var expRows=userExpenses.filter(function(e){
+        if(expDeletes.has(e._key))return false;
+        if(selMonth!=='All Months'&&e.month!==selMonth)return false;
+        return true;
+      }).sort(function(a,b){return(a.date||'').localeCompare(b.date||'');});
+
+      if(expRows.length>0){
+        var expData=expRows.map(function(e){
+          return[
+            e.date||'—',
+            e.month||'—',
+            e.category||'Other',
+            (e.description||'—').substring(0,40),
+            e.advertiser||'—',
+            '$'+(e.amount||0).toLocaleString(undefined,{minimumFractionDigits:2}),
+            (e.recurring||'No'),
+            (e.notes||'').substring(0,35)
+          ];
+        });
+        var expTotal=expRows.reduce(function(a,e){return a+(e.amount||0);},0);
+        // Add total row
+        expData.push(['','','','','TOTAL EXPENSES:','$'+expTotal.toLocaleString(undefined,{minimumFractionDigits:2}),'','']);
+
+        pdf.autoTable({
+          startY:expY+4,
+          head:[['Date','Month','Category','Description','Advertiser','Amount','Recurring','Notes']],
+          body:expData,
+          styles:{fontSize:8,cellPadding:2.5},
+          headStyles:{fillColor:[239,68,68],textColor:255,fontStyle:'bold'},
+          alternateRowStyles:{fillColor:[254,242,242]},
+          columnStyles:{5:{halign:'right',fontStyle:'bold'}},
+          margin:{left:14,right:14},
+          didParseCell:function(data){
+            if(data.row.index===expData.length-1){
+              data.cell.styles.fontStyle='bold';
+              data.cell.styles.fillColor=[254,226,226];
+              data.cell.styles.textColor=[185,28,28];
+            }
+          }
+        });
+      } else {
+        pdf.setFontSize(9);pdf.setTextColor(120);
+        pdf.text('No expense entries recorded for '+selMonth+'.',14,expY+8);
+      }
+
+      // === EXPENSE BY CATEGORY BREAKDOWN ===
+      if(expRows.length>0){
+        var catY=pdf.lastAutoTable?pdf.lastAutoTable.finalY+14:expY+16;
+        if(catY>230){pdf.addPage();catY=20;}
+        pdf.setFontSize(13);pdf.setTextColor(99,102,241);
+        pdf.text('Expense by Category',14,catY);
+        var expCats={};expRows.forEach(function(e){var c=e.category||'Other';if(!expCats[c])expCats[c]={amount:0,count:0};expCats[c].amount+=(e.amount||0);expCats[c].count++;});
+        var catData=Object.keys(expCats).sort(function(a,b){return expCats[b].amount-expCats[a].amount;}).map(function(c){
+          return[c,expCats[c].count.toString(),'$'+expCats[c].amount.toLocaleString(undefined,{minimumFractionDigits:2})];
+        });
+        var catTotal=expRows.reduce(function(a,e){return a+(e.amount||0);},0);
+        catData.push(['TOTAL',expRows.length.toString(),'$'+catTotal.toLocaleString(undefined,{minimumFractionDigits:2})]);
+        pdf.autoTable({
+          startY:catY+4,
+          head:[['Category','Entries','Total Amount']],
+          body:catData,
+          styles:{fontSize:9,cellPadding:3},
+          headStyles:{fillColor:[124,58,237],textColor:255,fontStyle:'bold'},
+          columnStyles:{2:{halign:'right'}},
+          margin:{left:14,right:14},
+          didParseCell:function(data){if(data.row.index===catData.length-1){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[237,233,254];data.cell.styles.textColor=[91,33,182];}}
+        });
+      }
+
+      // === NET P&L SUMMARY BOX ===
+      var sumY=pdf.lastAutoTable?pdf.lastAutoTable.finalY+14:(expY+20);
+      if(sumY>250){pdf.addPage();sumY=20;}
+      pdf.setFontSize(13);pdf.setTextColor(99,102,241);
+      pdf.text('P&L Summary',14,sumY);
+      var netPL=lrv2-ltexp2;
+      pdf.autoTable({
+        startY:sumY+4,
+        head:[['Metric','Amount']],
+        body:[
+          ['Gross Revenue','$'+lrv2.toLocaleString(undefined,{minimumFractionDigits:2})],
+          ['Payment Received','$'+lr2.toLocaleString(undefined,{minimumFractionDigits:2})],
+          ['ETC Balance','$'+lb2.toLocaleString(undefined,{minimumFractionDigits:2})],
+          ['Total Expenses','$'+ltexp2.toLocaleString(undefined,{minimumFractionDigits:2})],
+          ['Net Profit/Loss','$'+netPL.toLocaleString(undefined,{minimumFractionDigits:2})]
+        ],
+        styles:{fontSize:10,cellPadding:4},
+        headStyles:{fillColor:[15,23,42],textColor:255,fontStyle:'bold'},
+        columnStyles:{1:{halign:'right',fontStyle:'bold'}},
+        margin:{left:14,right:100},
+        didParseCell:function(data){
+          if(data.row.index===4){data.cell.styles.fillColor=netPL>=0?[220,252,231]:[254,226,226];data.cell.styles.textColor=netPL>=0?[22,101,52]:[185,28,28];data.cell.styles.fontStyle='bold';}
+          if(data.row.index===3){data.cell.styles.textColor=[185,28,28];}
+        }
       });
 
       pdf.save('ETC_PNL_Report_'+selMonth.replace(/\s/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.pdf');
