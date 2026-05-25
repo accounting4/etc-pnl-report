@@ -2094,7 +2094,18 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 
 ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
-for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});var _fetchStamp=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)).filter(r=>{var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();return adv!=='interactive offers';}));}
+for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});var _fetchStamp=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});rows.filter(r=>Object.values(r).some(v=>v)).forEach(r=>{
+var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();
+if(adv==='interactive offers'){
+/* Keep IO entries from CTO sheet - tag as IO, use Offers as package name */
+r._ctoType='IO';r['Type']='IO';
+if(!r['Offers']||r['Offers'].toLowerCase()==='interactive offers'){
+r['Offers']=r['Advertiser/Offer']||r['Advertiser']||'Interactive Offers';
+}
+r['Advertiser']='Interactive Offers';
+}
+allCTO.push(r);
+});}
 // CPA data removed — Tracking Dashboard shows CTO Performance Dashboard only
 
 const mNames={'01':'January','02':'February','03':'March','04':'April','05':'May','06':'June','07':'July','08':'August','09':'September','10':'October','11':'November','12':'December'};
@@ -2170,7 +2181,7 @@ for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
-ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':camp,'Advertiser/Offer':camp,'Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{timeZone:'America/New_York'})});});
+ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':'Interactive Offers','Advertiser/Offer':'Interactive Offers ('+camp+')','Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{timeZone:'America/New_York'})});});
 ss('Loading ETC Everflow CPA data...');
 const etcEfRows=await fetchCSV(gv(EF_ID,'Everflow CPA'));
 etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'CPA','_month':monthName,'_source':'sheet','_ctoType':'CPA','_efDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{timeZone:'America/New_York'})});});
@@ -2531,7 +2542,16 @@ document.getElementById('ctoEditModal').style.display='flex';
 }
 function getCTOKey(r){return(r._ctoType||r['Type']||'CTO')+'|'+(r['Advertiser']||'')+'|'+(r['Offers']||r['Advertiser/Offer']||'')+'|'+(r._month||'');}
 function saveCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');allCTO.forEach(function(r){if(!r._userEdited)return;var key=getCTOKey(r);edits[key]={leads:r['Current Lead Count']||'',rate:r['Rate/Lead ($)']||'',revenue:r['Total Revenue ($)']||'',type:r['Type']||r._ctoType||'',cpaType:r._cpaType||'',saleDate:r._saleDate||'',lastUpdated:r._lastUpdated||'',notes:r._userNotes||'',flat:r['Flat Fee']||'',advertiser:r['Advertiser']||'',offer:r['Offers']||'',_userEdited:true};});localStorage.setItem('ctoEdits',JSON.stringify(edits));}catch(e){console.warn('saveCTOEdits',e);}}
-function loadCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');allCTO.forEach(function(r){var key=getCTOKey(r);if(edits[key]){var e=edits[key];if(e.leads)r['Current Lead Count']=e.leads;if(e.rate)r['Rate/Lead ($)']=e.rate;if(e.revenue)r['Total Revenue ($)']=e.revenue;if(e.type){r['Type']=e.type;r._ctoType=e.type;}if(e.cpaType)r._cpaType=e.cpaType;if(e.saleDate)r._saleDate=e.saleDate;if(e.lastUpdated)r._lastUpdated=e.lastUpdated;if(e.notes)r._userNotes=e.notes;if(e.flat)r['Flat Fee']=e.flat;r._userEdited=true;}});}catch(e){console.warn('loadCTOEdits',e);}}
+function loadCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');
+/* Migrate old IO keys: IO|CampaignName|CampaignName|Month → IO|Interactive Offers|CampaignName|Month */
+var migrated=false;Object.keys(edits).forEach(function(k){
+if(k.startsWith('IO|')&&!k.startsWith('IO|Interactive Offers|')){
+var parts=k.split('|');if(parts.length===4){
+var newKey='IO|Interactive Offers|'+parts[2]+'|'+parts[3];
+if(!edits[newKey]){edits[newKey]=edits[k];migrated=true;}
+}}});
+if(migrated)localStorage.setItem('ctoEdits',JSON.stringify(edits));
+allCTO.forEach(function(r){var key=getCTOKey(r);if(edits[key]){var e=edits[key];if(e.leads)r['Current Lead Count']=e.leads;if(e.rate)r['Rate/Lead ($)']=e.rate;if(e.revenue)r['Total Revenue ($)']=e.revenue;if(e.type){r['Type']=e.type;r._ctoType=e.type;}if(e.cpaType)r._cpaType=e.cpaType;if(e.saleDate)r._saleDate=e.saleDate;if(e.lastUpdated)r._lastUpdated=e.lastUpdated;if(e.notes)r._userNotes=e.notes;if(e.flat)r['Flat Fee']=e.flat;r._userEdited=true;}});}catch(e){console.warn('loadCTOEdits',e);}}
 var _ctoView='grouped';
 var _expandedAdvs={};
 function setCTOView(v){
