@@ -586,6 +586,28 @@ table tbody tr:last-child td{border-bottom:none}
 #pnl-quarterly-table tr.quarter-row td{font-weight:700;font-size:.95rem;border-top:2px solid var(--border);padding:12px 14px}
 #pnl-quarterly-table tr.quarter-row.positive td:last-child{color:var(--green)}
 #pnl-quarterly-table tr.quarter-row.negative td:last-child{color:var(--red)}
+
+/* === EXPANDABLE ADVERTISER VIEW === */
+.view-toggle .view-btn.active{background:#6366f1!important;color:#fff!important}
+.view-toggle .view-btn:not(.active){background:var(--surface2)!important;color:var(--text2)!important}
+.view-toggle .view-btn:not(.active):hover{background:var(--border)!important}
+.adv-parent{cursor:pointer;transition:background .15s}
+.adv-parent:hover{background:var(--surface2)!important}
+.adv-parent td{padding:14px;font-weight:600}
+.adv-parent .expand-icon{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:.8rem;transition:transform .2s,background .15s}
+.adv-parent:hover .expand-icon{background:var(--border)}
+.adv-parent.expanded .expand-icon{transform:rotate(90deg);background:#6366f1;color:#fff;border-color:#6366f1}
+.adv-child{background:var(--surface);transition:all .2s}
+.adv-child td{padding:10px 14px;padding-left:46px;font-size:.85rem;border-bottom:1px solid var(--border);color:var(--text2)}
+.adv-child td:first-child{padding-left:46px}
+.adv-child:hover{background:var(--surface2)}
+.adv-child:last-of-type td{border-bottom:2px solid var(--border)}
+.adv-revenue{font-size:1.05rem;font-weight:700;color:var(--green)}
+.adv-count{display:inline-block;background:var(--surface2);padding:2px 10px;border-radius:20px;font-size:.8rem;font-weight:600;color:var(--text2);border:1px solid var(--border)}
+
+/* === LAST UPDATED BADGES === */
+.last-upd-badge{display:inline-block;padding:3px 8px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:.75rem;font-weight:500;white-space:nowrap;color:var(--text2)}
+.adv-child .last-upd-badge{background:transparent;border:none;padding:0}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -980,7 +1002,7 @@ Secured with Firebase Authentication
 <tfoot id="cto-adv-tfoot"></tfoot>
 </table>
 </div>
-<div class="section-header"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CPA / CTO / CPL</div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div>
+<div class="section-header"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CPA / CTO / CPL / IR</div><div style="display:flex;gap:8px;align-items:center"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
 <div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="May">May</option><option value="April">April</option><option value="March">March</option><option value="February">February</option><option value="January">January</option><option value="">All Months</option></select></div>
@@ -988,8 +1010,12 @@ Secured with Firebase Authentication
 <div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="10">10</option></select></div>
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
 </div>
-<div class="table-card">
-<table><thead><tr><th onclick="sortCTO('_name')">Name</th><th onclick="sortCTO('_offer')">Package / Offer</th><th onclick="sortCTO('_leads')">Leads</th><th onclick="sortCTO('_rate')">Rate</th><th onclick="sortCTO('_revenue')">Revenue</th><th onclick="sortCTO('_rank')">Rank</th><th onclick="sortCTO('_type')">Source</th><th onclick="sortCTO('_cpaType')">CPA Type</th><th onclick="sortCTO('_saleDate')">Sale Date</th><th>Notes</th><th>Actions</th></tr></thead>
+<div class="table-card" id="cto-grouped-view">
+<table><thead><tr style="background:var(--surface2)"><th style="width:30px"></th><th>Advertiser</th><th>Source(s)</th><th>CPA Type</th><th>Campaigns</th><th>Total Leads</th><th>Total Revenue</th><th>Last Updated</th></tr></thead>
+<tbody id="cto-grouped-tbody"></tbody></table>
+</div>
+<div class="table-card" id="cto-flat-view" style="display:none">
+<table><thead><tr><th onclick="sortCTO('_name')">Name</th><th onclick="sortCTO('_offer')">Package / Offer</th><th onclick="sortCTO('_leads')">Leads</th><th onclick="sortCTO('_rate')">Rate</th><th onclick="sortCTO('_revenue')">Revenue</th><th onclick="sortCTO('_rank')">Rank</th><th onclick="sortCTO('_type')">Source</th><th onclick="sortCTO('_cpaType')">CPA Type</th><th onclick="sortCTO('_saleDate')">Sale Date</th><th onclick="sortCTO('_lastUpdated')">Last Updated</th><th>Notes</th><th>Actions</th></tr></thead>
 <tbody id="cto-tbody"></tbody></table>
 <div class="pagination" id="cto-pagination"></div>
 </div>
@@ -1878,7 +1904,7 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 
 ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
-for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)).filter(r=>{var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();return adv!=='interactive offers';}));}
+for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});var _fetchStamp=new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true});rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});allCTO.push(...rows.filter(r=>Object.values(r).some(v=>v)).filter(r=>{var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();return adv!=='interactive offers';}));}
 // CPA data removed — Tracking Dashboard shows CTO Performance Dashboard only
 
 const mNames={'01':'January','02':'February','03':'March','04':'April','05':'May','06':'June','07':'July','08':'August','09':'September','10':'October','11':'November','12':'December'};
@@ -1952,10 +1978,10 @@ qbRows.forEach(r=>{
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
-ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':camp,'Advertiser/Offer':camp,'Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt});});
+ioRows.forEach(r=>{var camp=(r['Campaign']||'').trim();var amt=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var dt=((r._rawVals&&r._rawVals[0])||r['Date']||'').trim();if(!camp||!amt||!parseFloat(amt))return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':camp,'Advertiser/Offer':camp,'Offers':camp,'Current Lead Count':'','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt,'TOTAL REVENUE':'','Type':'IO','_month':monthName,'_source':'sheet','_ctoType':'IO','_ioDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true})});});
 ss('Loading ETC Everflow CPA data...');
 const etcEfRows=await fetchCSV(gv(EF_ID,'Everflow CPA'));
-etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'EF-ETC','_month':monthName,'_source':'sheet','_ctoType':'EF-ETC','_efDate':dt});});
+etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'EF-ETC','_month':monthName,'_source':'sheet','_ctoType':'EF-ETC','_efDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true})});});
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
@@ -2283,13 +2309,47 @@ var saleDate=r._ioDate||r._efDate||r['Since Last Update']||r['Since Last Updated
 var cpaType=r._cpaType||r['CPA Type']||'';
 if(!cpaType){if(type.toUpperCase()==='IO')cpaType='CPL';else if(type.toUpperCase()==='EF-ETC')cpaType='CPA';else if(type.toUpperCase()==='CTO')cpaType='CTO';else cpaType='—';}
 var notes=[];if(growth&&growth!=='0')notes.push('Growth: +'+growth);if(goal)notes.push('Cap: '+goal);
-return{_name:name,_offer:offer,_leads:leads,_rate:rate,_flat:flat,_revenue:revenue,_rank:rank?parseInt(rank):999,_type:type,_cpaType:cpaType,_saleDate:saleDate,_notes:notes.join(' | '),_raw:r};
+var lastUpdated=r._lastUpdated||r['Since Last Update']||r['Since Last Updated']||r._ioDate||r._efDate||r._saleDate||'';
+return{_name:name,_offer:offer,_leads:leads,_rate:rate,_flat:flat,_revenue:revenue,_rank:rank?parseInt(rank):999,_type:type,_cpaType:cpaType,_saleDate:saleDate,_lastUpdated:lastUpdated,_notes:notes.join(' | '),_raw:r};
 }
 var _ctoEditIdx=-1;
 function editCTORow(idx){var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);var row=sorted[idx];if(!row)return;_ctoEditIdx=idx;document.getElementById('cto-ed-name').value=row._name;document.getElementById('cto-ed-offer').value=row._offer;document.getElementById('cto-ed-leads').value=row._leads;document.getElementById('cto-ed-rate').value=row._rate;document.getElementById('cto-ed-type').value=row._type;document.getElementById('cto-ed-cpatype').value=row._cpaType||'—';document.getElementById('cto-ed-saledate').value=row._saleDate||'';document.getElementById('cto-ed-notes').value=row._notes;document.getElementById('ctoEditModal').style.display='flex';}
-function saveCTOEdit(){var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);var row=sorted[_ctoEditIdx];if(!row||!row._raw)return;var r=row._raw;r['Advertiser']=document.getElementById('cto-ed-name').value;r['Offers']=document.getElementById('cto-ed-offer').value;r['Current Lead Count']=document.getElementById('cto-ed-leads').value;r['Rate/Lead ($)']=document.getElementById('cto-ed-rate').value;r['Type']=document.getElementById('cto-ed-type').value;r._ctoType=document.getElementById('cto-ed-type').value;r._cpaType=document.getElementById('cto-ed-cpatype').value;r._saleDate=document.getElementById('cto-ed-saledate').value;document.getElementById('ctoEditModal').style.display='none';saveCTOEditsLocal();renderCTO();}
+function saveCTOEdit(){var f=getCTOFilt();var sorted=sortArr(f.map(getCTORow),ctoSort);var row=sorted[_ctoEditIdx];if(!row||!row._raw)return;var r=row._raw;r['Advertiser']=document.getElementById('cto-ed-name').value;r['Offers']=document.getElementById('cto-ed-offer').value;r['Current Lead Count']=document.getElementById('cto-ed-leads').value;r['Rate/Lead ($)']=document.getElementById('cto-ed-rate').value;r['Type']=document.getElementById('cto-ed-type').value;r._ctoType=document.getElementById('cto-ed-type').value;r._cpaType=document.getElementById('cto-ed-cpatype').value;r._saleDate=document.getElementById('cto-ed-saledate').value;r._lastUpdated=new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('ctoEditModal').style.display='none';saveCTOEditsLocal();renderCTO();}
 function saveCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');var f=getCTOFilt();f.forEach(function(r,i){var key=r._ctoType+'_'+(r['Advertiser']||'')+'_'+r._month;if(r._cpaType||r._saleDate){edits[key]={cpaType:r._cpaType||'',saleDate:r._saleDate||''};}});localStorage.setItem('ctoEdits',JSON.stringify(edits));}catch(e){}}
 function loadCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');allCTO.forEach(function(r){var key=(r._ctoType||'')+'_'+(r['Advertiser']||'')+'_'+(r._month||'');if(edits[key]){r._cpaType=edits[key].cpaType||r._cpaType;r._saleDate=edits[key].saleDate||r._saleDate;}});}catch(e){}}
+var _ctoView='grouped';
+var _expandedAdvs={};
+function setCTOView(v){
+_ctoView=v;
+document.getElementById('btn-view-grouped').className='view-btn'+(v==='grouped'?' active':'');
+document.getElementById('btn-view-flat').className='view-btn'+(v==='flat'?' active':'');
+document.getElementById('cto-grouped-view').style.display=v==='grouped'?'':'none';
+document.getElementById('cto-flat-view').style.display=v==='flat'?'':'none';
+renderCTO();
+}
+function toggleAdv(name){
+_expandedAdvs[name]=!_expandedAdvs[name];
+renderCTO();
+}
+function fmtLastUpd(d){
+if(!d)return'—';
+try{
+var dt=new Date(d);
+if(isNaN(dt.getTime())){
+// Try parsing "May 21, 2026" format
+var parts=d.match(/(\w+)\s+(\d+),?\s*(\d{4})/);
+if(parts)dt=new Date(parts[1]+' '+parts[2]+', '+parts[3]);
+else return d;
+}
+if(isNaN(dt.getTime()))return d;
+var mo=String(dt.getMonth()+1).padStart(2,'0');
+var dy=String(dt.getDate()).padStart(2,'0');
+var yr=String(dt.getFullYear()).slice(-2);
+var hr=dt.getHours();var ampm=hr>=12?'PM':'AM';hr=hr%12||12;
+var mn=String(dt.getMinutes()).padStart(2,'0');
+return mo+'/'+dy+'/'+yr+' '+hr+':'+mn+' '+ampm;
+}catch(e){return d;}
+}
 function renderCTO(){var f=getCTOFilt();var rows=f.map(getCTORow).filter(function(r){return r._name||r._offer;});var pp=parseInt(document.getElementById('cto-entries').value)||25;var tp=Math.max(1,Math.ceil(rows.length/pp));ctoPage=Math.min(ctoPage,tp);
 var totRev=0,totLeads=0,activeOffers=0,affRevMap={};
 rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=r._name||'Unknown';affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
@@ -2297,9 +2357,57 @@ setStat('cto-s-rev',$m(totRev));setStat('cto-s-leads',totLeads.toLocaleString())
 var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
 showCTOSummary(totRev,totLeads,activeOffers,affRevMap);
-var sl=sortArr(rows,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
 var typeColors={CTO:'purple',IO:'pink',CPA:'red',CPL:'accent','EF-ETC':'everflow'};
-document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td>'+(r._cpaType||'—')+'</td><td style="font-size:.85rem">'+(r._saleDate||'—')+'</td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button><button class="btn-del" style="margin-left:4px" onclick="deleteCTORow('+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="11" class="empty-state">No CTO records found</td></tr>';
+/* === GROUPED VIEW === */
+var grouped={};
+rows.forEach(function(r){
+var key=r._name||'Unknown';
+if(!grouped[key])grouped[key]={name:key,rows:[],totalRev:0,totalLeads:0,types:{},cpaTypes:{},latestUpdate:''};
+grouped[key].rows.push(r);
+grouped[key].totalRev+=r._revenue;
+grouped[key].totalLeads+=r._leads;
+var t=r._type||'CTO';grouped[key].types[t]=true;
+var ct=r._cpaType||'—';grouped[key].cpaTypes[ct]=true;
+var upd=r._lastUpdated||r['Since Last Update']||'';
+if(upd){try{var d1=new Date(upd),d2=new Date(grouped[key].latestUpdate||'1970-01-01');if(d1>d2)grouped[key].latestUpdate=upd;}catch(e){if(!grouped[key].latestUpdate)grouped[key].latestUpdate=upd;}}
+});
+var advEntries=Object.values(grouped).sort(function(a,b){return b.totalRev-a.totalRev;});
+var gHtml='';
+advEntries.forEach(function(adv){
+var isExp=_expandedAdvs[adv.name];
+var badges=Object.keys(adv.types).map(function(t){var tc=typeColors[t.toUpperCase()]||'cto';return'<span class="source-badge '+tc+'">'+t+'</span>';}).join(' ');
+var cpaBadges=Object.keys(adv.cpaTypes).filter(function(c){return c!=='—';}).join(', ')||'—';
+gHtml+='<tr class="adv-parent'+(isExp?' expanded':'')+ '" data-adv="'+adv.name.replace(/"/g,'&quot;')+'" onclick="toggleAdv(this.dataset.adv)">';
+gHtml+='<td><span class="expand-icon">&#9654;</span></td>';
+gHtml+='<td><strong>'+adv.name+'</strong></td>';
+gHtml+='<td>'+badges+'</td>';
+gHtml+='<td>'+cpaBadges+'</td>';
+gHtml+='<td><span class="adv-count">'+adv.rows.length+(adv.rows.length===1?' entry':' entries')+'</span></td>';
+gHtml+='<td>'+adv.totalLeads.toLocaleString()+'</td>';
+gHtml+='<td class="adv-revenue">'+$m(adv.totalRev)+'</td>';
+gHtml+='<td style="font-size:.8rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(adv.latestUpdate)+'</span></td>';
+gHtml+='</tr>';
+if(isExp){
+adv.rows.sort(function(a,b){return b._revenue-a._revenue;});
+adv.rows.forEach(function(r,ri){
+var tc=typeColors[(r._type||'').toUpperCase()]||'cto';
+gHtml+='<tr class="adv-child">';
+gHtml+='<td></td>';
+gHtml+='<td style="padding-left:46px"><strong>'+(r._offer||r._name)+'</strong><br><span style="font-size:.75rem;color:var(--text3)">'+r._leads.toLocaleString()+' leads @ '+$m(r._rate)+'</span></td>';
+gHtml+='<td><span class="source-badge '+tc+'" style="font-size:.7rem">'+r._type+'</span></td>';
+gHtml+='<td style="font-size:.82rem">'+(r._cpaType||'—')+'</td>';
+gHtml+='<td style="font-size:.82rem">'+(r._saleDate||'—')+'</td>';
+gHtml+='<td><strong>'+$m(r._revenue)+'</strong></td>';
+gHtml+='<td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td>';
+gHtml+='</tr>';
+});
+}
+});
+var gTbody=document.getElementById('cto-grouped-tbody');
+if(gTbody)gTbody.innerHTML=advEntries.length?gHtml:'<tr><td colspan="8" class="empty-state">No records found</td></tr>';
+/* === FLAT VIEW (original) === */
+var sl=sortArr(rows,ctoSort).slice((ctoPage-1)*pp,ctoPage*pp);
+document.getElementById('cto-tbody').innerHTML=sl.length?sl.map(function(r,i){var gi=(ctoPage-1)*pp+i;var tc=typeColors[(r._type||'').toUpperCase()]||'';return'<tr><td><strong>'+r._name+'</strong></td><td>'+r._offer+'</td><td>'+r._leads.toLocaleString()+'</td><td>'+$m(r._rate)+'</td><td><strong>'+$m(r._revenue)+'</strong></td><td>'+(r._rank<999?'#'+r._rank:'—')+'</td><td>'+(r._type?'<span class="source-badge '+(tc||'cto')+'">'+r._type+'</span>':'—')+'</td><td>'+(r._cpaType||'—')+'</td><td style="font-size:.85rem">'+(r._saleDate||'—')+'</td><td style="font-size:.78rem;color:var(--text3)"><span class="last-upd-badge">'+fmtLastUpd(r._lastUpdated)+'</span></td><td style="font-size:.8rem;color:var(--text3)">'+r._notes+'</td><td><button class="btn-edit" onclick="editCTORow('+gi+')">✎</button><button class="btn-del" style="margin-left:4px" onclick="deleteCTORow('+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="12" class="empty-state">No CTO records found</td></tr>';
 renderPagination('cto',ctoPage,tp,pp,rows.length);
 updateCTOCharts(rows,affRevMap);
 try{renderAdvSummary();}catch(e){}
@@ -2381,7 +2489,8 @@ var newEntry={
 '_ctoType':type,
 '_cpaType':document.getElementById('cto-add-cpatype').value,
 '_saleDate':document.getElementById('cto-add-saledate').value,
-'_manual':true
+'_manual':true,
+'_lastUpdated':new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit',hour:'numeric',minute:'2-digit',hour12:true})
 };
 allCTO.push(newEntry);
 saveManualCTOEntries();
