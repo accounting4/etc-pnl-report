@@ -2126,7 +2126,7 @@ if(aff3.includes('GROSS REVENUE')||aff3.includes('EXPECTED REVENUE'))r._isSummar
 if(aff3.includes('EXPENSES'))r._isSummary=true;
 if(aff3.includes('NET PROFIT')||aff3.includes('EXPECTED PROFIT'))r._isSummary=true;
 if(aff3.includes('FMD REVENUE')||aff3.includes('FMD COST'))r._isSummary=true;
-if(aff3.includes('SALARY')||aff3.includes('ADS')||aff3.includes('GOBOT')||aff3.includes('BEEHIIV'))r._isSummary=true;
+if(aff3.includes('SALARY')||(aff3.includes('ADS')&&!aff3.includes('BEEHIV'))||aff3.includes('GOBOT')||aff3.includes('BEEHIIV'))r._isSummary=true;
 if(aff3.includes('PAYMENT RCVD')||aff3.includes('PAYMENT RECEIVED')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.paymentRcvd=n[0];}
 if(aff3.includes('TOTAL EXPECTED GROSS')||aff3.includes('GROSS REVENUE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.grossRevenue=n[0];}
 if(aff3.includes('TOTAL EXPECTED REVENUE')&&!aff3.includes('GROSS')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.grossRevenue)sum.grossRevenue=n[0];}
@@ -3070,11 +3070,8 @@ renderQChart(d.qi);
 }
 
 function renderAll(){
-// Snapshot sheet-only expenses before merging user expenses
-window._sheetExpenseSnapshot={};
-for(var _sm in pnlSummaries){
-window._sheetExpenseSnapshot[_sm]={totalExpenses:pnlSummaries[_sm].totalExpenses||0,salary:pnlSummaries[_sm].salary||0,ads:pnlSummaries[_sm].ads||0};
-}
+// Recalculate financial summary from ALL invoice data (sheet+QB+FMD+user) now that everything is loaded
+mergeUserInvoices();
 mergeUserExpenses();
 renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}try{renderExpenseBreakdown();}catch(e){}}
 </script><script>
