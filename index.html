@@ -3789,21 +3789,21 @@ if(status==='syncing'){
 if(dot)dot.style.background='#f59e0b';if(txt)txt.textContent='Syncing...';
 if(gDot)gDot.style.background='#f59e0b';if(gStatus){gStatus.textContent='Syncing...';gStatus.style.color='#f59e0b';}
 if(gBtn){gBtn.disabled=true;gBtn.textContent='⏳ Syncing...';}
-_syncCountdown=900;
+_syncCountdown=300;
 }else if(status==='done'){
 var estTime=new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true});
 if(dot)dot.style.background='#10b981';if(txt)txt.textContent='Synced '+estTime+' EST';
 if(gDot)gDot.style.background='#10b981';if(gStatus){gStatus.textContent='Synced';gStatus.style.color='#10b981';}
 if(gTime)gTime.textContent='Last: '+estTime+' EST';
 if(gBtn){gBtn.disabled=false;gBtn.textContent='⟳ Sync Now';}
-_lastSyncTime=new Date();_syncCountdown=900;
+_lastSyncTime=new Date();_syncCountdown=300;
 }else if(status==='error'){
 if(dot)dot.style.background='#ef4444';if(txt)txt.textContent='Sync error';
 if(gDot)gDot.style.background='#ef4444';if(gStatus){gStatus.textContent='Sync error';gStatus.style.color='#ef4444';}
 if(gBtn){gBtn.disabled=false;gBtn.textContent='⟳ Retry';}
 }
 }
-var _syncCountdown=900;
+var _syncCountdown=300;
 setInterval(function(){
 if(_syncCountdown>0)_syncCountdown--;
 var gNext=document.getElementById('gsync-next');
@@ -3863,8 +3863,16 @@ updateSyncIndicator('error');
 setTimeout(function(){updateSyncIndicator('done');},5000);
 }
 }
-// Auto-sync every 15 minutes (900000ms)
-setInterval(autoSyncData,900000);
+// Auto-sync every 5 minutes (300000ms)
+setInterval(autoSyncData,300000);
+// Also refresh when user returns to the tab (visibility change)
+var _lastVisSync=Date.now();
+document.addEventListener('visibilitychange',function(){
+if(!document.hidden&&(Date.now()-_lastVisSync)>120000){
+_lastVisSync=Date.now();
+autoSyncData();
+}
+});
 // Show initial sync time
 setTimeout(function(){updateSyncIndicator('done');},1000);
 
