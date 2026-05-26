@@ -2058,11 +2058,13 @@ function showTab(t){
   document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   document.getElementById('btn-'+t).classList.add('active');
+  /* Re-render Expense Manager when tab becomes visible (fixes Chart.js 0-dimension bug) */
+  if(t==='expmgr'&&typeof emRenderAll==='function'){setTimeout(emRenderAll,50);}
 }
 function applyTabPermissions(){
   // Hide tabs the user doesn't have access to
   if(currentUserRole==='admin')return; // admins see all
-  var allTabs=['overview','revenue','pnl','cto','fmd','analytics','tools'];
+  var allTabs=['overview','revenue','pnl','cto','fmd','analytics','tools','expmgr'];
   allTabs.forEach(function(t){
     var btn=document.getElementById('btn-'+t);
     if(!btn)return;
@@ -3075,12 +3077,13 @@ function renderAll(){
 // Recalculate financial summary from ALL invoice data (sheet+QB+FMD+user) now that everything is loaded
 mergeUserInvoices();
 mergeUserExpenses();
+try{mergeEMExpenses();}catch(e){}
 renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}try{renderExpenseBreakdown();}catch(e){}}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
 function getFMDSorted(){return sortArr(getFMDFilt(),fmdSort);}
-function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;uStatus[_safeKey(r._key)]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();try{renderOverview();}catch(e){}var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else{renderRevenue();try{renderOverview();}catch(e){}}}
+function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;uStatus[_safeKey(r._key)]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();try{mergeEMExpenses();}catch(e){}renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();try{renderOverview();}catch(e){}var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else{renderRevenue();try{renderOverview();}catch(e){}}}
 function updRemark(ta,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.remarks=ta.value;if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));fbSyncRemarks();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}}
 function savePNLRecord(){
 var amt=parseFloat(document.getElementById('f-invAmt').value)||0;
@@ -3621,6 +3624,31 @@ else pnlSummaries[m].otherExp=(pnlSummaries[m].otherExp||0)+(ex.amount||0);
 });
 }
 
+/* Bridge Expense Manager transactions into P&L summaries */
+function mergeEMExpenses(){
+if(typeof emTransactions==='undefined'||!emTransactions||!emTransactions.length)return;
+/* Map EM categories → P&L fields */
+function emCatToPNL(cat){
+var c=(cat||'').toLowerCase();
+if(c==='salaries')return'salary';
+if(c==='marketing')return'ads';
+if(c==='software'||c==='ai tools'||c==='cloud hosting'||c==='subscriptions')return'software';
+return'otherExp';
+}
+emTransactions.forEach(function(tx){
+if(!tx.date||!tx.amount)return;
+var m=emGetMonth(tx.date); /* e.g. "May 2026" */
+if(!m)return;
+/* Extract just the month name (e.g. "May") */
+var monthName=m.split(' ')[0];
+if(!monthName)return;
+if(!pnlSummaries[monthName])pnlSummaries[monthName]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
+pnlSummaries[monthName].totalExpenses=(pnlSummaries[monthName].totalExpenses||0)+(tx.amount||0);
+var field=emCatToPNL(tx.category);
+pnlSummaries[monthName][field]=(pnlSummaries[monthName][field]||0)+(tx.amount||0);
+});
+}
+
 function getExpFilt(){
 var q=(document.getElementById('exp-search').value||'').toLowerCase();
 var mf=(document.getElementById('exp-month-f')||{}).value||'';
@@ -3772,6 +3800,7 @@ pnlSummaries[m].beehiiv=0;pnlSummaries[m].software=0;pnlSummaries[m].contractors
 }
 mergeUserInvoices();
 mergeUserExpenses();
+try{mergeEMExpenses();}catch(e){}
 renderExpenses();
 renderPNL();
 try{var _smb=document.querySelector('#pnl-month-buttons button.active');if(_smb&&_smb.textContent!=='All Months')showMonthlySummary(_smb.textContent);}catch(e){}
@@ -6073,12 +6102,18 @@ emRenderAll();
 }
 
 /* ── Persistence (Firebase + localStorage) ── */
+var _emFbSuppress=false;
 function emSaveTransactions(){
 localStorage.setItem('emTransactions',JSON.stringify(emTransactions));
+_emFbSuppress=true;
 if(fbDb&&fbAuth&&fbAuth.currentUser){
 var obj={};emTransactions.forEach(function(tx){if(tx._key)obj[_safeKey(tx._key)]=tx;});
-fbDb.ref('shared/expenseManager').set(obj).catch(function(e){console.warn('EM save:',e);});
-}
+fbDb.ref('shared/expenseManager').set(obj).then(function(){
+setTimeout(function(){_emFbSuppress=false;},600);
+}).catch(function(e){_emFbSuppress=false;console.warn('EM save:',e);});
+}else{setTimeout(function(){_emFbSuppress=false;},100);}
+/* Also refresh P&L totals so EM expenses appear in Financial Summary */
+try{refreshAfterExpenseChange();}catch(e){}
 }
 function emLoadTransactions(){
 /* Try Firebase first, fall back to localStorage */
@@ -6092,14 +6127,25 @@ emTransactions=Object.values(data);
 localStorage.setItem('emTransactions',JSON.stringify(emTransactions));
 }
 emRenderAll();
+try{refreshAfterExpenseChange();}catch(e){}
 }).catch(function(){emRenderAll();});
-/* Real-time listener */
+/* Real-time listener — uses dedicated suppress flag */
 fbDb.ref('shared/expenseManager').on('value',function(snap){
-if(_fbSuppressListener)return;
+if(_emFbSuppress)return;
 var data=snap.val();
-if(data){emTransactions=Object.values(data);localStorage.setItem('emTransactions',JSON.stringify(emTransactions));emRenderAll();}
+if(data){emTransactions=Object.values(data);localStorage.setItem('emTransactions',JSON.stringify(emTransactions));emRenderAll();try{refreshAfterExpenseChange();}catch(e){}}
 });
-}else{emRenderAll();}
+}else{
+emRenderAll();
+/* Retry Firebase connection after 5s in case auth wasn't ready */
+setTimeout(function(){
+if(fbDb&&fbAuth&&fbAuth.currentUser&&!emTransactions.length){
+fbDb.ref('shared/expenseManager').once('value').then(function(snap){
+var data=snap.val();if(data){emTransactions=Object.values(data);localStorage.setItem('emTransactions',JSON.stringify(emTransactions));emRenderAll();}
+});
+}
+},5000);
+}
 }
 
 /* ── Rendering ── */
