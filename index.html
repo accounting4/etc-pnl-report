@@ -3565,27 +3565,41 @@ if(row)row.style.display=(st==='Partially Paid')?'':'none';
 
 // === MERGE MANUAL INVOICES INTO P&L SUMMARIES ===
 function mergeUserInvoices(){
-/* Add user-entered invoice amounts to pnlSummaries so stats reflect them */
-var snp=window._sheetInvoiceSnapshot;
-if(snp){for(var m in snp){if(pnlSummaries[m]){pnlSummaries[m].grossRevenue=snp[m].grossRevenue||0;pnlSummaries[m].paymentRcvd=snp[m].paymentRcvd||0;pnlSummaries[m].balance=snp[m].balance||0;}}}
-userPNL.forEach(function(r){
-var k=r._key||'';if(k&&pnlDeletes.has(k))return;
-var m=r._month||'';if(!m||m==='Manual')return;
-if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
-var amt=r.invAmt||r.displayAmt||0;var rcvd=r.rcvd||0;
-var st=(r.status||'').toLowerCase();
-if(st==='paid'){
-pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
-pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+(rcvd||amt);
-}else if(st==='partially paid'){
-pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
-pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+rcvd;
-pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+(amt-rcvd);
-}else{
-/* Unpaid, Pending, No Final Count → all goes to balance */
-pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
-pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+amt;
+/* Recalculate financial summary from ALL actual invoices (sheet + QB + user) by payment status.
+   UNPAID = ETC Balance / Accounts Receivable
+   PAID = Payment Received / Actual Revenue Collected
+   Keeps expenses from sheet snapshot. */
+var expSnp=window._sheetExpenseSnapshot||{};
+/* Reset revenue fields for all months but preserve expenses */
+for(var mk in pnlSummaries){
+  pnlSummaries[mk].grossRevenue=0;
+  pnlSummaries[mk].paymentRcvd=0;
+  pnlSummaries[mk].balance=0;
+  /* Restore expenses from snapshot */
+  if(expSnp[mk]){pnlSummaries[mk].totalExpenses=expSnp[mk].totalExpenses||0;pnlSummaries[mk].salary=expSnp[mk].salary||0;pnlSummaries[mk].ads=expSnp[mk].ads||0;}
 }
+/* Scan ALL PNL entries (sheet + QB + user) */
+var allEntries=allPNL.concat(allFMD);
+allEntries.forEach(function(r){
+  if(r._isSummary)return;
+  var k=r._key||'';if(k&&pnlDeletes.has(k))return;
+  var m=r._month||'';if(!m||m==='Manual')return;
+  if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
+  var amt=r.displayAmt||r.invAmt||0;var rcvd=r.rcvd||0;
+  var st=(r.status||'').toLowerCase();
+  if(st==='paid'){
+    pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+(rcvd||amt);
+    pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+(rcvd||amt);
+  }else if(st==='partially paid'){
+    var total=amt>0?amt:(rcvd>0?rcvd:0);
+    pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+total;
+    pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+rcvd;
+    pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+(total-rcvd);
+  }else{
+    /* Unpaid, Pending, No Final Count → all goes to balance (Accounts Receivable) */
+    pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
+    pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+amt;
+  }
 });
 }
 
