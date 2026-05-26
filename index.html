@@ -3571,6 +3571,7 @@ var expSnp=window._sheetExpenseSnapshot||{};
 for(var mk in pnlSummaries){
   if(snp[mk]){pnlSummaries[mk].grossRevenue=snp[mk].grossRevenue||0;pnlSummaries[mk].paymentRcvd=snp[mk].paymentRcvd||0;pnlSummaries[mk].balance=snp[mk].balance||0;}
   if(expSnp[mk]){pnlSummaries[mk].totalExpenses=expSnp[mk].totalExpenses||0;pnlSummaries[mk].salary=expSnp[mk].salary||0;pnlSummaries[mk].ads=expSnp[mk].ads||0;}
+  pnlSummaries[mk].beehiiv=0;pnlSummaries[mk].software=0;pnlSummaries[mk].contractors=0;pnlSummaries[mk].office=0;pnlSummaries[mk].otherExp=0;
 }
 /* Add non-sheet entries (QB + user) on top — these aren't in the sheet summary */
 var allEntries=allPNL.concat(allFMD);
@@ -3763,6 +3764,7 @@ if(pnlSummaries[m]){
 pnlSummaries[m].totalExpenses=window._sheetExpenseSnapshot[m].totalExpenses||0;
 pnlSummaries[m].salary=window._sheetExpenseSnapshot[m].salary||0;
 pnlSummaries[m].ads=window._sheetExpenseSnapshot[m].ads||0;
+pnlSummaries[m].beehiiv=0;pnlSummaries[m].software=0;pnlSummaries[m].contractors=0;pnlSummaries[m].office=0;pnlSummaries[m].otherExp=0;
 }
 }
 }
