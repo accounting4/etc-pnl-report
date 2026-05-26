@@ -949,7 +949,7 @@ Secured with Firebase Authentication
 <div class="stat-card red" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view P&L expenses"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary →</div></div>
 <div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">TRACKING REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">CTO + IO + Everflow →</div></div>
 <div class="stat-card" style="border-left:3px solid #14b8a6"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid vs Total (QB)</div></div>
-<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #f97316" title="Click to view Beehiiv Revenue"><div class="sc-label">BEEHIIV AD REVENUE</div><div class="sc-value" id="ov-beehiiv">$0</div><div class="sc-sub">Ad Network revenue →</div></div>
+<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #f97316" title="Click to view Beehiiv Revenue"><div class="sc-label">BEEHIIV EARNINGS</div><div class="sc-value" id="ov-beehiiv">$0</div><div class="sc-sub">Daily earnings →</div></div>
 <div class="stat-card" onclick="showTab('fmd')" style="cursor:pointer;border-left:3px solid #f59e0b" title="Click to view FMD"><div class="sc-label">FMD REVENUE</div><div class="sc-value" id="ov-fmd">$0</div><div class="sc-sub">Five Minute Daily →</div></div>
 <div class="stat-card" style="border-left:3px solid #8b5cf6"><div class="sc-label">ACTIVE AFFILIATES</div><div class="sc-value" id="ov-affiliates">0</div><div class="sc-sub">This month</div></div>
 </div>
@@ -2367,12 +2367,25 @@ c.appendChild(b);
 function qbIncludeInStats(month){var ps=(pnlSummaries[month]||{}).grossRevenue||0;var qt=qbRawTotals[month]?(qbRawTotals[month].p+qbRawTotals[month].u):0;return qt>0&&ps<qt;}
 function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=s.grossRevenue||0;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';var expLines='';if(s.totalExpenses)expLines+='<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>';if(s.salary)expLines+='<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>';if(s.ads)expLines+='<div class="psb-line"><span class="psb-key">Marketing</span><span class="psb-value">'+$m(s.ads)+'</span></div>';if(s.beehiiv)expLines+='<div class="psb-line"><span class="psb-key">Dues and Subscriptions</span><span class="psb-value">'+$m(s.beehiiv)+'</span></div>';if(s.software)expLines+='<div class="psb-line"><span class="psb-key">Software and Subscription</span><span class="psb-value">'+$m(s.software)+'</span></div>';if(s.contractors)expLines+='<div class="psb-line"><span class="psb-key">Meals and Entertainment</span><span class="psb-value">'+$m(s.contractors)+'</span></div>';if(s.office)expLines+='<div class="psb-line"><span class="psb-key">Office Supplies</span><span class="psb-value">'+$m(s.office)+'</span></div>';if(s.otherExp)expLines+='<div class="psb-line"><span class="psb-key">Other</span><span class="psb-value">'+$m(s.otherExp)+'</span></div>';/* Beehiiv revenue line */
 var bhLine='';var bhm=s.beehiivRev||0;
-if(bhm>0){
-  bhLine='<div class="psb-line"><span class="psb-key">Beehiiv Ad Network</span><span class="psb-value" style="color:#f97316">'+$m(bhm)+'</span></div>';
+/* Beehiiv API earnings for this month */
+var _bhApiMo=0,_bhApiPubMap={},_bhApiDailyMap={};
+if(window._bhApiEarnings&&window._bhApiEarnings.publications){
+  for(var _bpn in window._bhApiEarnings.publications){
+    if(_bpn.toLowerCase().indexOf('five minute')>-1)continue;
+    var _bpd=(window._bhApiEarnings.publications[_bpn]||{})[m];
+    if(_bpd&&_bpd.total>0){_bhApiMo+=_bpd.total;_bhApiPubMap[_bpn]=_bpd.total;if(_bpd.daily){for(var _bdk in _bpd.daily){_bhApiDailyMap[_bdk]=(_bhApiDailyMap[_bdk]||0)+_bpd.daily[_bdk];}}}
+  }
+}
+var _bhDisplay=_bhApiMo>0?_bhApiMo:bhm;
+if(_bhDisplay>0){
+  bhLine='<div class="psb-line"><span class="psb-key">Beehiiv Earnings</span><span class="psb-value" style="color:#f97316">'+$m(_bhDisplay)+'</span></div>';
   /* Per-publication breakdown */
-  var bPubs=(window._beehiivByPub||{})[m]||{};
+  var bPubs=_bhApiMo>0?_bhApiPubMap:((window._beehiivByPub||{})[m]||{});
   var bPubKeys=Object.keys(bPubs).sort(function(a,b){return bPubs[b]-bPubs[a];});
   if(bPubKeys.length){bhLine+='<div style="margin-left:16px;border-left:2px solid #f97316;padding-left:10px;margin-bottom:4px">';bPubKeys.forEach(function(p){bhLine+='<div class="psb-line" style="font-size:.82rem"><span class="psb-key" style="color:var(--text3)">'+p+'</span><span class="psb-value" style="font-size:.82rem">'+$m(bPubs[p])+'</span></div>';});bhLine+='</div>';}
+  /* Daily earnings breakdown (only from API) */
+  var _bhDailyKeys=Object.keys(_bhApiDailyMap).sort();
+  if(_bhDailyKeys.length){bhLine+='<div style="margin-left:16px;border-left:2px solid #f97316;padding-left:10px;margin-top:4px"><div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:2px">📅 Daily</div>';_bhDailyKeys.forEach(function(dk){var dl=dk;try{var dp=dk.split('-');dl=new Date(dp[0],dp[1]-1,dp[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch(e){}bhLine+='<div class="psb-line" style="font-size:.82rem"><span class="psb-key" style="color:var(--text3)">'+dl+'</span><span class="psb-value" style="font-size:.82rem;color:#f97316">'+$m(_bhApiDailyMap[dk])+'</span></div>';});bhLine+='</div>';}
 }
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div>'+bhLine+'</div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
@@ -3251,7 +3264,38 @@ allPNL.filter(function(r){if(r._isSummary)return false;if(_sm&&r._month!==_sm)re
   else if(cat==='Beehiiv Ads'){bhRev+=tot;bhAffs[aff]=(bhAffs[aff]||0)+tot;}
   else{cpcRev+=tot;cpcAffs[aff]=(cpcAffs[aff]||0)+tot;}
 });
-var grand=totRev+irRev+psRev+cpcRev+bhRev;
+// Beehiiv API earnings (from Firebase shared/beehiivEarnings)
+var bhApiRev=0,bhApiPubs={},bhApiDaily={};
+if(window._bhApiEarnings&&window._bhApiEarnings.publications){
+  var _bhPubs=window._bhApiEarnings.publications;
+  var _bhMonthFilter=_sm||'';
+  for(var _bhPubName in _bhPubs){
+    // Skip FMD — goes to FMD tab only
+    if(_bhPubName.toLowerCase().indexOf('five minute')>-1||_bhPubName.toLowerCase().indexOf('fmd')>-1)continue;
+    var _bhMonths=_bhPubs[_bhPubName];
+    for(var _bhMo in _bhMonths){
+      if(_bhMonthFilter&&_bhMo!==_bhMonthFilter)continue;
+      var _bhMoData=_bhMonths[_bhMo];
+      var _bhMoTotal=_bhMoData.total||0;
+      if(_bhMoTotal>0){
+        bhApiRev+=_bhMoTotal;
+        bhApiPubs[_bhPubName]=(bhApiPubs[_bhPubName]||0)+_bhMoTotal;
+        if(_bhMoData.daily){
+          for(var _bhDate in _bhMoData.daily){
+            bhApiDaily[_bhDate]=(bhApiDaily[_bhDate]||0)+_bhMoData.daily[_bhDate];
+          }
+        }
+      }
+    }
+  }
+}
+// Use API earnings if available, otherwise fall back to PNL sheet data
+var bhFinalRev=bhApiRev>0?bhApiRev:bhRev;
+var bhFinalAffs=bhApiRev>0?bhApiPubs:bhAffs;
+var bhFinalMetric=bhApiRev>0?'Publications':'Invoices';
+var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
+
+var grand=totRev+irRev+psRev+cpcRev+bhFinalRev;
 
 // Sources config
 var sources=[
@@ -3260,11 +3304,35 @@ var sources=[
   {id:'cpa',name:'CPA (Everflow)',color:'#f59e0b',rev:efRev,metric:'Conversions',metricVal:efLeads,affs:efAffs},
   {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
   {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
-  {id:'bh',name:'Beehiiv Ad Network',color:'#f97316',rev:bhRev,metric:'Publications',metricVal:Object.keys(bhAffs).length,affs:bhAffs},
+  {id:'bh',name:'Beehiiv Earnings',color:'#f97316',rev:bhFinalRev,metric:bhFinalMetric,metricVal:bhFinalMetricVal,affs:bhFinalAffs,daily:bhApiRev>0?bhApiDaily:null},
   {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
 ].filter(function(s){return s.rev>0||s.id==='bh';}).sort(function(a,b){return b.rev-a.rev;});
 
-function affTbl(map){
+function affTbl(map,daily){
+  var s=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
+  if(!s.length&&!daily)return'';
+  var h='';
+  // Daily earnings table
+  if(daily&&Object.keys(daily).length>0){
+    h+='<div style="margin-bottom:12px"><div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📅 Daily Earnings</div>';
+    h+='<table><tr><th>Date</th><th style="text-align:right">Earnings</th></tr>';
+    var dSorted=Object.entries(daily).sort(function(a,b){return a[0].localeCompare(b[0]);});
+    dSorted.forEach(function(d){
+      var dt=d[0];try{var dp=dt.split('-');dt=new Date(dp[0],dp[1]-1,dp[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch(e){}
+      h+='<tr><td>'+dt+'</td><td style="text-align:right;font-weight:600;color:#f97316">$'+d[1].toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
+    });
+    h+='</table></div>';
+  }
+  // Publication/affiliate table
+  if(s.length){
+    h+='<div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">By Publication</div>';
+    h+='<table><tr><th>Publication</th><th style="text-align:right">Revenue</th></tr>';
+    s.forEach(function(a){h+='<tr><td>'+a[0]+'</td><td style="text-align:right">$'+a[1].toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';});
+    h+='</table>';
+  }
+  return h;
+}
+function _legacyAffTbl(map){
   var s=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
   if(!s.length)return'';
   var h='<table><tr><th>Affiliate</th><th style="text-align:right">Revenue</th></tr>';
@@ -3294,7 +3362,7 @@ sources.forEach(function(s){
   h+='<div class="rbs-row-pct" style="color:'+s.color+'">'+pct.toFixed(1)+'%</div>';
   h+='<div class="rbs-row-arrow">▾</div>';
   h+='</div>';
-  h+='<div class="rbs-row-detail"><div class="rbs-detail-inner">'+affTbl(s.affs)+'</div></div>';
+  h+='<div class="rbs-row-detail"><div class="rbs-detail-inner">'+(s.daily?affTbl(s.affs,s.daily):_legacyAffTbl(s.affs))+'</div></div>';
   h+='</div>';
 });
 h+='</div>';
@@ -3399,6 +3467,9 @@ async function fbLoadUserData(){
     userExpenses=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
     if(userExpenses.length!==b2)localStorage.setItem('userExpenses',JSON.stringify(userExpenses));
 
+    // Load beehiiv API earnings
+    if(d.beehiivEarnings){window._bhApiEarnings=d.beehiivEarnings;console.log('✅ Beehiiv API earnings loaded');}
+
     console.log('✅ Shared data loaded');
 
     // Start real-time listeners for other users' changes
@@ -3430,6 +3501,8 @@ function fbStartListeners(){
     if(d.pnlEdits){pnlEdits={};Object.keys(d.pnlEdits).forEach(function(sk){pnlEdits[sk]=d.pnlEdits[sk];});localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));}
     if(d.fmdEdits){fmdEdits={};Object.keys(d.fmdEdits).forEach(function(sk){fmdEdits[sk]=d.fmdEdits[sk];});localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));}
     if(d.pnlAttachments){localStorage.setItem('pnlAttachments',JSON.stringify(d.pnlAttachments));}
+    // Update beehiiv API earnings from listener
+    if(d.beehiivEarnings){window._bhApiEarnings=d.beehiivEarnings;}
     // Clean deleted
     userPNL=userPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});
     userExpenses=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
@@ -4207,9 +4280,17 @@ function renderOverview(){
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
-    // Beehiiv Ad Revenue
+    // Beehiiv Earnings (prefer API data, fallback to PNL sheet)
     var bhTotal=0;
-    for(var _bk in (window._beehiivByMonth||{}))bhTotal+=window._beehiivByMonth[_bk];
+    if(window._bhApiEarnings&&window._bhApiEarnings.publications){
+      var _ovBhPubs=window._bhApiEarnings.publications;
+      for(var _ovPn in _ovBhPubs){
+        if(_ovPn.toLowerCase().indexOf('five minute')>-1)continue;
+        for(var _ovMo in _ovBhPubs[_ovPn]){bhTotal+=(_ovBhPubs[_ovPn][_ovMo].total||0);}
+      }
+    } else {
+      for(var _bk in (window._beehiivByMonth||{}))bhTotal+=window._beehiivByMonth[_bk];
+    }
     setStat('ov-beehiiv','$'+bhTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
     // FMD (same structure as PNL)
@@ -4253,7 +4334,14 @@ function renderStatSparklines(curMonth){
     allCTO.forEach(function(r){var m=r._month||'';if(ctoByM.hasOwnProperty(m))ctoByM[m]+=parseMoney(r['Total Revenue ($)'])||0;});
     allFMD.forEach(function(r){var m=r._month||r.Month||'';if(fmdByM.hasOwnProperty(m))fmdByM[m]+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
     
-    var bhByM={};activeMonths.forEach(function(m){bhByM[m]=(window._beehiivByMonth||{})[m]||0;});
+    var bhByM={};activeMonths.forEach(function(m){
+      if(window._bhApiEarnings&&window._bhApiEarnings.publications){
+        var _spBh=0;for(var _spPn in window._bhApiEarnings.publications){
+          if(_spPn.toLowerCase().indexOf('five minute')>-1)continue;
+          _spBh+=(((window._bhApiEarnings.publications[_spPn]||{})[m]||{}).total||0);
+        }bhByM[m]=_spBh;
+      } else {bhByM[m]=(window._beehiivByMonth||{})[m]||0;}
+    });
     var sparkMap={
       'ov-revenue':activeMonths.map(function(m){return revByM[m];}),
       'ov-pnl':activeMonths.map(function(m){return pnlByM[m];}),
