@@ -949,6 +949,7 @@ Secured with Firebase Authentication
 <div class="stat-card red" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view P&L expenses"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary →</div></div>
 <div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">TRACKING REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">CTO + IO + Everflow →</div></div>
 <div class="stat-card" style="border-left:3px solid #14b8a6"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid vs Total (QB)</div></div>
+<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #f97316" title="Click to view Beehiiv Revenue"><div class="sc-label">BEEHIIV AD REVENUE</div><div class="sc-value" id="ov-beehiiv">$0</div><div class="sc-sub">Ad Network revenue →</div></div>
 <div class="stat-card" onclick="showTab('fmd')" style="cursor:pointer;border-left:3px solid #f59e0b" title="Click to view FMD"><div class="sc-label">FMD REVENUE</div><div class="sc-value" id="ov-fmd">$0</div><div class="sc-sub">Five Minute Daily →</div></div>
 <div class="stat-card" style="border-left:3px solid #8b5cf6"><div class="sc-label">ACTIVE AFFILIATES</div><div class="sc-value" id="ov-affiliates">0</div><div class="sc-sub">This month</div></div>
 </div>
@@ -1113,7 +1114,7 @@ Secured with Firebase Authentication
 <div class="table-card" style="margin-bottom:0">
 <div class="section-title" style="margin-bottom:12px"><div class="icon-circle">&#128181;</div> Profit and Loss Report</div>
 <table id="pnl-monthly-table">
-<thead><tr><th>Month</th><th>Revenue</th><th>Expenses</th><th>Net P&L</th></tr></thead>
+<thead><tr><th>Month</th><th>Revenue</th><th>Beehiiv Ads</th><th>Expenses</th><th>Net P&L</th></tr></thead>
 <tbody id="pnl-monthly-tbody"></tbody>
 <tfoot id="pnl-monthly-tfoot"></tfoot>
 </table>
@@ -2155,6 +2156,22 @@ return true;
 allFMD.push(...inv.filter(r=>isFMD(r.affiliate)));
 allPNL.push(...inv.filter(r=>!isFMD(r.affiliate)));
 }
+/* Compute Beehiiv Ad Network revenue per month from PNL entries */
+window._beehiivByMonth={};window._beehiivByPub={};
+allPNL.forEach(function(r){
+  if(classifyPNLSource(r.affiliate)!=='Beehiiv Ads')return;
+  var mo=r._month||'';if(!mo)return;
+  var amt=(r.rcvd||r.displayAmt||r.invAmt||0);if(!amt)return;
+  window._beehiivByMonth[mo]=(window._beehiivByMonth[mo]||0)+amt;
+  var pub=(r.affiliate||'').replace(/Beehiv Ads\s*-\s*/i,'').trim()||'Unknown';
+  if(!window._beehiivByPub[mo])window._beehiivByPub[mo]={};
+  window._beehiivByPub[mo][pub]=(window._beehiivByPub[mo][pub]||0)+amt;
+});
+/* Inject beehiivRev into pnlSummaries */
+for(var _bm in window._beehiivByMonth){
+  if(!pnlSummaries[_bm])pnlSummaries[_bm]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
+  pnlSummaries[_bm].beehiivRev=window._beehiivByMonth[_bm];
+}
 /* Snapshot sheet-only summaries before merging user data */
 window._sheetInvoiceSnapshot={};window._sheetExpenseSnapshot={};
 for(var _sm in pnlSummaries){window._sheetInvoiceSnapshot[_sm]={grossRevenue:pnlSummaries[_sm].grossRevenue||0,paymentRcvd:pnlSummaries[_sm].paymentRcvd||0,balance:pnlSummaries[_sm].balance||0};window._sheetExpenseSnapshot[_sm]={totalExpenses:pnlSummaries[_sm].totalExpenses||0,salary:pnlSummaries[_sm].salary||0,ads:pnlSummaries[_sm].ads||0};}
@@ -2348,7 +2365,16 @@ c.appendChild(b);
 });
 }
 function qbIncludeInStats(month){var ps=(pnlSummaries[month]||{}).grossRevenue||0;var qt=qbRawTotals[month]?(qbRawTotals[month].p+qbRawTotals[month].u):0;return qt>0&&ps<qt;}
-function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=s.grossRevenue||0;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';var expLines='';if(s.totalExpenses)expLines+='<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>';if(s.salary)expLines+='<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>';if(s.ads)expLines+='<div class="psb-line"><span class="psb-key">Marketing</span><span class="psb-value">'+$m(s.ads)+'</span></div>';if(s.beehiiv)expLines+='<div class="psb-line"><span class="psb-key">Dues and Subscriptions</span><span class="psb-value">'+$m(s.beehiiv)+'</span></div>';if(s.software)expLines+='<div class="psb-line"><span class="psb-key">Software and Subscription</span><span class="psb-value">'+$m(s.software)+'</span></div>';if(s.contractors)expLines+='<div class="psb-line"><span class="psb-key">Meals and Entertainment</span><span class="psb-value">'+$m(s.contractors)+'</span></div>';if(s.office)expLines+='<div class="psb-line"><span class="psb-key">Office Supplies</span><span class="psb-value">'+$m(s.office)+'</span></div>';if(s.otherExp)expLines+='<div class="psb-line"><span class="psb-key">Other</span><span class="psb-value">'+$m(s.otherExp)+'</span></div>';cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
+function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=s.grossRevenue||0;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';var expLines='';if(s.totalExpenses)expLines+='<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>';if(s.salary)expLines+='<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>';if(s.ads)expLines+='<div class="psb-line"><span class="psb-key">Marketing</span><span class="psb-value">'+$m(s.ads)+'</span></div>';if(s.beehiiv)expLines+='<div class="psb-line"><span class="psb-key">Dues and Subscriptions</span><span class="psb-value">'+$m(s.beehiiv)+'</span></div>';if(s.software)expLines+='<div class="psb-line"><span class="psb-key">Software and Subscription</span><span class="psb-value">'+$m(s.software)+'</span></div>';if(s.contractors)expLines+='<div class="psb-line"><span class="psb-key">Meals and Entertainment</span><span class="psb-value">'+$m(s.contractors)+'</span></div>';if(s.office)expLines+='<div class="psb-line"><span class="psb-key">Office Supplies</span><span class="psb-value">'+$m(s.office)+'</span></div>';if(s.otherExp)expLines+='<div class="psb-line"><span class="psb-key">Other</span><span class="psb-value">'+$m(s.otherExp)+'</span></div>';/* Beehiiv revenue line */
+var bhLine='';var bhm=s.beehiivRev||0;
+if(bhm>0){
+  bhLine='<div class="psb-line"><span class="psb-key">Beehiiv Ad Network</span><span class="psb-value" style="color:#f97316">'+$m(bhm)+'</span></div>';
+  /* Per-publication breakdown */
+  var bPubs=(window._beehiivByPub||{})[m]||{};
+  var bPubKeys=Object.keys(bPubs).sort(function(a,b){return bPubs[b]-bPubs[a];});
+  if(bPubKeys.length){bhLine+='<div style="margin-left:16px;border-left:2px solid #f97316;padding-left:10px;margin-bottom:4px">';bPubKeys.forEach(function(p){bhLine+='<div class="psb-line" style="font-size:.82rem"><span class="psb-key" style="color:var(--text3)">'+p+'</span><span class="psb-value" style="font-size:.82rem">'+$m(bPubs[p])+'</span></div>';});bhLine+='</div>';}
+}
+cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div>'+bhLine+'</div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
 function getRevFilt(){const q=((document.getElementById('rev-search')||{}).value||'').toLowerCase(),mf=(document.getElementById('rev-month-f')||{}).value||'',tf=(document.getElementById('rev-type-f')||{}).value||'',{from,to}=getDR('rev');var merged=allRev.map(function(r){return Object.assign({},r,{_recType:'revenue'});}).concat(allFC.map(function(r){return{_recType:'forecast',_source:'forecast',_srcLabel:'Forecast',_key:r._key||('fc_'+r.affiliate),date:r.date,_week:r._period||'',_month:r._period?r._period.replace(/\s*week.*/i,'').trim():'',affiliate:r.affiliate,amount:r.amount,status:'',remarks:''};}));return merged.filter(r=>{if(tf==='revenue'&&r._recType!=='revenue')return false;if(tf==='forecast'&&r._recType!=='forecast')return false;if(mf&&r._month!==mf&&!(r._week||'').toLowerCase().includes(mf.toLowerCase().substring(0,3)))return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{var dk=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(dk&&pnlDeletes.has(dk))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
@@ -2360,7 +2386,7 @@ function doSort(tab,col){const m={rev:{s:revSort,fn:renderRevenue},pnl:{s:pnlSor
 function sortRev(c){doSort('rev',c);}function sortPNL(c){doSort('pnl',c);}function sortCTO(c){doSort('cto',c);}function sortFc(c){doSort('fc',c);}function sortFMD(c){doSort('fmd',c);}
 function renderPagination(px,pg,tp,pp,tot){const el=document.getElementById(px+'-pagination');if(!el)return;const s=tot===0?0:(pg-1)*pp+1,e=Math.min(pg*pp,tot);let b='<button class="page-btn" '+(pg<=1?'disabled':'')+' onclick="goPage(\x27'+px+'\x27,'+(pg-1)+')">&#171; Prev</button>';for(let p=Math.max(1,pg-2);p<=Math.min(tp,pg+2);p++)b+='<button class="page-btn'+(p===pg?' active':'')+'" onclick="goPage(\x27'+px+'\x27,'+p+')">'+p+'</button>';b+='<button class="page-btn" '+(pg>=tp?'disabled':'')+' onclick="goPage(\x27'+px+'\x27,'+(pg+1)+')">Next &#187;</button>';el.innerHTML='<span class="pg-info">Showing '+s+'&#8211;'+e+' of '+tot+'</span><div class="pg-btns">'+b+'</div>';}
 function goPage(px,p){if(px==='rev'){revPage=p;renderRevenue();}if(px==='pnl'){pnlPage=p;renderPNL();}if(px==='cto'){ctoPage=p;renderCTO();}if(px==='fc'){fcPage=p;renderFC();}if(px==='fmd'){fmdPage=p;renderFMD();}}
-function renderMonthlySummary(){var months=['January','February','March','April','May','June'];var tbody=document.getElementById('pnl-monthly-tbody');var tfoot=document.getElementById('pnl-monthly-tfoot');if(!tbody)return;var tPnl=0,tExp=0,tNet=0;var rows='';var mRevData=[],mExpData=[],mProfData=[],mLabels=[];months.forEach(function(m){var ps=pnlSummaries[m]||{};var pnlRev=0;pnlRev=ps.grossRevenue||0;var exp=ps.totalExpenses||0;var net=pnlRev-exp;tPnl+=pnlRev;tExp+=exp;tNet+=net;if(pnlRev||exp){mLabels.push(m.substring(0,3));mRevData.push(pnlRev);mExpData.push(exp);mProfData.push(net);var cls=net>=0?'green':'red';rows+='<tr><td><strong>'+m+'</strong></td><td><strong>'+$m(pnlRev)+'</strong></td><td style="color:var(--red)">'+$m(exp)+'</td><td style="color:var(--'+cls+');font-weight:700">'+$m(net)+'</td></tr>';}});tbody.innerHTML=rows||'<tr><td colspan="4" class="empty-state">No data</td></tr>';tfoot.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+$m(tPnl)+'</td><td style="color:var(--red)">'+$m(tExp)+'</td><td style="color:var(--green)">'+$m(tNet)+'</td></tr>';setStat('rev-s-expenses',$m(tExp));try{renderQuarterlySummary();}catch(e){}var cEl=document.getElementById('revMonthlyChart');if(cEl){var ex=Chart.getChart('revMonthlyChart');if(ex)ex.destroy();new Chart(cEl,{type:'bar',data:{labels:mLabels,datasets:[{label:'Total Revenue',data:mRevData,backgroundColor:ACCENT+'cc',borderColor:ACCENT,borderWidth:2,borderRadius:8,borderSkipped:false},{label:'Expenses',data:mExpData,backgroundColor:RED+'cc',borderColor:RED,borderWidth:2,borderRadius:8,borderSkipped:false},{label:'Net Profit',data:mProfData,backgroundColor:GREEN+'cc',borderColor:GREEN,borderWidth:2,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});};}
+function renderMonthlySummary(){var months=['January','February','March','April','May','June'];var tbody=document.getElementById('pnl-monthly-tbody');var tfoot=document.getElementById('pnl-monthly-tfoot');if(!tbody)return;var tPnl=0,tExp=0,tNet=0,tBh=0;var rows='';var mRevData=[],mExpData=[],mProfData=[],mBhData=[],mLabels=[];months.forEach(function(m){var ps=pnlSummaries[m]||{};var pnlRev=0;pnlRev=ps.grossRevenue||0;var exp=ps.totalExpenses||0;var net=pnlRev-exp;var bh=ps.beehiivRev||0;tPnl+=pnlRev;tExp+=exp;tNet+=net;tBh+=bh;if(pnlRev||exp){mLabels.push(m.substring(0,3));mRevData.push(pnlRev);mExpData.push(exp);mProfData.push(net);mBhData.push(bh);var cls=net>=0?'green':'red';rows+='<tr><td><strong>'+m+'</strong></td><td><strong>'+$m(pnlRev)+'</strong></td><td style="color:#f97316;font-weight:600">'+$m(bh)+'</td><td style="color:var(--red)">'+$m(exp)+'</td><td style="color:var(--'+cls+');font-weight:700">'+$m(net)+'</td></tr>';}});tbody.innerHTML=rows||'<tr><td colspan="5" class="empty-state">No data</td></tr>';tfoot.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+$m(tPnl)+'</td><td style="color:#f97316">'+$m(tBh)+'</td><td style="color:var(--red)">'+$m(tExp)+'</td><td style="color:var(--green)">'+$m(tNet)+'</td></tr>';setStat('rev-s-expenses',$m(tExp));try{renderQuarterlySummary();}catch(e){}var cEl=document.getElementById('revMonthlyChart');if(cEl){var ex=Chart.getChart('revMonthlyChart');if(ex)ex.destroy();new Chart(cEl,{type:'bar',data:{labels:mLabels,datasets:[{label:'Total Revenue',data:mRevData,backgroundColor:ACCENT+'cc',borderColor:ACCENT,borderWidth:2,borderRadius:8,borderSkipped:false},{label:'Beehiiv Ads',data:mBhData,backgroundColor:'#f97316cc',borderColor:'#f97316',borderWidth:2,borderRadius:8,borderSkipped:false},{label:'Expenses',data:mExpData,backgroundColor:RED+'cc',borderColor:RED,borderWidth:2,borderRadius:8,borderSkipped:false},{label:'Net Profit',data:mProfData,backgroundColor:GREEN+'cc',borderColor:GREEN,borderWidth:2,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});};}
 function renderRevTracker(){
 var bEl=document.getElementById('rev-tracker-banner'),cEl=document.getElementById('rev-tracker-content');
 if(!bEl||!cEl)return;
@@ -2722,9 +2748,9 @@ function renderCTO(){var f=getCTOFilt();var rows=f.map(getCTORow).filter(functio
 var totRev=0,totLeads=0,activeOffers=0,affRevMap={};
 rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=r._name||'Unknown';affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
 // Compute P&L source totals for synced Tracking Revenue
-var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0;
-allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else _pnlCPC+=tot;});
-var syncedTotal=totRev+_pnlIR+_pnlPS+_pnlCPC;
+var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0,_pnlBH=0;
+allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
+var syncedTotal=totRev+_pnlIR+_pnlPS+_pnlCPC+_pnlBH;
 setStat('cto-s-rev',$m(syncedTotal));setStat('cto-s-leads',totLeads.toLocaleString());setStat('cto-s-count',activeOffers);
 var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
@@ -3217,14 +3243,15 @@ var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).
 
 // P&L sources
 var _sm=(document.getElementById('cto-month-f')||{}).value||'';
-var irRev=0,psRev=0,cpcRev=0,irAffs={},psAffs={},cpcAffs={};
+var irRev=0,psRev=0,cpcRev=0,bhRev=0,irAffs={},psAffs={},cpcAffs={},bhAffs={};
 allPNL.filter(function(r){if(r._isSummary)return false;if(_sm&&r._month!==_sm)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){
   var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;var aff=r.affiliate||'Unknown';
   if(cat==='IR'){irRev+=tot;irAffs[aff]=(irAffs[aff]||0)+tot;}
   else if(cat==='Platform Softwares'){psRev+=tot;psAffs[aff]=(psAffs[aff]||0)+tot;}
+  else if(cat==='Beehiiv Ads'){bhRev+=tot;bhAffs[aff]=(bhAffs[aff]||0)+tot;}
   else{cpcRev+=tot;cpcAffs[aff]=(cpcAffs[aff]||0)+tot;}
 });
-var grand=totRev+irRev+psRev+cpcRev;
+var grand=totRev+irRev+psRev+cpcRev+bhRev;
 
 // Sources config
 var sources=[
@@ -3233,6 +3260,7 @@ var sources=[
   {id:'cpa',name:'CPA (Everflow)',color:'#f59e0b',rev:efRev,metric:'Conversions',metricVal:efLeads,affs:efAffs},
   {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
   {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
+  {id:'bh',name:'Beehiiv Ad Network',color:'#f97316',rev:bhRev,metric:'Publications',metricVal:Object.keys(bhAffs).length,affs:bhAffs},
   {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
 ].filter(function(s){return s.rev>0;}).sort(function(a,b){return b.rev-a.rev;});
 
@@ -4179,6 +4207,11 @@ function renderOverview(){
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
+    // Beehiiv Ad Revenue
+    var bhTotal=0;
+    for(var _bk in (window._beehiivByMonth||{}))bhTotal+=window._beehiivByMonth[_bk];
+    setStat('ov-beehiiv','$'+bhTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+    
     // FMD (same structure as PNL)
     var fmdTotal=0;
     allFMD.forEach(function(r){fmdTotal+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
@@ -4220,10 +4253,12 @@ function renderStatSparklines(curMonth){
     allCTO.forEach(function(r){var m=r._month||'';if(ctoByM.hasOwnProperty(m))ctoByM[m]+=parseMoney(r['Total Revenue ($)'])||0;});
     allFMD.forEach(function(r){var m=r._month||r.Month||'';if(fmdByM.hasOwnProperty(m))fmdByM[m]+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
     
+    var bhByM={};activeMonths.forEach(function(m){bhByM[m]=(window._beehiivByMonth||{})[m]||0;});
     var sparkMap={
       'ov-revenue':activeMonths.map(function(m){return revByM[m];}),
       'ov-pnl':activeMonths.map(function(m){return pnlByM[m];}),
       'ov-tracking':activeMonths.map(function(m){return ctoByM[m];}),
+      'ov-beehiiv':activeMonths.map(function(m){return bhByM[m];}),
       'ov-fmd':activeMonths.map(function(m){return fmdByM[m];})
     };
     Object.keys(sparkMap).forEach(function(id){
@@ -4468,6 +4503,7 @@ function classifyPNLSource(aff){
   var a=(aff||'').toUpperCase();
   if(a.startsWith('IR ')||a.startsWith('IR-')||a.startsWith('IR -')||a==='IR'||a.indexOf(' IR ')>-1||a.indexOf(' IR-')>-1||a.startsWith('NATE')||a.indexOf('3 WEEKS IR')>-1)return 'IR';
   if(a.indexOf('PLATFORM')>-1||a.indexOf('SOFTWARE')>-1)return 'Platform Softwares';
+  if(a.indexOf('BEEHIV')>-1&&a.indexOf('ADS')>-1)return 'Beehiiv Ads';
   return 'CPC';
 }
 
@@ -4715,9 +4751,10 @@ function renderCTOPnlSummary(){
   setStat('ctopnl-expenses',$m(ltexp));
   setStat('ctopnl-net',$m(lrv-ltexp));
 
-  // Classify invoices by source (IR / Platform Softwares / CPC)
+  // Classify invoices by source (IR / Platform Softwares / Beehiiv Ads / CPC)
   var irRev=0,irBal=0,irPaid=0,irCount=0;
   var psRev=0,psBal=0,psPaid=0,psCount=0;
+  var bhRev2=0,bhBal=0,bhPaid2=0,bhCount=0;
   var cpcRev=0,cpcBal=0,cpcPaid=0,cpcCount=0;
   allPNL.filter(function(r){
     if(r._isSummary)return false;
@@ -4733,6 +4770,7 @@ function renderCTOPnlSummary(){
     var paid=(r.status==='Paid')?(rcvd||invAmt):rcvd;
     if(cat==='IR'){irRev+=total;irBal+=bal;irPaid+=paid;irCount++;}
     else if(cat==='Platform Softwares'){psRev+=total;psBal+=bal;psPaid+=paid;psCount++;}
+    else if(cat==='Beehiiv Ads'){bhRev2+=total;bhBal+=bal;bhPaid2+=paid;bhCount++;}
     else{cpcRev+=total;cpcBal+=bal;cpcPaid+=paid;cpcCount++;}
   });
 
@@ -4751,6 +4789,11 @@ function renderCTOPnlSummary(){
         '<div style="font-size:1.25rem;font-weight:800;color:#10b981;margin:4px 0">'+$m(psRev)+'</div>'+
         '<div style="font-size:.75rem;color:var(--text3)">Paid: '+$m(psPaid)+' · Balance: '+$m(psBal)+' · '+psCount+' invoices</div>'+
       '</div>'+
+      '<div style="background:var(--surface2);border-radius:12px;padding:14px;border-left:4px solid #f97316">'+
+        '<div style="font-size:.75rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Beehiiv Ad Network</div>'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#f97316;margin:4px 0">'+$m(bhRev2)+'</div>'+
+        '<div style="font-size:.75rem;color:var(--text3)">Paid: '+$m(bhPaid2)+' · Balance: '+$m(bhBal)+' · '+bhCount+' entries</div>'+
+      '</div>'+
       '<div style="background:var(--surface2);border-radius:12px;padding:14px;border-left:4px solid #f59e0b">'+
         '<div style="font-size:.75rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">CPC (Newsletter Ads)</div>'+
         '<div style="font-size:1.25rem;font-weight:800;color:#f59e0b;margin:4px 0">'+$m(cpcRev)+'</div>'+
@@ -4765,8 +4808,8 @@ function renderCTOPnlSummary(){
     if(ctx1){
       var ex1=Chart.getChart('ctoPnlSourceChart');if(ex1)ex1.destroy();
       new Chart(ctx1,{type:'doughnut',data:{
-        labels:['IR','Platform Softwares','CPC'],
-        datasets:[{data:[irRev,psRev,cpcRev],backgroundColor:['#6366f1','#10b981','#f59e0b'],borderWidth:3,borderColor:'var(--surface)'}]
+        labels:['IR','Platform Softwares','Beehiiv Ads','CPC'],
+        datasets:[{data:[irRev,psRev,bhRev2,cpcRev],backgroundColor:['#6366f1','#10b981','#f97316','#f59e0b'],borderWidth:3,borderColor:'var(--surface)'}]
       },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:12,weight:'600'},padding:16,usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.label+': '+$m(c.raw)+' ('+(lrv>0?((c.raw/lrv)*100).toFixed(1):0)+'%)';}}}}}}); 
     }
   }catch(e){}
@@ -5378,7 +5421,8 @@ var ps=pnlSummaries[m]||{};
 var rev=ps.grossRevenue||0;
 var exp=ps.totalExpenses||0;
 var net=rev-exp;
-if(rev||exp)data.push({month:m,short:monthsShort[i],rev:rev,exp:exp,net:net,margin:rev>0?Math.round((net/rev)*100):0});
+var bh=ps.beehiivRev||0;
+if(rev||exp)data.push({month:m,short:monthsShort[i],rev:rev,exp:exp,net:net,bh:bh,margin:rev>0?Math.round((net/rev)*100):0});
 });
 
 // === Summary Cards ===
@@ -5421,6 +5465,7 @@ window._maBarChart=new Chart(barCtx,{type:'bar',
 data:{labels:data.map(function(d){return d.short;}),
 datasets:[
 {label:'Revenue',data:data.map(function(d){return d.rev;}),backgroundColor:'rgba(99,102,241,.75)',borderColor:'#6366f1',borderWidth:2,borderRadius:8,borderSkipped:false},
+{label:'Beehiiv Ads',data:data.map(function(d){return d.bh;}),backgroundColor:'rgba(249,115,22,.65)',borderColor:'#f97316',borderWidth:2,borderRadius:8,borderSkipped:false},
 {label:'Expenses',data:data.map(function(d){return d.exp;}),backgroundColor:'rgba(239,68,68,.65)',borderColor:'#ef4444',borderWidth:2,borderRadius:8,borderSkipped:false},
 {label:'Net P&L',data:data.map(function(d){return d.net;}),backgroundColor:data.map(function(d){return d.net>=0?'rgba(16,185,129,.7)':'rgba(239,68,68,.4)';}),borderColor:data.map(function(d){return d.net>=0?'#10b981':'#ef4444';}),borderWidth:2,borderRadius:8,borderSkipped:false}
 ]},
@@ -5438,6 +5483,7 @@ window._maLineChart=new Chart(lineCtx,{type:'line',
 data:{labels:data.map(function(d){return d.short;}),
 datasets:[
 {label:'Revenue',data:data.map(function(d){return d.rev;}),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.1)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:2.5},
+{label:'Beehiiv Ads',data:data.map(function(d){return d.bh;}),borderColor:'#f97316',backgroundColor:'rgba(249,115,22,.08)',fill:false,tension:.35,pointRadius:4,pointHoverRadius:6,borderWidth:2.5},
 {label:'Expenses',data:data.map(function(d){return d.exp;}),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.05)',fill:false,tension:.35,pointRadius:4,pointHoverRadius:6,borderWidth:2,borderDash:[5,5]},
 {label:'Net P&L',data:data.map(function(d){return d.net;}),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:2.5}
 ]},
