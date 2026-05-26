@@ -847,7 +847,7 @@ Secured with Firebase Authentication
 <div class="modal"><h2>&#128181; Add Invoice</h2>
 <div class="form-row"><label>Invoice ID</label><input id="f-invId" placeholder="e.g. INV-001"></div>
 <div class="form-row"><label>Date</label><input id="f-invDate" type="date"></div>
-<div class="form-row"><label>Month</label><select id="f-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="f-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Advertiser / Client</label><input id="f-affiliate" placeholder="e.g. Interactive Offers"></div>
 <div class="form-row"><label>Amount ($)</label><input id="f-invAmt" type="number" step="0.01" placeholder="0.00"></div>
 <div class="form-row"><label>Status</label><select id="f-status" onchange="toggleInvAmtFields()"><option>Paid</option><option>Unpaid</option><option>Partially Paid</option><option>Pending</option><option>No Final Count</option></select></div>
@@ -859,7 +859,7 @@ Secured with Firebase Authentication
 <div class="modal-overlay" id="addExpenseModal">
 <div class="modal"><h2 style="color:#ef4444">&#128184; Add Expense</h2>
 <div class="form-row"><label>Date</label><input id="fe-date" type="date"></div>
-<div class="form-row"><label>Month</label><select id="fe-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fe-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Category</label><select id="fe-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
 <div class="form-row"><label>Description</label><input id="fe-desc" placeholder="e.g. Google Ads - May"></div>
 <div class="form-row"><label>Linked Advertiser (optional)</label><input id="fe-advertiser" placeholder="e.g. Investors Alley"></div>
@@ -871,7 +871,7 @@ Secured with Firebase Authentication
 <div class="modal-overlay" id="editExpenseModal">
 <div class="modal"><h2 style="color:#ef4444">&#9998; Edit Expense</h2>
 <div class="form-row"><label>Date</label><input id="fee-date" type="date"></div>
-<div class="form-row"><label>Month</label><select id="fee-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fee-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Category</label><select id="fee-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
 <div class="form-row"><label>Description</label><input id="fee-desc" placeholder="e.g. Google Ads - May"></div>
 <div class="form-row"><label>Linked Advertiser (optional)</label><input id="fee-advertiser" placeholder="e.g. Investors Alley"></div>
@@ -890,7 +890,7 @@ Secured with Firebase Authentication
 </div></div>
 <div class="modal-overlay" id="addFMDModal"><div class="modal"><h2>+ Add Five Minute Daily Record</h2>
 <div class="form-row"><label>Date</label><input id="fm-date" type="date"></div>
-<div class="form-row"><label>Month</label><select id="fm-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
+<div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fm-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Affiliate / Partner</label><input id="fm-affiliate" placeholder="Affiliate name"></div>
 <div class="form-row"><label>Invoice Amount</label><input id="fm-invAmt" type="number" step="0.01" placeholder="0.00"></div>
 <div class="form-row"><label>Amount Received</label><input id="fm-rcvd" type="number" step="0.01" placeholder="0.00"></div>
@@ -1173,7 +1173,7 @@ Secured with Firebase Authentication
 <button class="btn-clear" onclick="clearPNLFilters()">Clear</button>
 </div>
 <div class="table-card">
-<table><thead><tr><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Month</th><th onclick="sortPNL('affiliate')">Affiliate Name</th><th onclick="sortPNL('displayAmt')">Invoice Amount</th><th onclick="sortPNL('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Attachment</th><th>Actions</th></tr></thead>
+<table><thead><tr><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Reporting Month</th><th onclick="sortPNL('affiliate')">Affiliate Name</th><th onclick="sortPNL('displayAmt')">Invoice Amount</th><th onclick="sortPNL('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Attachment</th><th>Actions</th></tr></thead>
 <tbody id="pnl-tbody"></tbody></table>
 <div class="pagination" id="pnl-pagination"></div>
 </div>
@@ -2117,7 +2117,7 @@ const keys=Object.keys(r);const si=keys.findIndex(k=>k==='STATUS'||k==='Status')
 let sr='';if(si>-1&&keys[si+1]&&!keys[si+1].startsWith('_'))sr=r[keys[si+1]]||'';
 r.remarks=uRemarks[r._key]!==undefined?uRemarks[r._key]:sr;
 /* Apply full edits from pnlEdits (for sheet entries edited in the dashboard) */
-var _pe=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe){if(_pe.date)r.date=_pe.date;if(_pe.affiliate)r.affiliate=_pe.affiliate;if(_pe.invAmt!=null){r.invAmt=_pe.invAmt;r.displayAmt=_pe.displayAmt!=null?_pe.displayAmt:r.displayAmt;r.rcvd=_pe.rcvd!=null?_pe.rcvd:r.rcvd;}if(_pe.status)r.status=_pe.status;if(_pe.remarks!=null)r.remarks=_pe.remarks;}
+var _pe=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe){if(_pe._month)r._month=_pe._month;if(_pe.date)r.date=_pe.date;if(_pe.affiliate)r.affiliate=_pe.affiliate;if(_pe.invAmt!=null){r.invAmt=_pe.invAmt;r.displayAmt=_pe.displayAmt!=null?_pe.displayAmt:r.displayAmt;r.rcvd=_pe.rcvd!=null?_pe.rcvd:r.rcvd;}if(_pe.status)r.status=_pe.status;if(_pe.remarks!=null)r.remarks=_pe.remarks;}
 const av=(r._rawVals||Object.values(r)).map(v=>(v||'').toString());const rs=av.join(' ').toUpperCase();
 const aff3=((r._rawVals&&r._rawVals[3])||r.affiliate||'').toUpperCase();
 if(aff3.includes('ETC BALANCE'))r._isSummary=true;
@@ -2262,6 +2262,8 @@ qbRows.forEach(r=>{
 });
 // Filter deleted PNL from QB additions
 for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].invId||'';if(_qk&&pnlDeletes.has(_qk))allPNL.splice(_qi,1);}
+// Apply pnlEdits (including _month overrides) to QB entries
+allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2._month)r._month=_pe2._month;if(_pe2.date)r.date=_pe2.date;if(_pe2.affiliate)r.affiliate=_pe2.affiliate;if(_pe2.invAmt!=null){r.invAmt=_pe2.invAmt;r.displayAmt=_pe2.displayAmt!=null?_pe2.displayAmt:r.displayAmt;r.rcvd=_pe2.rcvd!=null?_pe2.rcvd:r.rcvd;}if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;}}});
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
@@ -3424,6 +3426,7 @@ function editPNLRow(e,gi){
   window._editGi=gi;
   document.getElementById('med-invid').value=r.invId||'—';
   document.getElementById('med-date').value=r.date||'';
+  document.getElementById('med-month').value=r._month||'';
   document.getElementById('med-affiliate').value=r.affiliate||'';
   document.getElementById('med-invamt').value=r.displayAmt!=null?r.displayAmt:(r.invAmt||0);
   document.getElementById('med-rcvd').value=r.rcvd||0;
@@ -3453,7 +3456,8 @@ function savePNLEdit(){
   const total=newInvAmt+newRcvd;
   if(newStatus==='Paid'){newRcvd=total;newInvAmt=0;}
   else if(newStatus==='Unpaid'||newStatus==='Pending'||newStatus==='No Final Count'){newInvAmt=total;newRcvd=0;}
-  const edit={date:document.getElementById('med-date').value,affiliate:document.getElementById('med-affiliate').value,invAmt:total,displayAmt:newInvAmt,rcvd:newRcvd,status:newStatus,remarks:document.getElementById('med-remarks').value,lastEditedBy:currentUser?currentUser.email:'',lastEditedAt:new Date().toLocaleString('en-US',{timeZone:'America/New_York'})};
+  var newMonth=document.getElementById('med-month').value||r._month||'';
+  const edit={date:document.getElementById('med-date').value,_month:newMonth,affiliate:document.getElementById('med-affiliate').value,invAmt:total,displayAmt:newInvAmt,rcvd:newRcvd,status:newStatus,remarks:document.getElementById('med-remarks').value,lastEditedBy:currentUser?currentUser.email:'',lastEditedAt:new Date().toLocaleString('en-US',{timeZone:'America/New_York'})};
   /* Handle file attachment */
   var fileInput=document.getElementById('med-file');
   if(fileInput&&fileInput.files[0]){
@@ -5733,7 +5737,7 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 <h3>&#9998; Edit FMD Record</h3>
 <div class="modal-row"><label>Invoice #</label><input id="fmed-invid" type="text" readonly style="background:var(--surface2);color:var(--text3)"></div>
 <div class="modal-row"><label>Date</label><input id="fmed-date" type="text" placeholder="e.g. January 15, 2026"></div>
-<div class="modal-row"><label>Month</label><select id="fmed-month"><option value="">Select</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
+<div class="modal-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fmed-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="modal-row"><label>Affiliate Name</label><input id="fmed-affiliate" type="text"></div>
 <div class="modal-row"><label>Invoice Amount ($)</label><input id="fmed-invamt" type="number" step="0.01" min="0" placeholder="0.00"></div>
 <div class="modal-row"><label>Amount Received ($)</label><input id="fmed-rcvd" type="number" step="0.01" min="0" placeholder="0.00"></div>
@@ -5747,6 +5751,7 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
 <h3>&#9998; Edit Invoice</h3>
 <div class="modal-row"><label>Invoice #</label><input id="med-invid" type="text" readonly style="background:var(--surface2);color:var(--text3)"></div>
 <div class="modal-row"><label>Date</label><input id="med-date" type="text" placeholder="e.g. January 15, 2026"></div>
+<div class="modal-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="med-month"><option value="">— Select —</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="modal-row"><label>Advertiser / Client</label><input id="med-affiliate" type="text"></div>
 <div class="modal-row"><label>Invoice Amount ($)</label><input id="med-invamt" type="number" step="0.01" min="0" placeholder="0.00"></div>
 <div class="modal-row"><label>Amount Received ($)</label><input id="med-rcvd" type="number" step="0.01" min="0" placeholder="0.00"></div>
