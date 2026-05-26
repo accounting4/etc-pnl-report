@@ -2132,6 +2132,7 @@ if(aff3.includes('EXPENSES'))r._isSummary=true;
 if(aff3.includes('NET PROFIT')||aff3.includes('EXPECTED PROFIT'))r._isSummary=true;
 if(aff3.includes('FMD REVENUE')||aff3.includes('FMD COST'))r._isSummary=true;
 if(aff3.includes('SALARY')||(aff3.includes('ADS')&&!aff3.includes('BEEHIV'))||aff3.includes('GOBOT')||aff3.includes('BEEHIIV'))r._isSummary=true;
+if(aff3.indexOf('BEEHIV')>-1&&aff3.indexOf('ADS')>-1&&({'January':1,'February':1,'March':1,'April':1})[m])r._isSummary=true;
 if(aff3.includes('PAYMENT RCVD')||aff3.includes('PAYMENT RECEIVED')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.paymentRcvd=n[0];}
 if(aff3.includes('TOTAL EXPECTED GROSS')||aff3.includes('GROSS REVENUE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.grossRevenue=n[0];}
 if(aff3.includes('TOTAL EXPECTED REVENUE')&&!aff3.includes('GROSS')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.grossRevenue)sum.grossRevenue=n[0];}
