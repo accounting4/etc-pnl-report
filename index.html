@@ -2176,6 +2176,20 @@ allFMD.push({_source:'fmd_sheet',_month:ft.month,_key:'fmd_'+ft.month+'_'+aff,in
 });
 }
 
+/* Re-apply fmdEdits after all FMD entries are loaded (mirrors pnlEdits for PNL) */
+allFMD.forEach(function(r){
+var fk=r._key||r.invId||'';
+var _fe=fmdEdits[fk]||fmdEdits[_safeKey(fk)];
+if(_fe){
+if(_fe._month)r._month=_fe._month;
+if(_fe.date)r.date=_fe.date;
+if(_fe.affiliate)r.affiliate=_fe.affiliate;
+if(_fe.invAmt!=null){r.invAmt=_fe.invAmt;r.displayAmt=_fe.displayAmt!=null?_fe.displayAmt:r.displayAmt;r.rcvd=_fe.rcvd!=null?_fe.rcvd:r.rcvd;}
+if(_fe.status)r.status=_fe.status;
+if(_fe.remarks!=null)r.remarks=_fe.remarks;
+}
+});
+
 ss('Loading CTO Performance Dashboard...');
 const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'}];
 for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType='CTO';});var _fetchStamp=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});rows.filter(r=>Object.values(r).some(v=>v)).forEach(r=>{
@@ -3143,6 +3157,7 @@ function saveFMDEdit(){
     const uR=JSON.parse(localStorage.getItem('uRemarks')||'{}');uR[r._key]=edit.remarks;localStorage.setItem('uRemarks',JSON.stringify(uR));
   }
   localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));
+  fbSyncFMDEdits();fbSyncStatus();fbSyncRemarks();
   closeFMDModal();
   renderFMD();
   try{renderOverview();}catch(e){}
@@ -3337,6 +3352,7 @@ async function fbLoadUserData(){
     if(d.uStatus){Object.assign(uStatus,d.uStatus);localStorage.setItem('uStatus',JSON.stringify(uStatus));}
     if(d.uRemarks){Object.assign(uRemarks,d.uRemarks);localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
     if(d.pnlEdits){var fbEdits={};Object.keys(d.pnlEdits).forEach(function(sk){fbEdits[sk]=d.pnlEdits[sk];});Object.assign(pnlEdits,fbEdits);localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));}
+    if(d.fmdEdits){var fbFmdEdits={};Object.keys(d.fmdEdits).forEach(function(sk){fbFmdEdits[sk]=d.fmdEdits[sk];});Object.assign(fmdEdits,fbFmdEdits);localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));}
     if(d.pnlAttachments){var localAtt=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');Object.keys(d.pnlAttachments).forEach(function(sk){if(!localAtt[sk]||d.pnlAttachments[sk].uploadedAt>=(localAtt[sk].uploadedAt||''))localAtt[sk]=d.pnlAttachments[sk];});localStorage.setItem('pnlAttachments',JSON.stringify(localAtt));}
 
     // Clean against deletes
@@ -3376,10 +3392,13 @@ function fbStartListeners(){
     if(d.uStatus){uStatus=d.uStatus;localStorage.setItem('uStatus',JSON.stringify(uStatus));}
     if(d.uRemarks){uRemarks=d.uRemarks;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
     if(d.pnlEdits){pnlEdits={};Object.keys(d.pnlEdits).forEach(function(sk){pnlEdits[sk]=d.pnlEdits[sk];});localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));}
+    if(d.fmdEdits){fmdEdits={};Object.keys(d.fmdEdits).forEach(function(sk){fmdEdits[sk]=d.fmdEdits[sk];});localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));}
     if(d.pnlAttachments){localStorage.setItem('pnlAttachments',JSON.stringify(d.pnlAttachments));}
     // Clean deleted
     userPNL=userPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!pnlDeletes.has(k);});
     userExpenses=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
+    // Re-apply fmdEdits to FMD entries after listener sync
+    allFMD.forEach(function(r){var fk=r._key||r.invId||'';var _fe=fmdEdits[fk]||fmdEdits[_safeKey(fk)];if(_fe){if(_fe._month)r._month=_fe._month;if(_fe.date)r.date=_fe.date;if(_fe.affiliate)r.affiliate=_fe.affiliate;if(_fe.invAmt!=null){r.invAmt=_fe.invAmt;r.displayAmt=_fe.displayAmt!=null?_fe.displayAmt:r.displayAmt;r.rcvd=_fe.rcvd!=null?_fe.rcvd:r.rcvd;}if(_fe.status)r.status=_fe.status;if(_fe.remarks!=null)r.remarks=_fe.remarks;}});
     // Re-render everything
     try{
       allPNL=allPNL.filter(function(r){return r._source!=='user';});
@@ -3407,6 +3426,7 @@ function fbSyncExpDeletes(){fbSave('expDeletes',[...expDeletes].reduce(function(
 function fbSyncStatus(){fbSave('uStatus',uStatus);}
 function fbSyncRemarks(){fbSave('uRemarks',uRemarks);}
 function fbSyncEdits(){fbSave('pnlEdits',Object.keys(pnlEdits).reduce(function(o,k){o[_safeKey(k)]=pnlEdits[k];return o;},{}));}
+function fbSyncFMDEdits(){fbSave('fmdEdits',Object.keys(fmdEdits).reduce(function(o,k){o[_safeKey(k)]=fmdEdits[k];return o;},{}));}
 function fbSyncAttachments(){var att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');var meta={};for(var k in att){meta[_safeKey(k)]={name:att[k].name,uploadedBy:att[k].uploadedBy||'',uploadedAt:att[k].uploadedAt||'',hasData:true};}fbSave('pnlAttachmentsMeta',meta);var data={};for(var k in att){data[_safeKey(k)]=att[k];}fbSave('pnlAttachments',data);}
 function loadAllData(){fbLoadUserData().then(function(){return fetchAllData();}).then(function(){try{loadManualCTOEntries();loadCTOEditsLocal();}catch(e){}}).catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
 initAuth();
@@ -3849,7 +3869,15 @@ document.body.appendChild(toast);
 setTimeout(function(){toast.style.opacity='0';toast.style.transition='opacity .3s';setTimeout(function(){toast.remove();},300);},3000);
 }
 
+function _isEditModalOpen(){
+return (document.getElementById('pnl-edit-modal')&&document.getElementById('pnl-edit-modal').style.display==='flex')||
+(document.getElementById('fmd-edit-modal')&&document.getElementById('fmd-edit-modal').style.display==='flex')||
+(document.getElementById('ctoEditModal')&&document.getElementById('ctoEditModal').style.display==='flex')||
+(document.getElementById('addExpenseModal')&&document.getElementById('addExpenseModal').classList.contains('open'))||
+(document.getElementById('editExpenseModal')&&document.getElementById('editExpenseModal').classList.contains('open'));
+}
 async function autoSyncData(){
+if(_isEditModalOpen()){console.log('Auto-sync skipped: edit modal open');return;}
 try{
 updateSyncIndicator('syncing');
 // Clear and refetch
