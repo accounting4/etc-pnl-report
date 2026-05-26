@@ -2132,7 +2132,6 @@ if(aff3.includes('EXPENSES'))r._isSummary=true;
 if(aff3.includes('NET PROFIT')||aff3.includes('EXPECTED PROFIT'))r._isSummary=true;
 if(aff3.includes('FMD REVENUE')||aff3.includes('FMD COST'))r._isSummary=true;
 if(aff3.includes('SALARY')||(aff3.includes('ADS')&&!aff3.includes('BEEHIV'))||aff3.includes('GOBOT')||aff3.includes('BEEHIIV'))r._isSummary=true;
-if(aff3.indexOf('BEEHIV')>-1&&aff3.indexOf('ADS')>-1&&({'January':1,'February':1,'March':1,'April':1})[m])r._isSummary=true;
 if(aff3.includes('PAYMENT RCVD')||aff3.includes('PAYMENT RECEIVED')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.paymentRcvd=n[0];}
 if(aff3.includes('TOTAL EXPECTED GROSS')||aff3.includes('GROSS REVENUE')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length)sum.grossRevenue=n[0];}
 if(aff3.includes('TOTAL EXPECTED REVENUE')&&!aff3.includes('GROSS')){const n=av.map(v=>parseAmt(v)).filter(v=>v>0);if(n.length&&!sum.grossRevenue)sum.grossRevenue=n[0];}
@@ -2160,8 +2159,8 @@ allPNL.push(...inv.filter(r=>!isFMD(r.affiliate)));
 /* Compute Beehiiv Ad Network revenue per month from PNL entries */
 window._beehiivByMonth={};window._beehiivByPub={};
 allPNL.forEach(function(r){
-  if(classifyPNLSource(r.affiliate)!=='Beehiiv Ads')return;
   var mo=r._month||'';if(!mo)return;
+  if(classifyPNLSource(r.affiliate,mo)!=='Beehiiv Ads')return;
   var amt=(r.rcvd||r.displayAmt||r.invAmt||0);if(!amt)return;
   window._beehiivByMonth[mo]=(window._beehiivByMonth[mo]||0)+amt;
   var pub=(r.affiliate||'').replace(/Beehiv Ads\s*-\s*/i,'').trim()||'Unknown';
@@ -2750,7 +2749,7 @@ var totRev=0,totLeads=0,activeOffers=0,affRevMap={};
 rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=r._name||'Unknown';affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
 // Compute P&L source totals for synced Tracking Revenue
 var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0,_pnlBH=0;
-allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
+allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
 var syncedTotal=totRev+_pnlIR+_pnlPS+_pnlCPC+_pnlBH;
 setStat('cto-s-rev',$m(syncedTotal));setStat('cto-s-leads',totLeads.toLocaleString());setStat('cto-s-count',activeOffers);
 var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
@@ -3246,7 +3245,7 @@ var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).
 var _sm=(document.getElementById('cto-month-f')||{}).value||'';
 var irRev=0,psRev=0,cpcRev=0,bhRev=0,irAffs={},psAffs={},cpcAffs={},bhAffs={};
 allPNL.filter(function(r){if(r._isSummary)return false;if(_sm&&r._month!==_sm)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){
-  var cat=classifyPNLSource(r.affiliate);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;var aff=r.affiliate||'Unknown';
+  var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;var aff=r.affiliate||'Unknown';
   if(cat==='IR'){irRev+=tot;irAffs[aff]=(irAffs[aff]||0)+tot;}
   else if(cat==='Platform Softwares'){psRev+=tot;psAffs[aff]=(psAffs[aff]||0)+tot;}
   else if(cat==='Beehiiv Ads'){bhRev+=tot;bhAffs[aff]=(bhAffs[aff]||0)+tot;}
@@ -4500,11 +4499,11 @@ function showMoreOverviewRecords(){
 // ===== EXPORT PDF =====
 
 // ===== P&L SOURCE CLASSIFICATION =====
-function classifyPNLSource(aff){
+function classifyPNLSource(aff,month){
   var a=(aff||'').toUpperCase();
   if(a.startsWith('IR ')||a.startsWith('IR-')||a.startsWith('IR -')||a==='IR'||a.indexOf(' IR ')>-1||a.indexOf(' IR-')>-1||a.startsWith('NATE')||a.indexOf('3 WEEKS IR')>-1)return 'IR';
   if(a.indexOf('PLATFORM')>-1||a.indexOf('SOFTWARE')>-1)return 'Platform Softwares';
-  if(a.indexOf('BEEHIV')>-1&&a.indexOf('ADS')>-1)return 'Beehiiv Ads';
+  if(a.indexOf('BEEHIV')>-1&&a.indexOf('ADS')>-1){if(({'January':1,'February':1,'March':1,'April':1})[month])return 'CPC';return 'Beehiiv Ads';}
   return 'CPC';
 }
 
@@ -4526,7 +4525,7 @@ function downloadPNLReport(format){
       rcvd:rcvd,
       status:r.status||'—',
       remarks:r.remarks||'',
-      source:classifyPNLSource(r.affiliate)
+      source:classifyPNLSource(r.affiliate,r._month)
     };
   });
 
@@ -4763,7 +4762,7 @@ function renderCTOPnlSummary(){
     var amt=r.displayAmt||r.invAmt||0;var rc=r.rcvd||0;
     return(amt>0||rc>0);
   }).forEach(function(r){
-    var cat=classifyPNLSource(r.affiliate);
+    var cat=classifyPNLSource(r.affiliate,r._month);
     var invAmt=r.invAmt||r.displayAmt||0;
     var rcvd=r.rcvd||0;
     var total=invAmt>0?invAmt:rcvd;
@@ -4833,7 +4832,7 @@ function renderCTOPnlSummary(){
       activeMonths.forEach(function(m){
         var ir2=0,ps2=0,cpc2=0;
         allPNL.filter(function(r){return!r._isSummary&&r._month===m&&((r.displayAmt||0)>0||(r.rcvd||0)>0);}).forEach(function(r){
-          var cat=classifyPNLSource(r.affiliate);
+          var cat=classifyPNLSource(r.affiliate,r._month);
           var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
           if(cat==='IR')ir2+=tot;else if(cat==='Platform Softwares')ps2+=tot;else cpc2+=tot;
         });
@@ -4880,7 +4879,7 @@ function exportExcel(tabId){
       getPNLFilt().forEach(function(r){
         var invA=r.displayAmt||r.invAmt||0;var rc=r.rcvd||0;
         if(r.status==='Paid'){rc=r.rcvd||r.invAmt||r.displayAmt||0;invA=rc;}
-        data.push([r.invId||'',r.date||'','Elite Trade Club',r.affiliate||'',invA,rc,r.status||'',r.remarks||'',classifyPNLSource(r.affiliate)]);
+        data.push([r.invId||'',r.date||'','Elite Trade Club',r.affiliate||'',invA,rc,r.status||'',r.remarks||'',classifyPNLSource(r.affiliate,r._month)]);
       });
     }else if(tabId==='cto'){
       headers=['Affiliate','Revenue','Leads','Month','Type','Source'];
