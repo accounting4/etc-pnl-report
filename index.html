@@ -3562,23 +3562,22 @@ if(row)row.style.display=(st==='Partially Paid')?'':'none';
 
 // === MERGE MANUAL INVOICES INTO P&L SUMMARIES ===
 function mergeUserInvoices(){
-/* Recalculate financial summary from ALL actual invoices (sheet + QB + user) by payment status.
+/* Financial summary: sheet summary rows as base (source of truth) + QB/user entries added dynamically.
    UNPAID = ETC Balance / Accounts Receivable
-   PAID = Payment Received / Actual Revenue Collected
-   Keeps expenses from sheet snapshot. */
+   PAID = Payment Received / Actual Revenue Collected */
+var snp=window._sheetInvoiceSnapshot||{};
 var expSnp=window._sheetExpenseSnapshot||{};
-/* Reset revenue fields for all months but preserve expenses */
+/* Restore sheet summary as base */
 for(var mk in pnlSummaries){
-  pnlSummaries[mk].grossRevenue=0;
-  pnlSummaries[mk].paymentRcvd=0;
-  pnlSummaries[mk].balance=0;
-  /* Restore expenses from snapshot */
+  if(snp[mk]){pnlSummaries[mk].grossRevenue=snp[mk].grossRevenue||0;pnlSummaries[mk].paymentRcvd=snp[mk].paymentRcvd||0;pnlSummaries[mk].balance=snp[mk].balance||0;}
   if(expSnp[mk]){pnlSummaries[mk].totalExpenses=expSnp[mk].totalExpenses||0;pnlSummaries[mk].salary=expSnp[mk].salary||0;pnlSummaries[mk].ads=expSnp[mk].ads||0;}
 }
-/* Scan ALL PNL entries (sheet + QB + user) */
+/* Add non-sheet entries (QB + user) on top — these aren't in the sheet summary */
 var allEntries=allPNL.concat(allFMD);
 allEntries.forEach(function(r){
   if(r._isSummary)return;
+  var src=r._source||'';
+  if(src==='sheet'||src==='fmd_sheet')return;/* Already in sheet summary */
   var k=r._key||'';if(k&&pnlDeletes.has(k))return;
   var m=r._month||'';if(!m||m==='Manual')return;
   if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
@@ -3593,7 +3592,7 @@ allEntries.forEach(function(r){
     pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+rcvd;
     pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+(total-rcvd);
   }else{
-    /* Unpaid, Pending, No Final Count → all goes to balance (Accounts Receivable) */
+    /* Unpaid, Pending, No Final Count → Accounts Receivable */
     pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
     pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+amt;
   }
