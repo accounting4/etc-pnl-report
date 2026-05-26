@@ -3238,7 +3238,28 @@ function updateRevCharts(f){const agg={};f.forEach(r=>{const a=r.affiliate||'Unk
 function updatePNLCharts(f){var months=['January','February','March','April','May','June'];var selM=(document.getElementById('pnl-month-f')||{}).value||'';function _pnlChartRev(m){return (pnlSummaries[m]||{}).grossRevenue||0;}var profMonths=selM?[selM]:months.filter(function(m){return _pnlChartRev(m)||((pnlSummaries[m]||{}).totalExpenses);});var revData=profMonths.map(function(m){return _pnlChartRev(m);});var expData=profMonths.map(function(m){return(pnlSummaries[m]?pnlSummaries[m].totalExpenses:0)||0;});var profData=profMonths.map(function(m){return(_pnlChartRev(m)-((pnlSummaries[m]||{}).totalExpenses||0));});var chartCtx=document.getElementById('pnlProfitChart');if(chartCtx){var exP=Chart.getChart('pnlProfitChart');if(exP)exP.destroy();new Chart(chartCtx,{type:'bar',data:{labels:profMonths,datasets:[{label:'Total Revenue',data:revData,backgroundColor:ACCENT+'cc',borderColor:ACCENT,borderWidth:2,borderRadius:10,borderSkipped:false},{label:'Total Expenses',data:expData,backgroundColor:RED+'cc',borderColor:RED,borderWidth:2,borderRadius:10,borderSkipped:false},{label:'Net Profit',data:profData,backgroundColor:GREEN+'cc',borderColor:GREEN,borderWidth:2,borderRadius:10,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:700,easing:'easeInOutQuart'},plugins:{legend:{display:true,position:'top',labels:{font:{size:12,weight:'700'},padding:18,usePointStyle:true,pointStyle:'circle',color:'#4a5578'}},tooltip:{backgroundColor:'rgba(26,35,64,.96)',titleColor:'#fff',bodyColor:'rgba(255,255,255,.85)',borderColor:ACCENT,borderWidth:1,padding:14,cornerRadius:10,callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{ticks:{font:{size:12,weight:'600'},color:'#4a5578'},grid:{display:false},border:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v.toLocaleString());},font:{size:10},color:'#8892a4'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false},beginAtZero:true}}}});}}
 function updateFcCharts(f){const agg={};f.filter(r=>r.amount>0).forEach(r=>{const a=r.affiliate||'Unknown';agg[a]=(agg[a]||0)+r.amount;});const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,15);mkChart('fcBarChart','bar',sorted.map(x=>x[0].substring(0,18)),[{label:'Forecast',data:sorted.map(x=>x[1]),backgroundColor:CC.slice(0,sorted.length),borderRadius:4}]);const pAgg={};f.forEach(r=>{pAgg[r._period]=(pAgg[r._period]||0)+r.amount;});const pSorted=Object.entries(pAgg).sort((a,b)=>b[1]-a[1]);mkChart('fcPeriodChart','bar',pSorted.map(x=>x[0]),[{label:'Period Total',data:pSorted.map(x=>x[1]),backgroundColor:NAVY,borderRadius:4}]);}
 function buildFMDMonthButtons(){var c=document.getElementById('fmd-month-buttons');if(!c)return;c.innerHTML='';var ab=document.createElement('button');ab.className='month-btn active';ab.textContent='All Months';ab.onclick=function(){document.querySelectorAll('#fmd-month-buttons .month-btn').forEach(function(b){b.classList.remove('active');});ab.classList.add('active');document.getElementById('fmd-month-f').value='';document.getElementById('fmd-summary-banner').style.display='none';applyFMDFilters();};c.appendChild(ab);['January','February','March','April','May','June'].forEach(function(m){var b=document.createElement('button');b.className='month-btn';b.textContent=m;b.onclick=function(){document.querySelectorAll('#fmd-month-buttons .month-btn').forEach(function(x){x.classList.remove('active');});b.classList.add('active');document.getElementById('fmd-month-f').value=m;showFMDMonthlySummary(m);applyFMDFilters();};c.appendChild(b);});}
-function showFMDMonthlySummary(m){var bEl=document.getElementById('fmd-summary-banner'),cEl=document.getElementById('fmd-summary-content');if(!bEl||!cEl)return;var recs=allFMD.filter(function(r){return r._month===m;});var totalInv=recs.reduce(function(a,r){return a+(r.displayAmt||r.invAmt||0);},0);var totalRcvd=recs.reduce(function(a,r){return a+(r.rcvd||0);},0);var totalBal=recs.filter(function(r){var s=(r.status||'').toLowerCase();return s!=='paid';}).reduce(function(a,r){return a+(r.displayAmt||0);},0);if(totalInv===0&&totalRcvd===0){bEl.style.display='none';return;}bEl.style.display='block';cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Total Invoiced</span><span class="psb-value gold">'+$m(totalInv)+'</span></div><div class="psb-line"><span class="psb-key">Amount Received</span><span class="psb-value gold">'+$m(totalRcvd)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Balance</div><div class="psb-line"><span class="psb-key">FMD Balance</span><span class="psb-value red">'+$m(totalBal)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Collected</span><span class="psb-value green">'+$m(totalRcvd)+'</span></div></div>';}
+function showFMDMonthlySummary(m){var bEl=document.getElementById('fmd-summary-banner'),cEl=document.getElementById('fmd-summary-content');if(!bEl||!cEl)return;var recs=allFMD.filter(function(r){return r._month===m;});var totalInv=recs.reduce(function(a,r){return a+(r.displayAmt||r.invAmt||0);},0);var totalRcvd=recs.reduce(function(a,r){return a+(r.rcvd||0);},0);var totalBal=recs.filter(function(r){var s=(r.status||'').toLowerCase();return s!=='paid';}).reduce(function(a,r){return a+(r.displayAmt||0);},0);if(totalInv===0&&totalRcvd===0){bEl.style.display='none';return;}bEl.style.display='block';/* FMD Beehiiv API earnings */
+var _fmdBhTotal=0,_fmdBhDaily={},_fmdBhAdvs={};
+if(window._bhApiEarnings&&window._bhApiEarnings.publications){
+  var _fmdPubs=['Five Minute Daily','FMD'];
+  for(var _fp=0;_fp<_fmdPubs.length;_fp++){
+    var _fpd=(window._bhApiEarnings.publications[_fmdPubs[_fp]]||{})[m];
+    if(_fpd&&_fpd.total>0){
+      _fmdBhTotal+=_fpd.total;
+      if(_fpd.daily){for(var _fdd in _fpd.daily){_fmdBhDaily[_fdd]=(_fmdBhDaily[_fdd]||0)+_fpd.daily[_fdd];}}
+      if(_fpd.entries){_fpd.entries.forEach(function(e){if(e.advertiser&&e.earnings>0)_fmdBhAdvs[e.advertiser]=(_fmdBhAdvs[e.advertiser]||0)+e.earnings;});}
+    }
+  }
+}
+var _fmdBhHtml='';
+if(_fmdBhTotal>0){
+  _fmdBhHtml='<div class="psb-group"><div class="psb-group-title" style="color:#f97316">🐝 Beehiiv Ad Network Earnings</div>';
+  _fmdBhHtml+='<div class="psb-line"><span class="psb-key">Total Beehiiv Earnings</span><span class="psb-value" style="color:#f97316">'+$m(_fmdBhTotal)+'</span></div>';
+  var _fmdAdvKeys=Object.keys(_fmdBhAdvs).sort(function(a,b){return _fmdBhAdvs[b]-_fmdBhAdvs[a];});
+  if(_fmdAdvKeys.length){_fmdBhHtml+='<div style="margin-left:16px;border-left:2px solid #f97316;padding-left:10px;margin-top:4px">';_fmdAdvKeys.forEach(function(a){_fmdBhHtml+='<div class="psb-line" style="font-size:.82rem"><span class="psb-key" style="color:var(--text3)">'+a+'</span><span class="psb-value" style="font-size:.82rem;color:#f97316">'+$m(_fmdBhAdvs[a])+'</span></div>';});_fmdBhHtml+='</div>';}
+  _fmdBhHtml+='</div>';
+}
+cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Total Invoiced</span><span class="psb-value gold">'+$m(totalInv)+'</span></div><div class="psb-line"><span class="psb-key">Amount Received</span><span class="psb-value gold">'+$m(totalRcvd)+'</span></div></div>'+_fmdBhHtml+'<div class="psb-group"><div class="psb-group-title">Balance</div><div class="psb-line"><span class="psb-key">FMD Balance</span><span class="psb-value red">'+$m(totalBal)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Collected</span><span class="psb-value green">'+$m(totalRcvd)+'</span></div></div>';}
 function updateFMDCharts(f){var months=['January','February','March','April','May','June'];var selM=(document.getElementById('fmd-month-f')||{}).value||'';var chartMonths=selM?[selM]:months.filter(function(m){return f.some(function(r){return r._month===m;});});var mAgg={},mRcvd={};chartMonths.forEach(function(m){mAgg[m]=0;mRcvd[m]=0;});f.forEach(function(r){if(mAgg[r._month]!==undefined){mAgg[r._month]+=(r.displayAmt||r.invAmt||0);mRcvd[r._month]+=(r.rcvd||0);}});var bc=document.getElementById('fmdBarChart');if(bc){var exB=Chart.getChart('fmdBarChart');if(exB)exB.destroy();new Chart(bc,{type:'bar',data:{labels:chartMonths,datasets:[{label:'Total Invoiced',data:chartMonths.map(function(m){return mAgg[m];}),backgroundColor:NAVY+'cc',borderColor:NAVY,borderWidth:2,borderRadius:10,borderSkipped:false},{label:'Amount Received',data:chartMonths.map(function(m){return mRcvd[m];}),backgroundColor:ACCENT+'cc',borderColor:ACCENT,borderWidth:2,borderRadius:10,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},padding:12,usePointStyle:true,pointStyle:'circle',color:'#4a5578'}},tooltip:{backgroundColor:'rgba(26,35,64,0.95)',titleColor:'#fff',borderColor:ACCENT,borderWidth:1,padding:10,cornerRadius:8,callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{ticks:{font:{size:10,weight:'500'},color:'#8892a4'},grid:{display:false},border:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v.toLocaleString());},font:{size:10},color:'#8892a4'},grid:{color:'rgba(0,0,0,.06)'},border:{display:false},beginAtZero:true}}}});}var stAgg={Paid:0,'Partially Paid':0,Unpaid:0,Pending:0,'No Final Count':0};f.forEach(function(r){var s=r.status||'Pending';if(stAgg[s]!==undefined)stAgg[s]+=(r.displayAmt||0);else stAgg['Pending']+=(r.displayAmt||0);});var stL=Object.keys(stAgg).filter(function(k){return stAgg[k]>0;});var dc=document.getElementById('fmdDoughnutChart');if(dc){var exD=Chart.getChart('fmdDoughnutChart');if(exD)exD.destroy();new Chart(dc,{type:'doughnut',data:{labels:stL,datasets:[{data:stL.map(function(k){return stAgg[k];}),backgroundColor:[GREEN,YELLOW,RED,PURPLE,'#64748b'],borderWidth:3,borderColor:'#fff',hoverOffset:10}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},cutout:'65%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11,weight:'600'},padding:12,usePointStyle:true,pointStyle:'circle',color:'#4a5578'}},tooltip:{backgroundColor:'rgba(26,35,64,0.95)',titleColor:'#fff',borderColor:ACCENT,borderWidth:1,padding:10,cornerRadius:8,callbacks:{label:function(c){return c.label+': '+$m(c.raw);}}}}}});}}
 function showCTOSummary(totRev,totLeads,activeOffers,affRevMap){
 var bEl=document.getElementById('cto-summary-banner'),cEl=document.getElementById('cto-summary-content');
@@ -3265,7 +3286,7 @@ allPNL.filter(function(r){if(r._isSummary)return false;if(_sm&&r._month!==_sm)re
   else{cpcRev+=tot;cpcAffs[aff]=(cpcAffs[aff]||0)+tot;}
 });
 // Beehiiv API earnings (from Firebase shared/beehiivEarnings)
-var bhApiRev=0,bhApiPubs={},bhApiDaily={};
+var bhApiRev=0,bhApiPubs={},bhApiDaily={},bhApiAdvs={};
 if(window._bhApiEarnings&&window._bhApiEarnings.publications){
   var _bhPubs=window._bhApiEarnings.publications;
   var _bhMonthFilter=_sm||'';
@@ -3284,6 +3305,11 @@ if(window._bhApiEarnings&&window._bhApiEarnings.publications){
           for(var _bhDate in _bhMoData.daily){
             bhApiDaily[_bhDate]=(bhApiDaily[_bhDate]||0)+_bhMoData.daily[_bhDate];
           }
+        }
+        if(_bhMoData.entries){
+          _bhMoData.entries.forEach(function(e){
+            if(e.advertiser&&e.earnings>0)bhApiAdvs[e.advertiser]=(bhApiAdvs[e.advertiser]||0)+e.earnings;
+          });
         }
       }
     }
@@ -3304,13 +3330,13 @@ var sources=[
   {id:'cpa',name:'CPA (Everflow)',color:'#f59e0b',rev:efRev,metric:'Conversions',metricVal:efLeads,affs:efAffs},
   {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
   {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
-  {id:'bh',name:'Beehiiv Earnings',color:'#f97316',rev:bhFinalRev,metric:bhFinalMetric,metricVal:bhFinalMetricVal,affs:bhFinalAffs,daily:bhApiRev>0?bhApiDaily:null},
+  {id:'bh',name:'Beehiiv Earnings',color:'#f97316',rev:bhFinalRev,metric:bhFinalMetric,metricVal:bhFinalMetricVal,affs:bhFinalAffs,daily:bhApiRev>0?bhApiDaily:null,advs:bhApiRev>0?bhApiAdvs:null},
   {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
 ].filter(function(s){return s.rev>0||s.id==='bh';}).sort(function(a,b){return b.rev-a.rev;});
 
-function affTbl(map,daily){
+function affTbl(map,daily,advs){
   var s=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
-  if(!s.length&&!daily)return'';
+  if(!s.length&&!daily&&!(advs&&Object.keys(advs).length))return'';
   var h='';
   // Daily earnings table
   if(daily&&Object.keys(daily).length>0){
@@ -3323,9 +3349,17 @@ function affTbl(map,daily){
     });
     h+='</table></div>';
   }
-  // Publication/affiliate table
+  // Per-advertiser table (from entries)
+  if(advs&&Object.keys(advs).length){
+    var av=Object.entries(advs).sort(function(a,b){return b[1]-a[1];});
+    h+='<div style="margin-bottom:12px"><div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🏢 By Advertiser</div>';
+    h+='<table><tr><th>Advertiser</th><th style="text-align:right">Earnings</th></tr>';
+    av.forEach(function(a){h+='<tr><td>'+a[0]+'</td><td style="text-align:right;font-weight:600;color:#f97316">$'+a[1].toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';});
+    h+='</table></div>';
+  }
+  // Publication table
   if(s.length){
-    h+='<div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">By Publication</div>';
+    h+='<div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📰 By Publication</div>';
     h+='<table><tr><th>Publication</th><th style="text-align:right">Revenue</th></tr>';
     s.forEach(function(a){h+='<tr><td>'+a[0]+'</td><td style="text-align:right">$'+a[1].toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';});
     h+='</table>';
@@ -3362,7 +3396,7 @@ sources.forEach(function(s){
   h+='<div class="rbs-row-pct" style="color:'+s.color+'">'+pct.toFixed(1)+'%</div>';
   h+='<div class="rbs-row-arrow">▾</div>';
   h+='</div>';
-  h+='<div class="rbs-row-detail"><div class="rbs-detail-inner">'+(s.daily?affTbl(s.affs,s.daily):_legacyAffTbl(s.affs))+'</div></div>';
+  h+='<div class="rbs-row-detail"><div class="rbs-detail-inner">'+(s.daily?affTbl(s.affs,s.daily,s.advs):_legacyAffTbl(s.affs))+'</div></div>';
   h+='</div>';
 });
 h+='</div>';
