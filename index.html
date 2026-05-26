@@ -3262,7 +3262,7 @@ var sources=[
   {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
   {id:'bh',name:'Beehiiv Ad Network',color:'#f97316',rev:bhRev,metric:'Publications',metricVal:Object.keys(bhAffs).length,affs:bhAffs},
   {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
-].filter(function(s){return s.rev>0;}).sort(function(a,b){return b.rev-a.rev;});
+].filter(function(s){return s.rev>0||s.id==='bh';}).sort(function(a,b){return b.rev-a.rev;});
 
 function affTbl(map){
   var s=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
