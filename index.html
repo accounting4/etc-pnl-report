@@ -3766,10 +3766,12 @@ mergeUserInvoices();
 mergeUserExpenses();
 renderExpenses();
 renderPNL();
+try{var _smb=document.querySelector('#pnl-month-buttons button.active');if(_smb&&_smb.textContent!=='All Months')showMonthlySummary(_smb.textContent);}catch(e){}
 try{renderQuarterlySummary();}catch(e){}
 try{renderOverview();}catch(e){}
 try{renderExpenseCategories();}catch(e){}
 try{renderExpenseBreakdown();}catch(e){}
+try{renderMonthlySummary();}catch(e){}
 }
 
 function renderExpenseBreakdown(){
