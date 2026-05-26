@@ -862,7 +862,7 @@ Secured with Firebase Authentication
 <div class="modal"><h2 style="color:#ef4444">&#128184; Add Expense</h2>
 <div class="form-row"><label>Date</label><input id="fe-date" type="date"></div>
 <div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fe-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
-<div class="form-row"><label>Category</label><select id="fe-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
+<div class="form-row"><label>Category</label><select id="fe-category"><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
 <div class="form-row"><label>Description</label><input id="fe-desc" placeholder="e.g. Google Ads - May"></div>
 <div class="form-row"><label>Linked Advertiser (optional)</label><input id="fe-advertiser" placeholder="e.g. Investors Alley"></div>
 <div class="form-row"><label>Amount ($)</label><input id="fe-amount" type="number" step="0.01" placeholder="0.00"></div>
@@ -874,7 +874,7 @@ Secured with Firebase Authentication
 <div class="modal"><h2 style="color:#ef4444">&#9998; Edit Expense</h2>
 <div class="form-row"><label>Date</label><input id="fee-date" type="date"></div>
 <div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fee-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
-<div class="form-row"><label>Category</label><select id="fee-category"><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
+<div class="form-row"><label>Category</label><select id="fee-category"><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
 <div class="form-row"><label>Description</label><input id="fee-desc" placeholder="e.g. Google Ads - May"></div>
 <div class="form-row"><label>Linked Advertiser (optional)</label><input id="fee-advertiser" placeholder="e.g. Investors Alley"></div>
 <div class="form-row"><label>Amount ($)</label><input id="fee-amount" type="number" step="0.01" placeholder="0.00"></div>
@@ -1204,7 +1204,7 @@ Secured with Firebase Authentication
 <div class="filter-bar" style="margin-bottom:8px">
 <div class="fg"><label>Search</label><input id="exp-search" type="search" placeholder="Search expenses..." oninput="renderExpenses()"></div>
 <div class="fg"><label>Month</label><select id="exp-month-f" onchange="renderExpenses()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
-<div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Ads / Leads</option><option>Beehiiv</option><option>Software</option><option>Contractors</option><option>Office</option><option>Other</option></select></div>
+<div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
 </div>
 <div class="table-card" style="margin-bottom:20px;overflow-x:auto">
 <table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Description</th><th>Advertiser</th><th>Amount</th><th>Recurring</th><th>Notes</th><th>Added By</th><th>Last Updated</th><th style="width:100px">Actions</th></tr></thead>
@@ -2348,7 +2348,7 @@ c.appendChild(b);
 });
 }
 function qbIncludeInStats(month){var ps=(pnlSummaries[month]||{}).grossRevenue||0;var qt=qbRawTotals[month]?(qbRawTotals[month].p+qbRawTotals[month].u):0;return qt>0&&ps<qt;}
-function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=s.grossRevenue||0;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';var expLines='';if(s.totalExpenses)expLines+='<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>';if(s.salary)expLines+='<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>';if(s.ads)expLines+='<div class="psb-line"><span class="psb-key">Ads / Leads</span><span class="psb-value">'+$m(s.ads)+'</span></div>';if(s.beehiiv)expLines+='<div class="psb-line"><span class="psb-key">Beehiiv</span><span class="psb-value">'+$m(s.beehiiv)+'</span></div>';if(s.software)expLines+='<div class="psb-line"><span class="psb-key">Software</span><span class="psb-value">'+$m(s.software)+'</span></div>';if(s.contractors)expLines+='<div class="psb-line"><span class="psb-key">Contractors</span><span class="psb-value">'+$m(s.contractors)+'</span></div>';if(s.office)expLines+='<div class="psb-line"><span class="psb-key">Office</span><span class="psb-value">'+$m(s.office)+'</span></div>';if(s.otherExp)expLines+='<div class="psb-line"><span class="psb-key">Other</span><span class="psb-value">'+$m(s.otherExp)+'</span></div>';cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
+function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=s.grossRevenue||0;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';var expLines='';if(s.totalExpenses)expLines+='<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>';if(s.salary)expLines+='<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>';if(s.ads)expLines+='<div class="psb-line"><span class="psb-key">Marketing</span><span class="psb-value">'+$m(s.ads)+'</span></div>';if(s.beehiiv)expLines+='<div class="psb-line"><span class="psb-key">Dues and Subscriptions</span><span class="psb-value">'+$m(s.beehiiv)+'</span></div>';if(s.software)expLines+='<div class="psb-line"><span class="psb-key">Software and Subscription</span><span class="psb-value">'+$m(s.software)+'</span></div>';if(s.contractors)expLines+='<div class="psb-line"><span class="psb-key">Meals and Entertainment</span><span class="psb-value">'+$m(s.contractors)+'</span></div>';if(s.office)expLines+='<div class="psb-line"><span class="psb-key">Office Supplies</span><span class="psb-value">'+$m(s.office)+'</span></div>';if(s.otherExp)expLines+='<div class="psb-line"><span class="psb-key">Other</span><span class="psb-value">'+$m(s.otherExp)+'</span></div>';cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div></div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
 function getRevFilt(){const q=((document.getElementById('rev-search')||{}).value||'').toLowerCase(),mf=(document.getElementById('rev-month-f')||{}).value||'',tf=(document.getElementById('rev-type-f')||{}).value||'',{from,to}=getDR('rev');var merged=allRev.map(function(r){return Object.assign({},r,{_recType:'revenue'});}).concat(allFC.map(function(r){return{_recType:'forecast',_source:'forecast',_srcLabel:'Forecast',_key:r._key||('fc_'+r.affiliate),date:r.date,_week:r._period||'',_month:r._period?r._period.replace(/\s*week.*/i,'').trim():'',affiliate:r.affiliate,amount:r.amount,status:'',remarks:''};}));return merged.filter(r=>{if(tf==='revenue'&&r._recType!=='revenue')return false;if(tf==='forecast'&&r._recType!=='forecast')return false;if(mf&&r._month!==mf&&!(r._week||'').toLowerCase().includes(mf.toLowerCase().substring(0,3)))return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{var dk=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(dk&&pnlDeletes.has(dk))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
@@ -3613,13 +3613,16 @@ var m=ex.month||'';
 if(!m)return;
 if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
 pnlSummaries[m].totalExpenses=(pnlSummaries[m].totalExpenses||0)+(ex.amount||0);
-var cat=(ex.category||'').toUpperCase();
-if(cat.includes('SALARY'))pnlSummaries[m].salary=(pnlSummaries[m].salary||0)+(ex.amount||0);
-else if(cat.includes('ADS'))pnlSummaries[m].ads=(pnlSummaries[m].ads||0)+(ex.amount||0);
-else if(cat.includes('BEEHIIV'))pnlSummaries[m].beehiiv=(pnlSummaries[m].beehiiv||0)+(ex.amount||0);
-else if(cat.includes('SOFTWARE'))pnlSummaries[m].software=(pnlSummaries[m].software||0)+(ex.amount||0);
-else if(cat.includes('CONTRACTOR'))pnlSummaries[m].contractors=(pnlSummaries[m].contractors||0)+(ex.amount||0);
-else if(cat.includes('OFFICE'))pnlSummaries[m].office=(pnlSummaries[m].office||0)+(ex.amount||0);
+/* Migrate old category names */
+var rawCat=ex.category||'Other';
+var cat=(_EM_CAT_MIGRATE&&_EM_CAT_MIGRATE[rawCat])?_EM_CAT_MIGRATE[rawCat]:rawCat;
+var cu=cat.toUpperCase();
+if(cu.includes('SALARY'))pnlSummaries[m].salary=(pnlSummaries[m].salary||0)+(ex.amount||0);
+else if(cu==='MARKETING'||cu.includes('ADS'))pnlSummaries[m].ads=(pnlSummaries[m].ads||0)+(ex.amount||0);
+else if(cu.includes('DUES'))pnlSummaries[m].beehiiv=(pnlSummaries[m].beehiiv||0)+(ex.amount||0);
+else if(cu.includes('SOFTWARE'))pnlSummaries[m].software=(pnlSummaries[m].software||0)+(ex.amount||0);
+else if(cu.includes('MEALS'))pnlSummaries[m].contractors=(pnlSummaries[m].contractors||0)+(ex.amount||0);
+else if(cu.includes('OFFICE'))pnlSummaries[m].office=(pnlSummaries[m].office||0)+(ex.amount||0);
 else pnlSummaries[m].otherExp=(pnlSummaries[m].otherExp||0)+(ex.amount||0);
 });
 }
@@ -3634,9 +3637,14 @@ return'';
 }
 function _emCatToPNL(cat){
 var c=(cat||'').toLowerCase();
-if(c==='salaries')return'salary';
-if(c==='marketing')return'ads';
-if(c==='software'||c==='ai tools'||c==='cloud hosting'||c==='subscriptions')return'software';
+/* Migrate old names first */
+if(_EM_CAT_MIGRATE){var uc=cat||'';if(_EM_CAT_MIGRATE[uc])c=_EM_CAT_MIGRATE[uc].toLowerCase();}
+if(c==='salary'||c==='salaries')return'salary';
+if(c==='marketing'||c.includes('ads'))return'ads';
+if(c==='dues and subscriptions')return'beehiiv';
+if(c==='software and subscription'||c==='software'||c==='ai tools'||c==='cloud hosting')return'software';
+if(c==='meals and entertainment')return'contractors';
+if(c==='office supplies'||c==='office')return'office';
 return'otherExp';
 }
 function mergeEMExpenses(){
@@ -3647,7 +3655,10 @@ var pc=_emPrevContrib[pm];
 pnlSummaries[pm].totalExpenses=Math.max(0,(pnlSummaries[pm].totalExpenses||0)-(pc.totalExpenses||0));
 pnlSummaries[pm].salary=Math.max(0,(pnlSummaries[pm].salary||0)-(pc.salary||0));
 pnlSummaries[pm].ads=Math.max(0,(pnlSummaries[pm].ads||0)-(pc.ads||0));
+pnlSummaries[pm].beehiiv=Math.max(0,(pnlSummaries[pm].beehiiv||0)-(pc.beehiiv||0));
 pnlSummaries[pm].software=Math.max(0,(pnlSummaries[pm].software||0)-(pc.software||0));
+pnlSummaries[pm].contractors=Math.max(0,(pnlSummaries[pm].contractors||0)-(pc.contractors||0));
+pnlSummaries[pm].office=Math.max(0,(pnlSummaries[pm].office||0)-(pc.office||0));
 pnlSummaries[pm].otherExp=Math.max(0,(pnlSummaries[pm].otherExp||0)-(pc.otherExp||0));
 }
 }
@@ -3662,7 +3673,7 @@ var monthName=_emDateToMonth(tx.date);
 if(!monthName)return;
 if(!pnlSummaries[monthName])pnlSummaries[monthName]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
 /* Track contribution */
-if(!_emPrevContrib[monthName])_emPrevContrib[monthName]={totalExpenses:0,salary:0,ads:0,software:0,otherExp:0};
+if(!_emPrevContrib[monthName])_emPrevContrib[monthName]={totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
 _emPrevContrib[monthName].totalExpenses+=amt;
 var field=_emCatToPNL(tx.category);
 _emPrevContrib[monthName][field]+=amt;
@@ -3700,7 +3711,7 @@ setStat('exp-s-month','$'+totalMonth.toLocaleString('en',{minimumFractionDigits:
 var smLbl=document.getElementById('exp-s-month-label');if(smLbl)smLbl.textContent=curMonth;
 setStat('exp-s-cats',Object.keys(cats).length.toString());
 setStat('exp-s-count',userExpenses.filter(function(e){return!expDeletes.has(e._key);}).length.toString());
-var catColors={'Salary':'#2563eb','Ads / Leads':'#dc2626','Beehiiv':'#7c3aed','Software':'#0ea5e9','Contractors':'#ec4899','Office':'#14b8a6','Other':'#f97316'};
+var catColors={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#f97316'};
 var tbody=document.getElementById('exp-tbody');
 if(!tbody)return;
 if(!f.length){tbody.innerHTML='<tr><td colspan="9" class="empty-state">No expenses recorded yet. Click "+ Add Expense" to start tracking.</td></tr>';return;}
@@ -3747,7 +3758,7 @@ localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSyncAllExpen
 document.getElementById('addExpenseModal').classList.remove('open');
 ['fe-date','fe-desc','fe-amount','fe-notes','fe-advertiser'].forEach(function(id){document.getElementById(id).value='';});
 document.getElementById('fe-month').value='';
-document.getElementById('fe-category').value='Salary';
+document.getElementById('fe-category').value='Other';
 document.getElementById('fe-recurring').value='No';
 refreshAfterExpenseChange();
 /* Auto-expand Financial Records section and switch to Expenses tab */
@@ -3835,7 +3846,7 @@ try{renderMonthlySummary();}catch(e){}
 }
 
 function renderExpenseBreakdown(){
-var catColors={'Salary':'#2563eb','Ads / Leads':'#dc2626','Beehiiv':'#7c3aed','Software':'#0ea5e9','Contractors':'#ec4899','Office':'#14b8a6','Other':'#f97316'};
+var catColors={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#f97316'};
 var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
 var all=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
 var totalAll=0,totalMonth=0,cats={},byMonth={};
@@ -5071,16 +5082,26 @@ function renderExpenseCategories(){
     monthsFull.forEach(function(m){
       var snap=(window._sheetExpenseSnapshot||{})[m];if(!snap)return;
       if(snap.salary)cats['Salary']=(cats['Salary']||0)+snap.salary;
-      if(snap.ads)cats['Ads / Leads']=(cats['Ads / Leads']||0)+snap.ads;
+      if(snap.ads)cats['Marketing']=(cats['Marketing']||0)+snap.ads;
       var other=(snap.totalExpenses||0)-(snap.salary||0)-(snap.ads||0);
       if(other>0)cats['Other (Sheet)']=(cats['Other (Sheet)']||0)+other;
     });
-    // User-entered expenses by category
+    // User-entered expenses by category (with migration)
     (typeof userExpenses!=='undefined'?userExpenses:[]).forEach(function(ex){
       if(typeof expDeletes!=='undefined'&&expDeletes.has(ex._key))return;
       var c=ex.category||'Other';
+      if(typeof _EM_CAT_MIGRATE!=='undefined'&&_EM_CAT_MIGRATE[c])c=_EM_CAT_MIGRATE[c];
       cats[c]=(cats[c]||0)+(ex.amount||0);
     });
+    // EM expenses by category
+    if(typeof emTransactions!=='undefined'){
+      emTransactions.forEach(function(tx){
+        if(!tx.amount)return;
+        var c=tx.category||'Other';
+        if(typeof _EM_CAT_MIGRATE!=='undefined'&&_EM_CAT_MIGRATE[c])c=_EM_CAT_MIGRATE[c];
+        cats[c]=(cats[c]||0)+(tx.amount||0);
+      });
+    }
     var labels=Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];});
     var data=labels.map(function(l){return cats[l];});
     var colors=['#2563eb','#dc2626','#7c3aed','#0ea5e9','#ec4899','#14b8a6','#f97316','#16a34a'];
@@ -5853,35 +5874,35 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
    ═══════════════════════════════════════════════════════════════ */
 
 var emTransactions=[];var emReviewQueue=[];var emSortField='date';var emSortDir=-1;var emPage=1;var emPageSize=15;
-var EM_CATEGORIES=['Subscriptions','AI Tools','Salaries','Software','Cloud Hosting','Marketing','Utilities','Travel','Miscellaneous'];
-var EM_CAT_COLORS={'Subscriptions':'#6366f1','AI Tools':'#8b5cf6','Salaries':'#2563eb','Software':'#0ea5e9','Cloud Hosting':'#14b8a6','Marketing':'#ec4899','Utilities':'#f59e0b','Travel':'#10b981','Miscellaneous':'#64748b'};
+var EM_CATEGORIES=['Salary','Software and Subscription','Dues and Subscriptions','Marketing','Office Supplies','Meals and Entertainment','Other'];
+var EM_CAT_COLORS={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#64748b'};
+/* Migrate old category names to new ones */
+var _EM_CAT_MIGRATE={'Subscriptions':'Dues and Subscriptions','AI Tools':'Software and Subscription','Salaries':'Salary','Software':'Software and Subscription','Cloud Hosting':'Software and Subscription','Utilities':'Other','Travel':'Other','Miscellaneous':'Other','Ads / Leads':'Marketing','Beehiiv':'Dues and Subscriptions','Contractors':'Other','Office':'Office Supplies','Ads':'Marketing'};
 
-/* ── Category Rules Engine ── */
+/* ── Category Rules Engine (aligned to QuickBooks) ── */
 var EM_RULES=[
-{cat:'AI Tools',patterns:['anthropic','openai','claude','cursor','midjourney','chatgpt','perplexity','copilot','jasper','stability','replicate','hugging face','cohere','together ai','deepseek','grok','gemini api','vertex ai']},
-{cat:'Cloud Hosting',patterns:['aws','amazon web services','vercel','netlify','heroku','digitalocean','google cloud','gcp','azure','cloudflare','firebase','supabase','railway','render','fly.io','linode','vultr','hetzner','lambda','ec2','s3 bucket']},
-{cat:'Software',patterns:['canva','slack','notion','figma','airtable','zapier','hubspot','salesforce','jira','confluence','trello','asana','monday.com','clickup','intercom','zendesk','mailchimp','sendgrid','twilio','stripe fee','github','gitlab','bitbucket','postman','datadog','sentry','new relic','segment','mixpanel','amplitude','hotjar','typeform','calendly','loom','grammarly','1password','lastpass','dropbox','google workspace','microsoft 365','office 365','adobe','zoom','webex','miro','linear']},
-{cat:'Subscriptions',patterns:['netflix','spotify','apple music','youtube premium','hulu','disney+','hbo','paramount','amazon prime','audible','kindle','medium','substack','nyt','wsj','bloomberg','beehiiv','convertkit','mailerlite','activecampaign','semrush','ahrefs','moz','buffer','hootsuite','later','sprout social']},
-{cat:'Salaries',patterns:['payroll','salary','wages','gusto','adp','paychex','rippling','deel','remote.com','compensation','bonus','commission','contractor pay','1099','w-2','direct deposit','employee']},
-{cat:'Marketing',patterns:['facebook ads','meta ads','google ads','tiktok ads','linkedin ads','twitter ads','bing ads','snapchat ads','pinterest ads','campaign','ad spend','cpc','cpm','cpa','ppc','seo','influencer','pr agency','branding','creative agency','media buy','everflow','impact','partnerstack','affiliate']},
-{cat:'Utilities',patterns:['electric','gas bill','water bill','internet','comcast','at&t','verizon','t-mobile','spectrum','cox','utility','power','energy','phone bill','cell phone','mobile plan']},
-{cat:'Travel',patterns:['airline','flight','hotel','airbnb','uber','lyft','taxi','rental car','hertz','avis','enterprise','booking.com','expedia','kayak','southwest','delta','united','american airlines','jetblue','marriott','hilton','hyatt','amtrak','parking','toll','gas station','fuel']},
-{cat:'Miscellaneous',patterns:[]}
+{cat:'Software and Subscription',patterns:['anthropic','openai','claude','cursor','midjourney','chatgpt','perplexity','copilot','jasper','stability','replicate','hugging face','cohere','together ai','deepseek','grok','gemini api','vertex ai','aws','amazon web services','vercel','netlify','heroku','digitalocean','google cloud','gcp','azure','cloudflare','firebase','supabase','railway','render','fly.io','linode','vultr','hetzner','canva','slack','notion','figma','airtable','zapier','hubspot','salesforce','jira','confluence','trello','asana','monday.com','clickup','intercom','zendesk','mailchimp','sendgrid','twilio','stripe fee','github','gitlab','bitbucket','postman','datadog','sentry','new relic','segment','mixpanel','amplitude','hotjar','typeform','calendly','loom','grammarly','1password','lastpass','dropbox','google workspace','microsoft 365','office 365','adobe','zoom','webex','miro','linear','zerobounce','eztexting','ez texting','gobot','ez appointment','beehiiv']},
+{cat:'Dues and Subscriptions',patterns:['beehiiv ad network','netflix','spotify','apple music','youtube premium','hulu','disney+','hbo','paramount','amazon prime','audible','kindle','medium','substack','nyt','bloomberg','convertkit','mailerlite','activecampaign','semrush','ahrefs','moz','buffer','hootsuite','later','sprout social','membership','dues']},
+{cat:'Salary',patterns:['payroll','salary','wages','gusto','adp','paychex','rippling','deel','remote.com','compensation','bonus','commission','contractor pay','1099','w-2','direct deposit','employee']},
+{cat:'Marketing',patterns:['facebook ads','meta ads','google ads','tiktok ads','linkedin ads','twitter ads','bing ads','snapchat ads','pinterest ads','campaign','ad spend','cpc','cpm','cpa','ppc','seo','influencer','pr agency','branding','creative agency','media buy','everflow','impact','partnerstack','affiliate','trafficgrid','its today media','gsh as','traffic grid']},
+{cat:'Office Supplies',patterns:['staples','office depot','amazon marketplace','amazon.com','wsj','wall street journal','office supply','paper','ink','toner','printer','desk','chair','monitor','keyboard','mouse','usb','cable','stationery']},
+{cat:'Meals and Entertainment',patterns:['restaurant','cafe','coffee','starbucks','chipotle','mcdonalds','uber eats','doordash','grubhub','postmates','freshkitchen','fresh kitchen','lunch','dinner','catering','bar','grill','pizza','sushi','deli','bakery','food','meal','entertainment','event','ticket','concert']},
+{cat:'Other',patterns:[]}
 ];
 
 function emCategorize(merchant){
-if(!merchant)return'Miscellaneous';
+if(!merchant)return'Other';
 var ml=merchant.toLowerCase();
 /* Check user overrides first */
 var overrides=JSON.parse(localStorage.getItem('emCatOverrides')||'{}');
-for(var k in overrides){if(ml.includes(k.toLowerCase()))return overrides[k];}
+for(var k in overrides){if(ml.includes(k.toLowerCase())){var ov=overrides[k];return _EM_CAT_MIGRATE[ov]||ov;}}
 /* Rule-based matching */
 for(var i=0;i<EM_RULES.length;i++){
 var rule=EM_RULES[i];
 for(var j=0;j<rule.patterns.length;j++){
 if(ml.includes(rule.patterns[j]))return rule.cat;
 }}
-return'Miscellaneous';
+return'Other';
 }
 
 /* ── File Processing ── */
@@ -6151,7 +6172,17 @@ function emLoadTransactions(){
 /* Try Firebase first, fall back to localStorage */
 var ls=JSON.parse(localStorage.getItem('emTransactions')||'[]');
 emTransactions=ls;
+function _emMigrateCategories(){
+/* Auto-migrate old category names on existing transactions */
+if(!emTransactions||!emTransactions.length||!_EM_CAT_MIGRATE)return;
+var changed=false;
+emTransactions.forEach(function(tx){
+if(tx.category&&_EM_CAT_MIGRATE[tx.category]){tx.category=_EM_CAT_MIGRATE[tx.category];changed=true;}
+});
+if(changed){localStorage.setItem('emTransactions',JSON.stringify(emTransactions));}
+}
 function _emAfterLoad(){
+_emMigrateCategories();
 emRenderAll();
 try{
 if(typeof mergeEMExpenses==='function'){mergeEMExpenses();}
