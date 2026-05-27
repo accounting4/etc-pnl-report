@@ -2167,8 +2167,9 @@ allPNL.forEach(function(r){
   if(!window._beehiivByPub[mo])window._beehiivByPub[mo]={};
   window._beehiivByPub[mo][pub]=(window._beehiivByPub[mo][pub]||0)+amt;
 });
-/* Inject beehiivRev into pnlSummaries */
+/* Inject beehiivRev into pnlSummaries — skip Jan-May (PNL Sheet is source of truth) */
 for(var _bm in window._beehiivByMonth){
+  if(['January','February','March','April','May'].indexOf(_bm)>-1)continue;
   if(!pnlSummaries[_bm])pnlSummaries[_bm]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
   pnlSummaries[_bm].beehiivRev=window._beehiivByMonth[_bm];
 }
@@ -2367,9 +2368,9 @@ c.appendChild(b);
 function qbIncludeInStats(month){var ps=(pnlSummaries[month]||{}).grossRevenue||0;var qt=qbRawTotals[month]?(qbRawTotals[month].p+qbRawTotals[month].u):0;return qt>0&&ps<qt;}
 function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-banner'),cEl=document.getElementById('pnl-summary-content');if(!bEl||!cEl)return;var s=pnlSummaries[m]||{};var liveRcvd=s.paymentRcvd||0;var liveBal=s.balance||0;var liveRev=s.grossRevenue||0;var totalExp=s.totalExpenses||0;var liveNet=liveRev-totalExp;if(liveRev<=0&&!s.totalExpenses){bEl.style.display='none';return;}bEl.style.display='block';var expLines='';if(s.totalExpenses)expLines+='<div class="psb-line"><span class="psb-key">Total Expenses</span><span class="psb-value red">'+$m(s.totalExpenses)+'</span></div>';if(s.salary)expLines+='<div class="psb-line"><span class="psb-key">Salary</span><span class="psb-value">'+$m(s.salary)+'</span></div>';if(s.ads)expLines+='<div class="psb-line"><span class="psb-key">Marketing</span><span class="psb-value">'+$m(s.ads)+'</span></div>';if(s.beehiiv)expLines+='<div class="psb-line"><span class="psb-key">Dues and Subscriptions</span><span class="psb-value">'+$m(s.beehiiv)+'</span></div>';if(s.software)expLines+='<div class="psb-line"><span class="psb-key">Software and Subscription</span><span class="psb-value">'+$m(s.software)+'</span></div>';if(s.contractors)expLines+='<div class="psb-line"><span class="psb-key">Meals and Entertainment</span><span class="psb-value">'+$m(s.contractors)+'</span></div>';if(s.office)expLines+='<div class="psb-line"><span class="psb-key">Office Supplies</span><span class="psb-value">'+$m(s.office)+'</span></div>';if(s.otherExp)expLines+='<div class="psb-line"><span class="psb-key">Other</span><span class="psb-value">'+$m(s.otherExp)+'</span></div>';/* Beehiiv revenue line */
 var bhLine='';var bhm=s.beehiivRev||0;
-/* Beehiiv API earnings for this month */
+/* Beehiiv API earnings for this month — skip Jan-May (PNL Sheet is source of truth) */
 var _bhApiMo=0,_bhApiPubMap={},_bhApiDailyMap={};
-if(window._bhApiEarnings&&window._bhApiEarnings.publications){
+if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April','May'].indexOf(m)===-1){
   for(var _bpn in window._bhApiEarnings.publications){
     if(_bpn.toLowerCase().indexOf('five minute')>-1)continue;
     var _bpd=(window._bhApiEarnings.publications[_bpn]||{})[m];
@@ -3240,7 +3241,8 @@ function updateFcCharts(f){const agg={};f.filter(r=>r.amount>0).forEach(r=>{cons
 function buildFMDMonthButtons(){var c=document.getElementById('fmd-month-buttons');if(!c)return;c.innerHTML='';var ab=document.createElement('button');ab.className='month-btn active';ab.textContent='All Months';ab.onclick=function(){document.querySelectorAll('#fmd-month-buttons .month-btn').forEach(function(b){b.classList.remove('active');});ab.classList.add('active');document.getElementById('fmd-month-f').value='';document.getElementById('fmd-summary-banner').style.display='none';applyFMDFilters();};c.appendChild(ab);['January','February','March','April','May','June'].forEach(function(m){var b=document.createElement('button');b.className='month-btn';b.textContent=m;b.onclick=function(){document.querySelectorAll('#fmd-month-buttons .month-btn').forEach(function(x){x.classList.remove('active');});b.classList.add('active');document.getElementById('fmd-month-f').value=m;showFMDMonthlySummary(m);applyFMDFilters();};c.appendChild(b);});}
 function showFMDMonthlySummary(m){var bEl=document.getElementById('fmd-summary-banner'),cEl=document.getElementById('fmd-summary-content');if(!bEl||!cEl)return;var recs=allFMD.filter(function(r){return r._month===m;});var totalInv=recs.reduce(function(a,r){return a+(r.displayAmt||r.invAmt||0);},0);var totalRcvd=recs.reduce(function(a,r){return a+(r.rcvd||0);},0);var totalBal=recs.filter(function(r){var s=(r.status||'').toLowerCase();return s!=='paid';}).reduce(function(a,r){return a+(r.displayAmt||0);},0);if(totalInv===0&&totalRcvd===0){bEl.style.display='none';return;}bEl.style.display='block';/* FMD Beehiiv API earnings */
 var _fmdBhTotal=0,_fmdBhDaily={},_fmdBhAdvs={};
-if(window._bhApiEarnings&&window._bhApiEarnings.publications){
+/* Skip Jan-May beehiiv API — already in PNL Sheets */
+if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April','May'].indexOf(m)===-1){
   var _fmdPubs=['Five Minute Daily','FMD'];
   for(var _fp=0;_fp<_fmdPubs.length;_fp++){
     var _fpd=(window._bhApiEarnings.publications[_fmdPubs[_fp]]||{})[m];
@@ -3296,6 +3298,8 @@ if(window._bhApiEarnings&&window._bhApiEarnings.publications){
     var _bhMonths=_bhPubs[_bhPubName];
     for(var _bhMo in _bhMonths){
       if(_bhMonthFilter&&_bhMo!==_bhMonthFilter)continue;
+      /* Jan-May: PNL Sheet is source of truth — skip beehiiv API to avoid duplicates */
+      if(['January','February','March','April','May'].indexOf(_bhMo)>-1)continue;
       var _bhMoData=_bhMonths[_bhMo];
       var _bhMoTotal=_bhMoData.total||0;
       if(_bhMoTotal>0){
@@ -3713,12 +3717,13 @@ for(var mk in pnlSummaries){
   if(expSnp[mk]){pnlSummaries[mk].totalExpenses=expSnp[mk].totalExpenses||0;pnlSummaries[mk].salary=expSnp[mk].salary||0;pnlSummaries[mk].ads=expSnp[mk].ads||0;}
   pnlSummaries[mk].beehiiv=0;pnlSummaries[mk].software=0;pnlSummaries[mk].contractors=0;pnlSummaries[mk].office=0;pnlSummaries[mk].otherExp=0;
 }
-/* Add non-sheet entries (QB + user) on top — these aren't in the sheet summary */
+/* Add non-sheet entries (user/manual only) on top — QB excluded, sheet already in summary */
 var allEntries=allPNL.concat(allFMD);
 allEntries.forEach(function(r){
   if(r._isSummary)return;
   var src=r._source||'';
   if(src==='sheet'||src==='fmd_sheet')return;/* Already in sheet summary */
+  if(src==='qb')return;/* QB excluded — PNL Sheet is source of truth for Jan-May */
   var k=r._key||'';if(k&&pnlDeletes.has(k))return;
   var m=r._month||'';if(!m||m==='Manual')return;
   if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
@@ -4314,16 +4319,17 @@ function renderOverview(){
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
-    // Beehiiv Earnings (prefer API data, fallback to PNL sheet)
+    // Beehiiv Earnings (prefer API data, fallback to PNL sheet — skip Jan-May, already in PNL Sheet)
     var bhTotal=0;
+    var _bhSheetMonths=['January','February','March','April','May'];
     if(window._bhApiEarnings&&window._bhApiEarnings.publications){
       var _ovBhPubs=window._bhApiEarnings.publications;
       for(var _ovPn in _ovBhPubs){
         if(_ovPn.toLowerCase().indexOf('five minute')>-1)continue;
-        for(var _ovMo in _ovBhPubs[_ovPn]){bhTotal+=(_ovBhPubs[_ovPn][_ovMo].total||0);}
+        for(var _ovMo in _ovBhPubs[_ovPn]){if(_bhSheetMonths.indexOf(_ovMo)>-1)continue;bhTotal+=(_ovBhPubs[_ovPn][_ovMo].total||0);}
       }
     } else {
-      for(var _bk in (window._beehiivByMonth||{}))bhTotal+=window._beehiivByMonth[_bk];
+      for(var _bk in (window._beehiivByMonth||{})){if(_bhSheetMonths.indexOf(_bk)>-1)continue;bhTotal+=window._beehiivByMonth[_bk];}
     }
     setStat('ov-beehiiv','$'+bhTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
@@ -4368,7 +4374,8 @@ function renderStatSparklines(curMonth){
     allCTO.forEach(function(r){var m=r._month||'';if(ctoByM.hasOwnProperty(m))ctoByM[m]+=parseMoney(r['Total Revenue ($)'])||0;});
     allFMD.forEach(function(r){var m=r._month||r.Month||'';if(fmdByM.hasOwnProperty(m))fmdByM[m]+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
     
-    var bhByM={};activeMonths.forEach(function(m){
+    var bhByM={};var _bhSkip=['January','February','March','April','May'];activeMonths.forEach(function(m){
+      if(_bhSkip.indexOf(m)>-1){bhByM[m]=0;return;}
       if(window._bhApiEarnings&&window._bhApiEarnings.publications){
         var _spBh=0;for(var _spPn in window._bhApiEarnings.publications){
           if(_spPn.toLowerCase().indexOf('five minute')>-1)continue;
