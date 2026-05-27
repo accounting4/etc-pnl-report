@@ -2379,14 +2379,17 @@ if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','Februa
 }
 var _bhDisplay=_bhApiMo>0?_bhApiMo:bhm;
 if(_bhDisplay>0){
-  bhLine='<div class="psb-line"><span class="psb-key">Beehiiv Earnings</span><span class="psb-value" style="color:#f97316">'+$m(_bhDisplay)+'</span></div>';
-  /* Per-publication breakdown */
+  var _bhUid='bh_'+m.replace(/\s/g,'');
+  bhLine='<div class="psb-line" style="cursor:pointer;user-select:none;border-radius:6px;padding:4px 6px;transition:background .15s" onclick="var d=document.getElementById(\''+_bhUid+'\');if(d){d.style.display=d.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.bh-arrow\').textContent=d.style.display===\'none\'?\'▶\':\'▼\';}" onmouseenter="this.style.background=\'rgba(249,115,22,.08)\'" onmouseleave="this.style.background=\'transparent\'"><span class="psb-key" style="font-weight:600"><span class="bh-arrow" style="display:inline-block;width:16px;font-size:.7rem;color:#f97316">▶</span>Beehiiv Ads</span><span class="psb-value" style="color:#f97316;font-weight:700">'+$m(_bhDisplay)+'</span></div>';
+  /* Per-publication breakdown — hidden by default, shown on click */
   var bPubs=_bhApiMo>0?_bhApiPubMap:((window._beehiivByPub||{})[m]||{});
   var bPubKeys=Object.keys(bPubs).sort(function(a,b){return bPubs[b]-bPubs[a];});
+  bhLine+='<div id="'+_bhUid+'" style="display:none">';
   if(bPubKeys.length){bhLine+='<div style="margin-left:16px;border-left:2px solid #f97316;padding-left:10px;margin-bottom:4px">';bPubKeys.forEach(function(p){bhLine+='<div class="psb-line" style="font-size:.82rem"><span class="psb-key" style="color:var(--text3)">'+p+'</span><span class="psb-value" style="font-size:.82rem">'+$m(bPubs[p])+'</span></div>';});bhLine+='</div>';}
   /* Daily earnings breakdown (only from API) */
   var _bhDailyKeys=Object.keys(_bhApiDailyMap).sort();
   if(_bhDailyKeys.length){bhLine+='<div style="margin-left:16px;border-left:2px solid #f97316;padding-left:10px;margin-top:4px"><div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:2px">📅 Daily</div>';_bhDailyKeys.forEach(function(dk){var dl=dk;try{var dp=dk.split('-');dl=new Date(dp[0],dp[1]-1,dp[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch(e){}bhLine+='<div class="psb-line" style="font-size:.82rem"><span class="psb-key" style="color:var(--text3)">'+dl+'</span><span class="psb-value" style="font-size:.82rem;color:#f97316">'+$m(_bhApiDailyMap[dk])+'</span></div>';});bhLine+='</div>';}
+  bhLine+='</div>';
 }
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div>'+bhLine+'</div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
