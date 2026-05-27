@@ -2169,7 +2169,7 @@ allPNL.forEach(function(r){
 });
 /* Inject beehiivRev into pnlSummaries — skip Jan-May (PNL Sheet is source of truth) */
 for(var _bm in window._beehiivByMonth){
-  if(['January','February','March','April','May'].indexOf(_bm)>-1)continue;
+  if(['January','February','March','April'].indexOf(_bm)>-1)continue;
   if(!pnlSummaries[_bm])pnlSummaries[_bm]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
   pnlSummaries[_bm].beehiivRev=window._beehiivByMonth[_bm];
 }
@@ -2370,7 +2370,7 @@ function showMonthlySummary(m){var bEl=document.getElementById('pnl-summary-bann
 var bhLine='';var bhm=s.beehiivRev||0;
 /* Beehiiv API earnings for this month — skip Jan-May (PNL Sheet is source of truth) */
 var _bhApiMo=0,_bhApiPubMap={},_bhApiDailyMap={};
-if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April','May'].indexOf(m)===-1){
+if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April'].indexOf(m)===-1){
   for(var _bpn in window._bhApiEarnings.publications){
     if(_bpn.toLowerCase().indexOf('five minute')>-1)continue;
     var _bpd=(window._bhApiEarnings.publications[_bpn]||{})[m];
@@ -3242,7 +3242,7 @@ function buildFMDMonthButtons(){var c=document.getElementById('fmd-month-buttons
 function showFMDMonthlySummary(m){var bEl=document.getElementById('fmd-summary-banner'),cEl=document.getElementById('fmd-summary-content');if(!bEl||!cEl)return;var recs=allFMD.filter(function(r){return r._month===m;});var totalInv=recs.reduce(function(a,r){return a+(r.displayAmt||r.invAmt||0);},0);var totalRcvd=recs.reduce(function(a,r){return a+(r.rcvd||0);},0);var totalBal=recs.filter(function(r){var s=(r.status||'').toLowerCase();return s!=='paid';}).reduce(function(a,r){return a+(r.displayAmt||0);},0);if(totalInv===0&&totalRcvd===0){bEl.style.display='none';return;}bEl.style.display='block';/* FMD Beehiiv API earnings */
 var _fmdBhTotal=0,_fmdBhDaily={},_fmdBhAdvs={};
 /* Skip Jan-May beehiiv API — already in PNL Sheets */
-if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April','May'].indexOf(m)===-1){
+if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April'].indexOf(m)===-1){
   var _fmdPubs=['Five Minute Daily','FMD'];
   for(var _fp=0;_fp<_fmdPubs.length;_fp++){
     var _fpd=(window._bhApiEarnings.publications[_fmdPubs[_fp]]||{})[m];
@@ -3299,7 +3299,7 @@ if(window._bhApiEarnings&&window._bhApiEarnings.publications){
     for(var _bhMo in _bhMonths){
       if(_bhMonthFilter&&_bhMo!==_bhMonthFilter)continue;
       /* Jan-May: PNL Sheet is source of truth — skip beehiiv API to avoid duplicates */
-      if(['January','February','March','April','May'].indexOf(_bhMo)>-1)continue;
+      if(['January','February','March','April'].indexOf(_bhMo)>-1)continue;
       var _bhMoData=_bhMonths[_bhMo];
       var _bhMoTotal=_bhMoData.total||0;
       if(_bhMoTotal>0){
@@ -4321,7 +4321,7 @@ function renderOverview(){
     
     // Beehiiv Earnings (prefer API data, fallback to PNL sheet — skip Jan-May, already in PNL Sheet)
     var bhTotal=0;
-    var _bhSheetMonths=['January','February','March','April','May'];
+    var _bhSheetMonths=['January','February','March','April'];
     if(window._bhApiEarnings&&window._bhApiEarnings.publications){
       var _ovBhPubs=window._bhApiEarnings.publications;
       for(var _ovPn in _ovBhPubs){
@@ -4374,7 +4374,7 @@ function renderStatSparklines(curMonth){
     allCTO.forEach(function(r){var m=r._month||'';if(ctoByM.hasOwnProperty(m))ctoByM[m]+=parseMoney(r['Total Revenue ($)'])||0;});
     allFMD.forEach(function(r){var m=r._month||r.Month||'';if(fmdByM.hasOwnProperty(m))fmdByM[m]+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
     
-    var bhByM={};var _bhSkip=['January','February','March','April','May'];activeMonths.forEach(function(m){
+    var bhByM={};var _bhSkip=['January','February','March','April'];activeMonths.forEach(function(m){
       if(_bhSkip.indexOf(m)>-1){bhByM[m]=0;return;}
       if(window._bhApiEarnings&&window._bhApiEarnings.publications){
         var _spBh=0;for(var _spPn in window._bhApiEarnings.publications){
