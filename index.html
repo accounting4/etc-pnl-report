@@ -2390,7 +2390,7 @@ if(_bhDisplay>0){
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div>'+bhLine+'</div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
 function getRevFilt(){const q=((document.getElementById('rev-search')||{}).value||'').toLowerCase(),mf=(document.getElementById('rev-month-f')||{}).value||'',tf=(document.getElementById('rev-type-f')||{}).value||'',{from,to}=getDR('rev');var merged=allRev.map(function(r){return Object.assign({},r,{_recType:'revenue'});}).concat(allFC.map(function(r){return{_recType:'forecast',_source:'forecast',_srcLabel:'Forecast',_key:r._key||('fc_'+r.affiliate),date:r.date,_week:r._period||'',_month:r._period?r._period.replace(/\s*week.*/i,'').trim():'',affiliate:r.affiliate,amount:r.amount,status:'',remarks:''};}));return merged.filter(r=>{if(tf==='revenue'&&r._recType!=='revenue')return false;if(tf==='forecast'&&r._recType!=='forecast')return false;if(mf&&r._month!==mf&&!(r._week||'').toLowerCase().includes(mf.toLowerCase().substring(0,3)))return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
-function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{var dk=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(dk&&pnlDeletes.has(dk))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
+function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{if(r._source==='qb')return false;var dk=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(dk&&pnlDeletes.has(dk))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
 function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').toLowerCase();const tf=(document.getElementById('cto-type-f')||{}).value||'';const mf=(document.getElementById('cto-month-f')||{}).value||'';return allCTO.filter(r=>{var name=r['Advertiser/Offer']||r['Advertiser']||r['Offers']||'';if(!name||!name.trim())return false;if(mf&&r._month!==mf)return false;if(tf){var t=(r['Type']||r._ctoType||'').toUpperCase();if(!t.includes(tf))return false;}if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getFcFilt(){const q=(document.getElementById('fc-search').value||'').toLowerCase(),pf=document.getElementById('fc-period-f').value;return allFC.filter(r=>{if(pf&&r._period!==pf)return false;if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;return true;});}
 function getFMDFilt(){const q=(document.getElementById('fmd-search').value||'').toLowerCase(),mf=document.getElementById('fmd-month-f').value,sf=document.getElementById('fmd-status-f').value,{from,to}=getDR('fmd');return allFMD.filter(r=>{var k=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(k&&fmdDeletes.has(k))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
@@ -2413,16 +2413,16 @@ var pnlRcvd=0,pnlBal=0,pnlRev=0;
 filterMonths.forEach(function(m){var ps=pnlSummaries[m]||{};pnlRcvd+=(ps.paymentRcvd||0);pnlBal+=(ps.balance||0);pnlRev+=(ps.grossRevenue||0);});
 /* QB additions */
 var qbPaid=0,qbUnpaid=0;
-allPNL.forEach(function(r){if(r._source!=='qb'||r._isSummary)return;var qbMi=mOrder.indexOf(r._month);if(qbMi<qbCutIdx)return;var st=(r.status||'').toLowerCase();var revMonth=(st==='paid')?r._month:(qbMi>0?mOrder[qbMi-1]:r._month);if(selM&&revMonth!==selM)return;if(!selM&&mOrder.indexOf(revMonth)<qbCutIdx-1)return;if(st==='paid')qbPaid+=(r.rcvd||r.displayAmt||0);else qbUnpaid+=(r.displayAmt||0);});
+/* QB excluded from P&L totals — PNL Sheet is source of truth for now */
 /* CTO + IO + Everflow */
 var trackRev=0;
 allRev.forEach(function(r){if(r._srcLabel==='CTO'||r._srcLabel==='IO'||r._srcLabel==='CPA'){var m=r._month||'';if(selM&&m!==selM)return;if(!selM&&filterMonths.indexOf(m)===-1)return;trackRev+=r.amount;}});
 /* FMD */
 var fmdRev=0;
 allFMD.forEach(function(r){if(selM&&r._month!==selM)return;if(!selM&&filterMonths.indexOf(r._month)===-1)return;fmdRev+=(r.displayAmt||r.rcvd||0);});
-var totalPaid=pnlRcvd+qbPaid;
-var totalBal=pnlBal+qbUnpaid;
-var totalRev=pnlRev+qbPaid+qbUnpaid+trackRev+fmdRev;
+var totalPaid=pnlRcvd;
+var totalBal=pnlBal;
+var totalRev=pnlRev+trackRev+fmdRev;
 bEl.style.display='block';
 var lbl=selM||'All Months';
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">'+lbl+' — Revenue Breakdown</div>'+
@@ -4308,9 +4308,9 @@ function renderOverview(){
     allCTO.forEach(function(r){if(r._month===curMonth)ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});
     setStat('ov-tracking','$'+ctoTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Collection rate — from QB + user, current month
+    // Collection rate — PNL sheet + user entries only (QB excluded for now)
     var ovPaid=0,ovTotal=0;
-    allPNL.forEach(function(r){if((r._source!=='user'&&r._source!=='qb')||r._month!==curMonth)return;var a=r.displayAmt||0;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
+    allPNL.forEach(function(r){if(r._source==='qb')return;if(r._isSummary||!r._month||r._month!==curMonth)return;var a=r.displayAmt||0;if(a<=0)return;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
