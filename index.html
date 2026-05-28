@@ -6243,16 +6243,16 @@ var headers=rows[0].map(function(h){return(h||'').toString().toLowerCase().trim(
 /* Auto-detect columns */
 var dateCol=-1,merchCol=-1,amtCol=-1,refCol=-1,descCol=-1,payeeCol=-1;
 headers.forEach(function(h,i){
-if(dateCol<0&&/date|posted|trans.*date|booking/.test(h))dateCol=i;
+if(dateCol<0&&/date|posted|trans.*date|booking|time.*created/.test(h))dateCol=i;
 if(amtCol<0&&/amount|debit|withdrawal|sum|value|total/.test(h))amtCol=i;
 if(merchCol<0&&/merchant|vendor|counterpart|recipient/.test(h))merchCol=i;
-if(payeeCol<0&&/payee|^name$/.test(h)&&!/id|num|no|code|ref|#/.test(h))payeeCol=i;
-if(descCol<0&&/desc|memo|narration|particular|detail|remark/.test(h))descCol=i;
-if(refCol<0&&/ref|check|cheque|trans.*id|transaction.*no/.test(h))refCol=i;
+if(payeeCol<0&&/payee\s*name|^payee$|^name$/.test(h))payeeCol=i;
+if(descCol<0&&/desc|memo|narration|particular|detail|remark|purpose.*desc/.test(h))descCol=i;
+if(refCol<0&&/\bref\b|check|cheque|trans.*id|transaction.*no/.test(h))refCol=i;
 });
 /* If payee col found but no merchant col, use payee as merchant too */
 if(merchCol<0&&payeeCol>=0)merchCol=payeeCol;
-if(merchCol<0&&headers.some(function(h){return/name/.test(h);})){headers.forEach(function(h,i){if(merchCol<0&&/name/.test(h)&&i!==dateCol&&i!==amtCol)merchCol=i;});}
+if(merchCol<0&&headers.some(function(h){return/name/.test(h)&&!/email|country|currency/.test(h);})){headers.forEach(function(h,i){if(merchCol<0&&/name/.test(h)&&!/email|country|currency/.test(h)&&i!==dateCol&&i!==amtCol)merchCol=i;});}
 /* Fallbacks: if no merchant col found, use description */
 if(merchCol<0&&descCol>=0)merchCol=descCol;
 if(merchCol<0){/* Try first text column after date */
