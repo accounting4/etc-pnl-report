@@ -863,6 +863,7 @@ Secured with Firebase Authentication
 <div class="form-row"><label>Date</label><input id="fe-date" type="date"></div>
 <div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fe-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Category</label><select id="fe-category"><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
+<div class="form-row"><label>Payee Name</label><input id="fe-payee" placeholder="e.g. John Smith, Acme Corp"></div>
 <div class="form-row"><label>Description</label><input id="fe-desc" placeholder="e.g. Google Ads - May"></div>
 <div class="form-row"><label>Linked Advertiser (optional)</label><input id="fe-advertiser" placeholder="e.g. Investors Alley"></div>
 <div class="form-row"><label>Amount ($)</label><input id="fe-amount" type="number" step="0.01" placeholder="0.00"></div>
@@ -875,6 +876,7 @@ Secured with Firebase Authentication
 <div class="form-row"><label>Date</label><input id="fee-date" type="date"></div>
 <div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fee-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="form-row"><label>Category</label><select id="fee-category"><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
+<div class="form-row"><label>Payee Name</label><input id="fee-payee" placeholder="e.g. John Smith, Acme Corp"></div>
 <div class="form-row"><label>Description</label><input id="fee-desc" placeholder="e.g. Google Ads - May"></div>
 <div class="form-row"><label>Linked Advertiser (optional)</label><input id="fee-advertiser" placeholder="e.g. Investors Alley"></div>
 <div class="form-row"><label>Amount ($)</label><input id="fee-amount" type="number" step="0.01" placeholder="0.00"></div>
@@ -1208,7 +1210,7 @@ Secured with Firebase Authentication
 <div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
 </div>
 <div class="table-card" style="margin-bottom:20px;overflow-x:auto">
-<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Description</th><th>Advertiser</th><th>Amount</th><th>Recurring</th><th>Notes</th><th>Added By</th><th>Last Updated</th><th style="width:100px">Actions</th></tr></thead>
+<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Payee Name</th><th>Description</th><th>Advertiser</th><th>Amount</th><th>Recurring</th><th>Notes</th><th>Added By</th><th>Last Updated</th><th style="width:100px">Actions</th></tr></thead>
 <tbody id="exp-tbody"></tbody>
 </table>
 </div>
@@ -3879,7 +3881,7 @@ return userExpenses.filter(function(e){
 if(expDeletes.has(e._key))return false;
 if(mf&&e.month!==mf)return false;
 if(cf&&e.category!==cf)return false;
-if(q&&!(e.description||'').toLowerCase().includes(q)&&!(e.category||'').toLowerCase().includes(q)&&!(e.notes||'').toLowerCase().includes(q))return false;
+if(q&&!(e.description||'').toLowerCase().includes(q)&&!(e.category||'').toLowerCase().includes(q)&&!(e.payee||'').toLowerCase().includes(q)&&!(e.notes||'').toLowerCase().includes(q))return false;
 return true;
 });
 }
@@ -3902,7 +3904,7 @@ setStat('exp-s-count',userExpenses.filter(function(e){return!expDeletes.has(e._k
 var catColors={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#f97316'};
 var tbody=document.getElementById('exp-tbody');
 if(!tbody)return;
-if(!f.length){tbody.innerHTML='<tr><td colspan="9" class="empty-state">No expenses recorded yet. Click "+ Add Expense" to start tracking.</td></tr>';return;}
+if(!f.length){tbody.innerHTML='<tr><td colspan="12" class="empty-state">No expenses recorded yet. Click "+ Add Expense" to start tracking.</td></tr>';return;}
 var rows=f.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
 tbody.innerHTML=rows.map(function(e,i){
 var cc=catColors[e.category]||'#64748b';
@@ -3910,6 +3912,7 @@ return'<tr>'+
 '<td>'+fmtDate(e.date)+'</td>'+
 '<td>'+(e.month||'—')+'</td>'+
 '<td><span style="display:inline-block;padding:3px 10px;border-radius:20px;background:'+cc+'18;color:'+cc+';font-size:.78rem;font-weight:600;border:1px solid '+cc+'30">'+(e.category||'Other')+'</span></td>'+
+'<td style="font-size:.82rem">'+(e.payee||'—')+'</td>'+
 '<td><strong>'+(e.description||'—')+'</strong></td>'+
 '<td style="font-size:.82rem">'+(e.advertiser||'—')+'</td>'+
 '<td style="color:var(--red);font-weight:700">$'+(e.amount||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
@@ -3931,6 +3934,7 @@ _key:'exp_'+Date.now(),
 date:date,
 month:month,
 category:document.getElementById('fe-category').value||'Other',
+payee:document.getElementById('fe-payee').value||'',
 description:document.getElementById('fe-desc').value||'',
 advertiser:document.getElementById('fe-advertiser').value||'',
 amount:parseFloat(document.getElementById('fe-amount').value)||0,
@@ -3944,7 +3948,7 @@ if(!ex.amount){alert('Please enter an amount.');return;}
 userExpenses.push(ex);
 localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSyncAllExpenses();
 document.getElementById('addExpenseModal').classList.remove('open');
-['fe-date','fe-desc','fe-amount','fe-notes','fe-advertiser'].forEach(function(id){document.getElementById(id).value='';});
+['fe-date','fe-desc','fe-amount','fe-notes','fe-advertiser','fe-payee'].forEach(function(id){document.getElementById(id).value='';});
 document.getElementById('fe-month').value='';
 document.getElementById('fe-category').value='Other';
 document.getElementById('fe-recurring').value='No';
@@ -3963,6 +3967,7 @@ _editExpIdx=userExpenses.indexOf(ex);
 document.getElementById('fee-date').value=ex.date||'';
 document.getElementById('fee-month').value=ex.month||'';
 document.getElementById('fee-category').value=ex.category||'Other';
+document.getElementById('fee-payee').value=ex.payee||'';
 document.getElementById('fee-desc').value=ex.description||'';
 document.getElementById('fee-advertiser').value=ex.advertiser||'';
 document.getElementById('fee-amount').value=ex.amount||'';
@@ -3980,6 +3985,7 @@ if(!month&&date){var d=new Date(date+'T00:00:00');var mNames=['January','Februar
 ex.date=date;
 ex.month=month;
 ex.category=document.getElementById('fee-category').value||'Other';
+ex.payee=document.getElementById('fee-payee').value||'';
 ex.description=document.getElementById('fee-desc').value||'';
 ex.advertiser=document.getElementById('fee-advertiser').value||'';
 ex.amount=parseFloat(document.getElementById('fee-amount').value)||0;
@@ -4728,9 +4734,9 @@ function downloadPNLReport(format){
     csv+='\nEXPENSE ENTRIES\n';
     csv+='Date,Month,Category,Description,Advertiser,Amount,Recurring,Notes\n';
     var csvExpRows=userExpenses.filter(function(e){if(expDeletes.has(e._key))return false;if(selMonth!=='All Months'&&e.month!==selMonth)return false;return true;});
-    csvExpRows.forEach(function(e){csv+='"'+(e.date||'')+'",'+(e.month||'')+','+'"'+(e.category||'Other')+'","'+(e.description||'').replace(/"/g,'""')+'","'+(e.advertiser||'').replace(/"/g,'""')+'",'+(e.amount||0).toFixed(2)+',"'+(e.recurring||'No')+'","'+(e.notes||'').replace(/"/g,'""')+'"\n';});
+    csvExpRows.forEach(function(e){csv+='"'+(e.date||'')+'",'+(e.month||'')+','+'"'+(e.category||'Other')+'","'+(e.payee||'').replace(/"/g,'""')+'","'+(e.description||'').replace(/"/g,'""')+'","'+(e.advertiser||'').replace(/"/g,'""')+'",'+(e.amount||0).toFixed(2)+',"'+(e.recurring||'No')+'","'+(e.notes||'').replace(/"/g,'""')+'"\n';});
     var csvExpTotal=csvExpRows.reduce(function(a,e){return a+(e.amount||0);},0);
-    csv+=',,,,,'+csvExpTotal.toFixed(2)+',,TOTAL EXPENSES\n';
+    csv+=',,,,,,'+csvExpTotal.toFixed(2)+',,TOTAL EXPENSES\n';
 
     // P&L Summary
     var psCsv=pnlSummaries[selMonth==='All Months'?'':selMonth];
@@ -4825,6 +4831,7 @@ function downloadPNLReport(format){
             e.date||'—',
             e.month||'—',
             e.category||'Other',
+            (e.payee||'—').substring(0,30),
             (e.description||'—').substring(0,40),
             e.advertiser||'—',
             '$'+(e.amount||0).toLocaleString(undefined,{minimumFractionDigits:2}),
@@ -4834,11 +4841,11 @@ function downloadPNLReport(format){
         });
         var expTotal=expRows.reduce(function(a,e){return a+(e.amount||0);},0);
         // Add total row
-        expData.push(['','','','','TOTAL EXPENSES:','$'+expTotal.toLocaleString(undefined,{minimumFractionDigits:2}),'','']);
+        expData.push(['','','','','','TOTAL EXPENSES:','$'+expTotal.toLocaleString(undefined,{minimumFractionDigits:2}),'','']);
 
         pdf.autoTable({
           startY:expY+4,
-          head:[['Date','Month','Category','Description','Advertiser','Amount','Recurring','Notes']],
+          head:[['Date','Month','Category','Payee Name','Description','Advertiser','Amount','Recurring','Notes']],
           body:expData,
           styles:{fontSize:8,cellPadding:2.5},
           headStyles:{fillColor:[239,68,68],textColor:255,fontStyle:'bold'},
