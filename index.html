@@ -2310,10 +2310,10 @@ const rows=await fetchCSV(gv(FCST_ID,s));
 rows.forEach(r=>{r._period=s;r._source='sheet';r.date=r['Inv Date']||r['Date']||'';r.affiliate=r['Affiliate Name']||r['Affiliate']||'';r.amount=parseAmt(r['Invoice Amount']||'0');});
 allFC.push(...rows.filter(r=>r.affiliate));
 }
-allPNL.filter(r=>r._source==='sheet').forEach(r=>{
+allPNL.filter(r=>r._source==='sheet'||r._source==='qb').forEach(r=>{
 const amt=r.rcvd>0?r.rcvd:r.displayAmt;
 if(amt<=0)return;
-allRev.push({_source:'sheet',_srcLabel:'P&L',_key:'rev_'+r._key,date:r.date,_week:getWeekLabel(r.date)||(r._month+' (monthly)'),_month:r._month,affiliate:r.affiliate,amount:amt,status:r.status,remarks:r.remarks});
+allRev.push({_source:r._source,_srcLabel:r._source==='qb'?'QB':'P&L',_key:'rev_'+r._key,date:r.date,_week:getWeekLabel(r.date)||(r._month+' (monthly)'),_month:r._month,affiliate:r.affiliate,amount:amt,status:r.status,remarks:r.remarks});
 });
 allRev.push(...userRev.map(r=>({...r,_week:getWeekLabel(r.date)||'Manual'})));
 document.getElementById('loadingOverlay').style.display='none';
@@ -2457,7 +2457,7 @@ var stEl=document.getElementById('rev-sub-total');if(stEl)stEl.textContent=subLa
 var sfEl=document.getElementById('rev-sub-forecast');if(sfEl)sfEl.textContent=subLabel+' forecast';
 var seEl=document.getElementById('rev-sub-expenses');if(seEl)seEl.textContent=subLabel;
 var affSet=new Set();f.forEach(function(r){if(r.affiliate&&r.affiliate!=='\xe2\x80\x94'&&r._recType==='revenue')affSet.add(r.affiliate);});
-var allAffSet=new Set();allPNL.filter(function(r2){return r2._source==='sheet'&&(!selM||r2._month===selM);}).forEach(function(r2){if(r2.affiliate)allAffSet.add(r2.affiliate);});
+var allAffSet=new Set();allPNL.filter(function(r2){return (r2._source==='sheet'||r2._source==='qb')&&(!selM||r2._month===selM);}).forEach(function(r2){if(r2.affiliate)allAffSet.add(r2.affiliate);});
 setStat('rev-s-affiliates',allAffSet.size||affSet.size);const sl=sortArr(f,revSort).slice((revPage-1)*pp,revPage*pp);document.getElementById('rev-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(revPage-1)*pp+i;var srcCls=(r._srcLabel||'pnl').toLowerCase();if(r._recType==='forecast')srcCls='forecast';return'<tr><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+$m(r.amount)+'</td><td style="font-size:.8rem;color:var(--text3)">'+(r._week||r._month||'&#8212;')+'</td><td style="font-size:.8rem">'+(r.remarks||'&#8212;')+'</td><td><span class="source-badge '+srcCls+'">'+(r._srcLabel||'P&L')+'</span></td></tr>';}).join(''):'<tr><td colspan="5" class="empty-state">No records found</td></tr>';renderPagination('rev',revPage,tp,pp,f.length);updateRevCharts(f.filter(function(r){return r._recType==='revenue';}));computeForecasts();}
 
 function computeForecasts(){
@@ -3727,24 +3727,24 @@ if(row)row.style.display=(st==='Partially Paid')?'':'none';
 
 // === MERGE MANUAL INVOICES INTO P&L SUMMARIES ===
 function mergeUserInvoices(){
-/* Financial summary: sheet summary rows as base (source of truth) + QB/user entries added dynamically.
-   UNPAID = ETC Balance / Accounts Receivable
-   PAID = Payment Received / Actual Revenue Collected */
+/* Financial summary: sheet summary rows as base + QB invoices + manual entries.
+   Source of truth: QB Invoices + Manual entries (effective May 2026).
+   Sheet summary provides base; unmatched QB entries (already deduped) add on top.
+   PAID → Payment Received.  UNPAID → ETC Balance / Accounts Receivable. */
 var snp=window._sheetInvoiceSnapshot||{};
 var expSnp=window._sheetExpenseSnapshot||{};
-/* Restore sheet summary as base */
+/* Restore sheet summary as base for revenue; expenses always from sheet */
 for(var mk in pnlSummaries){
   if(snp[mk]){pnlSummaries[mk].grossRevenue=snp[mk].grossRevenue||0;pnlSummaries[mk].paymentRcvd=snp[mk].paymentRcvd||0;pnlSummaries[mk].balance=snp[mk].balance||0;}
   if(expSnp[mk]){pnlSummaries[mk].totalExpenses=expSnp[mk].totalExpenses||0;pnlSummaries[mk].salary=expSnp[mk].salary||0;pnlSummaries[mk].ads=expSnp[mk].ads||0;}
   pnlSummaries[mk].beehiiv=0;pnlSummaries[mk].software=0;pnlSummaries[mk].contractors=0;pnlSummaries[mk].office=0;pnlSummaries[mk].otherExp=0;
 }
-/* Add non-sheet entries (user/manual only) on top — QB excluded, sheet already in summary */
+/* Add QB + manual entries on top of sheet base (sheet entries already in summary, QB deduped) */
 var allEntries=allPNL.concat(allFMD);
 allEntries.forEach(function(r){
   if(r._isSummary)return;
   var src=r._source||'';
   if(src==='sheet'||src==='fmd_sheet')return;/* Already in sheet summary */
-  if(src==='qb')return;/* QB excluded — PNL Sheet is source of truth for Jan-May */
   var k=r._key||'';if(k&&pnlDeletes.has(k))return;
   var m=r._month||'';if(!m||m==='Manual')return;
   if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
@@ -4308,7 +4308,7 @@ function renderOverview(){
     
     // Collection rate — PNL sheet + user entries only (QB excluded for now)
     var ovPaid=0,ovTotal=0;
-    allPNL.forEach(function(r){if(r._source==='qb')return;if(r._isSummary||!r._month||r._month!==curMonth)return;var a=r.displayAmt||0;if(a<=0)return;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
+    allPNL.forEach(function(r){if(r._isSummary||!r._month||r._month!==curMonth)return;var a=r.displayAmt||0;if(a<=0)return;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
