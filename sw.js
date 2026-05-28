@@ -1,4 +1,4 @@
-const CACHE_NAME = 'etc-dashboard-v3';
+const CACHE_NAME = 'etc-dashboard-v4';
 const ASSETS = ['/etc-pnl-report/', '/etc-pnl-report/index.html'];
 
 self.addEventListener('install', e => {
@@ -12,7 +12,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Skip cache-busted data fetches entirely — always go to network
   if (e.request.url.includes('_t=') || e.request.url.includes('gviz/tq')) {
     e.respondWith(fetch(e.request));
     return;
