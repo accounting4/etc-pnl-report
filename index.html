@@ -6245,7 +6245,8 @@ var dateCol=-1,merchCol=-1,amtCol=-1,refCol=-1,descCol=-1;
 headers.forEach(function(h,i){
 if(dateCol<0&&/date|posted|trans.*date|booking/.test(h))dateCol=i;
 if(amtCol<0&&/amount|debit|withdrawal|sum|value|total/.test(h))amtCol=i;
-if(merchCol<0&&/merchant|payee|vendor|name|counterpart|recipient/.test(h))merchCol=i;
+if(merchCol<0&&/merchant|vendor|name|counterpart|recipient/.test(h))merchCol=i;
+if(/payee/.test(h)&&i!==dateCol&&i!==amtCol)var _payeeCol=i;
 if(descCol<0&&/desc|memo|narration|particular|detail|reference|remark/.test(h))descCol=i;
 if(refCol<0&&/ref|check|cheque|trans.*id|transaction.*no/.test(h))refCol=i;
 });
@@ -6271,8 +6272,9 @@ var merch=(merchCol>=0?(row[merchCol]||''):'').toString().trim();
 var ref=(refCol>=0?(row[refCol]||''):'').toString().trim();
 if(!ref&&descCol>=0&&descCol!==merchCol)ref=(row[descCol]||'').toString().trim();
 var parsedDate=emParseDate(dateVal);
+var payeeVal=(typeof _payeeCol!=='undefined'&&_payeeCol>=0?(row[_payeeCol]||''):'').toString().trim();
 emReviewQueue.push({
-date:parsedDate||dateVal,merchant:merch||'Unknown',amount:amtNum,
+date:parsedDate||dateVal,merchant:merch||'Unknown',payee:payeeVal,amount:amtNum,
 reference:ref,category:emCategorize(merch),source:source,
 _key:'em_'+Date.now()+'_'+Math.random().toString(36).substr(2,6)+'_'+r
 });
@@ -6298,7 +6300,7 @@ if(amtNum>0&&amtNum<1000000){
 var merch=m[2].trim().replace(/\s{2,}/g,' ');
 if(merch.length>2&&merch.length<100){
 emReviewQueue.push({
-date:emParseDate(m[1])||m[1],merchant:merch,amount:amtNum,
+date:emParseDate(m[1])||m[1],merchant:merch,payee:'',amount:amtNum,
 reference:'',category:emCategorize(merch),source:source,
 _key:'em_'+Date.now()+'_'+Math.random().toString(36).substr(2,6)+'_'+li
 });
@@ -6325,6 +6327,7 @@ document.getElementById('em-review-count').textContent=emReviewQueue.length;
 var tb=document.getElementById('em-review-tbody');
 tb.innerHTML=emReviewQueue.map(function(tx,i){
 return'<tr><td>'+tx.date+'</td><td><input type="text" value="'+escH(tx.merchant)+'" onchange="emReviewQueue['+i+'].merchant=this.value;emReviewQueue['+i+'].category=emCategorize(this.value);this.closest(\'tr\').querySelector(\'.em-cat-sel\').value=emReviewQueue['+i+'].category" style="width:100%;background:var(--surface);border:1px solid var(--border);padding:4px 8px;border-radius:6px;color:var(--text)"></td>'
++'<td><input type="text" value="'+escH(tx.payee||'')+'" onchange="emReviewQueue['+i+'].payee=this.value" placeholder="Payee name" style="width:100%;background:var(--surface);border:1px solid var(--border);padding:4px 8px;border-radius:6px;color:var(--text)"></td>'
 +'<td style="font-weight:700;color:var(--red)">$'+tx.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
 +'<td style="font-size:.82rem;color:var(--text3)">'+escH(tx.reference||'—')+'</td>'
 +'<td><select class="em-cat-sel" onchange="emReviewQueue['+i+'].category=this.value" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.82rem">'+EM_CATEGORIES.map(function(c){return'<option'+(c===tx.category?' selected':'')+'>'+c+'</option>';}).join('')+'</select></td>'
@@ -6354,6 +6357,7 @@ var html='<div class="modal-overlay" id="em-manual-modal" style="display:flex" o
 +'<h3>➕ Add Transaction</h3>'
 +'<div class="modal-row"><label>Date</label><input id="em-m-date" type="date" value="'+new Date().toISOString().split('T')[0]+'"></div>'
 +'<div class="modal-row"><label>Merchant</label><input id="em-m-merchant" type="text" placeholder="e.g. AWS, Anthropic, Canva"></div>'
++'<div class="modal-row"><label>Payee Name</label><input id="em-m-payee" type="text" placeholder="e.g. John Smith"></div>'
 +'<div class="modal-row"><label>Amount ($)</label><input id="em-m-amount" type="number" step="0.01" placeholder="0.00"></div>'
 +'<div class="modal-row"><label>Reference</label><input id="em-m-ref" type="text" placeholder="Optional"></div>'
 +'<div class="modal-row"><label>Category</label><select id="em-m-cat">'+EM_CATEGORIES.map(function(c){return'<option>'+c+'</option>';}).join('')+'</select></div>'
@@ -6371,7 +6375,8 @@ var a=parseFloat(document.getElementById('em-m-amount').value)||0;
 var r=document.getElementById('em-m-ref').value.trim();
 var c=document.getElementById('em-m-cat').value;
 if(!m||!a){alert('Merchant and amount required');return;}
-emTransactions.push({date:d,merchant:m,amount:Math.abs(a),reference:r,category:c,source:'Manual',_key:'em_'+Date.now()+'_'+Math.random().toString(36).substr(2,6)});
+var p=(document.getElementById('em-m-payee')||{}).value||'';
+emTransactions.push({date:d,merchant:m,payee:p.trim(),amount:Math.abs(a),reference:r,category:c,source:'Manual',_key:'em_'+Date.now()+'_'+Math.random().toString(36).substr(2,6)});
 emSaveTransactions();
 document.getElementById('em-manual-modal').remove();
 emRenderAll();
@@ -6500,7 +6505,7 @@ var mf=(document.getElementById('em-tx-month-f')||{}).value||'';
 return emTransactions.filter(function(tx){
 if(cf&&tx.category!==cf)return false;
 if(mf&&emGetMonth(tx.date)!==mf)return false;
-if(q&&!(tx.merchant+' '+tx.reference+' '+tx.category).toLowerCase().includes(q.toLowerCase()))return false;
+if(q&&!(tx.merchant+' '+(tx.payee||'')+' '+tx.reference+' '+tx.category).toLowerCase().includes(q.toLowerCase()))return false;
 return true;
 });
 }
@@ -6529,8 +6534,8 @@ tb.innerHTML=sl.length?sl.map(function(tx,i){
 var gi=start+i;
 var catBadge='<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:600;background:'+(EM_CAT_COLORS[tx.category]||'#64748b')+'22;color:'+(EM_CAT_COLORS[tx.category]||'#64748b')+'">'+tx.category+'</span>';
 var srcBadge=tx.source==='Manual'?'<span style="font-size:9px;background:var(--green);color:#fff;padding:1px 5px;border-radius:4px">Manual</span>':'<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px">Import</span>';
-return'<tr><td>'+tx.date+'</td><td><strong>'+escH(tx.merchant)+'</strong></td><td style="font-weight:700;color:var(--red)">$'+tx.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td style="font-size:.82rem;color:var(--text3)">'+escH(tx.reference||'—')+'</td><td>'+catBadge+'</td><td>'+srcBadge+'</td><td class="action-cell"><button class="btn-edit" onclick="emEditTx(\''+tx._key+'\')">✎</button> <button class="btn-del" onclick="emDeleteTx(\''+tx._key+'\')">🗑</button></td></tr>';
-}).join(''):'<tr><td colspan="7" class="empty-state">No transactions. Upload bank statements to get started!</td></tr>';
+return'<tr><td>'+tx.date+'</td><td><strong>'+escH(tx.merchant)+'</strong></td><td style="font-size:.82rem">'+escH(tx.payee||'—')+'</td><td style="font-weight:700;color:var(--red)">$'+tx.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td style="font-size:.82rem;color:var(--text3)">'+escH(tx.reference||'—')+'</td><td>'+catBadge+'</td><td>'+srcBadge+'</td><td class="action-cell"><button class="btn-edit" onclick="emEditTx(\''+tx._key+'\')">✎</button> <button class="btn-del" onclick="emDeleteTx(\''+tx._key+'\')">🗑</button></td></tr>';
+}).join(''):'<tr><td colspan="8" class="empty-state">No transactions. Upload bank statements to get started!</td></tr>';
 /* Pagination */
 var pEl=document.getElementById('em-tx-pagination');
 if(tp<=1){pEl.innerHTML='';return;}
@@ -6548,6 +6553,7 @@ var html='<div class="modal-overlay" id="em-edit-modal" style="display:flex" onc
 +'<h3>✎ Edit Transaction</h3>'
 +'<div class="modal-row"><label>Date</label><input id="em-e-date" type="date" value="'+tx.date+'"></div>'
 +'<div class="modal-row"><label>Merchant</label><input id="em-e-merchant" type="text" value="'+escH(tx.merchant)+'"></div>'
++'<div class="modal-row"><label>Payee Name</label><input id="em-e-payee" type="text" value="'+escH(tx.payee||'')+'"></div>'
 +'<div class="modal-row"><label>Amount ($)</label><input id="em-e-amount" type="number" step="0.01" value="'+tx.amount+'"></div>'
 +'<div class="modal-row"><label>Reference</label><input id="em-e-ref" type="text" value="'+escH(tx.reference||'')+'"></div>'
 +'<div class="modal-row"><label>Category</label><select id="em-e-cat">'+EM_CATEGORIES.map(function(c){return'<option'+(c===tx.category?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div>'
@@ -6562,6 +6568,7 @@ var tx=emTransactions.find(function(t){return t._key===key;});
 if(!tx)return;
 tx.date=document.getElementById('em-e-date').value;
 tx.merchant=document.getElementById('em-e-merchant').value.trim();
+tx.payee=(document.getElementById('em-e-payee')||{value:''}).value.trim();
 tx.amount=Math.abs(parseFloat(document.getElementById('em-e-amount').value))||0;
 tx.reference=document.getElementById('em-e-ref').value.trim();
 var newCat=document.getElementById('em-e-cat').value;
@@ -6690,9 +6697,9 @@ document.getElementById('em-report-content').innerHTML=html;
 function emExportCSV(){
 var data=emGetFiltered();
 if(!data.length){alert('No transactions to export');return;}
-var csv='Date,Merchant,Amount,Reference,Category,Source\n';
+var csv='Date,Merchant,Payee Name,Amount,Reference,Category,Source\n';
 data.forEach(function(tx){
-csv+='"'+tx.date+'","'+tx.merchant.replace(/"/g,'""')+'",'+tx.amount+',"'+(tx.reference||'').replace(/"/g,'""')+'","'+tx.category+'","'+(tx.source||'')+'"'+'\n';
+csv+='"'+tx.date+'","'+tx.merchant.replace(/"/g,'""')+'","'+(tx.payee||'').replace(/"/g,'""')+'",'+tx.amount+',"'+(tx.reference||'').replace(/"/g,'""')+'","'+tx.category+'","'+(tx.source||'')+'"'+'\n';
 });
 var blob=new Blob([csv],{type:'text/csv'});
 var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ETC_Expenses_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
@@ -6700,7 +6707,7 @@ var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='E
 function emExportExcel(){
 var data=emGetFiltered();
 if(!data.length){alert('No transactions to export');return;}
-var ws=XLSX.utils.json_to_sheet(data.map(function(tx){return{Date:tx.date,Merchant:tx.merchant,Amount:tx.amount,Reference:tx.reference||'',Category:tx.category,Source:tx.source||''};}));
+var ws=XLSX.utils.json_to_sheet(data.map(function(tx){return{Date:tx.date,Merchant:tx.merchant,'Payee Name':tx.payee||'',Amount:tx.amount,Reference:tx.reference||'',Category:tx.category,Source:tx.source||''};}));
 var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Expenses');
 XLSX.writeFile(wb,'ETC_Expenses_'+new Date().toISOString().split('T')[0]+'.xlsx');
 }
@@ -6709,11 +6716,11 @@ var month=(document.getElementById('em-report-month')||{}).value||'';
 var filtered=emTransactions.filter(function(tx){return emGetMonth(tx.date)===month;});
 if(!filtered.length){alert('No data for selected month');return;}
 if(fmt==='csv'){
-var csv='Date,Merchant,Amount,Reference,Category\n';
-filtered.forEach(function(tx){csv+='"'+tx.date+'","'+tx.merchant.replace(/"/g,'""')+'",'+tx.amount+',"'+(tx.reference||'')+'","'+tx.category+'"'+'\n';});
+var csv='Date,Merchant,Payee Name,Amount,Reference,Category\n';
+filtered.forEach(function(tx){csv+='"'+tx.date+'","'+tx.merchant.replace(/"/g,'""')+'","'+(tx.payee||'').replace(/"/g,'""')+'",'+tx.amount+',"'+(tx.reference||'')+'","'+tx.category+'"'+'\n';});
 var blob=new Blob([csv],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ETC_Report_'+month.replace(/\s/g,'_')+'.csv';a.click();
 }else{
-var ws=XLSX.utils.json_to_sheet(filtered.map(function(tx){return{Date:tx.date,Merchant:tx.merchant,Amount:tx.amount,Reference:tx.reference||'',Category:tx.category};}));
+var ws=XLSX.utils.json_to_sheet(filtered.map(function(tx){return{Date:tx.date,Merchant:tx.merchant,'Payee Name':tx.payee||'',Amount:tx.amount,Reference:tx.reference||'',Category:tx.category};}));
 var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Report');
 XLSX.writeFile(wb,'ETC_Report_'+month.replace(/\s/g,'_')+'.xlsx');
 }
@@ -6816,7 +6823,7 @@ if(!_emInitDone){_emInitDone=true;setTimeout(emLoadTransactions,500);}
 </div>
 <div style="overflow-x:auto;margin-top:10px">
 <table class="data-table" id="em-review-table"><thead><tr>
-<th>Date</th><th>Merchant</th><th>Amount</th><th>Reference</th><th>Category</th><th>Actions</th>
+<th>Date</th><th>Merchant</th><th>Payee Name</th><th>Amount</th><th>Reference</th><th>Category</th><th>Actions</th>
 </tr></thead><tbody id="em-review-tbody"></tbody></table>
 </div>
 </div>
@@ -6870,6 +6877,7 @@ if(!_emInitDone){_emInitDone=true;setTimeout(emLoadTransactions,500);}
 <table class="data-table"><thead><tr>
 <th style="cursor:pointer" onclick="emSort('date')">Date ⇅</th>
 <th style="cursor:pointer" onclick="emSort('merchant')">Merchant ⇅</th>
+<th style="cursor:pointer" onclick="emSort('payee')">Payee ⇅</th>
 <th style="cursor:pointer" onclick="emSort('amount')">Amount ⇅</th>
 <th>Reference</th>
 <th style="cursor:pointer" onclick="emSort('category')">Category ⇅</th>
