@@ -6241,15 +6241,17 @@ function emExtractFromRows(rows,source){
 if(!rows||rows.length<2)return;
 var headers=rows[0].map(function(h){return(h||'').toString().toLowerCase().trim();});
 /* Auto-detect columns */
-var dateCol=-1,merchCol=-1,amtCol=-1,refCol=-1,descCol=-1;
+var dateCol=-1,merchCol=-1,amtCol=-1,refCol=-1,descCol=-1,payeeCol=-1;
 headers.forEach(function(h,i){
 if(dateCol<0&&/date|posted|trans.*date|booking/.test(h))dateCol=i;
 if(amtCol<0&&/amount|debit|withdrawal|sum|value|total/.test(h))amtCol=i;
 if(merchCol<0&&/merchant|vendor|name|counterpart|recipient/.test(h))merchCol=i;
-if(/payee/.test(h)&&i!==dateCol&&i!==amtCol)var _payeeCol=i;
+if(payeeCol<0&&/payee/.test(h))payeeCol=i;
 if(descCol<0&&/desc|memo|narration|particular|detail|reference|remark/.test(h))descCol=i;
 if(refCol<0&&/ref|check|cheque|trans.*id|transaction.*no/.test(h))refCol=i;
 });
+/* If payee col found but no merchant col, use payee as merchant too */
+if(merchCol<0&&payeeCol>=0)merchCol=payeeCol;
 /* Fallbacks: if no merchant col found, use description */
 if(merchCol<0&&descCol>=0)merchCol=descCol;
 if(merchCol<0){/* Try first text column after date */
@@ -6272,7 +6274,8 @@ var merch=(merchCol>=0?(row[merchCol]||''):'').toString().trim();
 var ref=(refCol>=0?(row[refCol]||''):'').toString().trim();
 if(!ref&&descCol>=0&&descCol!==merchCol)ref=(row[descCol]||'').toString().trim();
 var parsedDate=emParseDate(dateVal);
-var payeeVal=(typeof _payeeCol!=='undefined'&&_payeeCol>=0?(row[_payeeCol]||''):'').toString().trim();
+var payeeVal=(payeeCol>=0?(row[payeeCol]||''):'').toString().trim();
+if(!payeeVal&&merch)payeeVal=merch;
 emReviewQueue.push({
 date:parsedDate||dateVal,merchant:merch||'Unknown',payee:payeeVal,amount:amtNum,
 reference:ref,category:emCategorize(merch),source:source,
@@ -6300,7 +6303,7 @@ if(amtNum>0&&amtNum<1000000){
 var merch=m[2].trim().replace(/\s{2,}/g,' ');
 if(merch.length>2&&merch.length<100){
 emReviewQueue.push({
-date:emParseDate(m[1])||m[1],merchant:merch,payee:'',amount:amtNum,
+date:emParseDate(m[1])||m[1],merchant:merch,payee:merch,amount:amtNum,
 reference:'',category:emCategorize(merch),source:source,
 _key:'em_'+Date.now()+'_'+Math.random().toString(36).substr(2,6)+'_'+li
 });
