@@ -2232,36 +2232,66 @@ qbRows.forEach(r=>{
   if(cust.toUpperCase().includes('FINANCE BUZZ'))return;
   if(dateParts[0]==='2026'){if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;}
   var _mo=['January','February','March','April','May','June','July','August','September','October','November','December'];var qbMi=_mo.indexOf(monthName);var prevMonthName=qbMi>0?_mo[qbMi-1]:'';
+  const custUp=cust.toUpperCase();
+  var cN=custUp.replace(/[\s\-\.]/g,'');
+  /* Two-pass dedup: 1) amount+name match  2) name-only match (same company, different amount) */
+  function _qbNameMatch(pAff){
+    var pN=pAff.replace(/[\s\-\.]/g,'');
+    if(pN.length>3&&cN.length>3&&(pN.includes(cN)||cN.includes(pN)))return true;
+    if(pAff.length>3&&custUp.length>3&&(pAff.includes(custUp)||custUp.includes(pAff)))return true;
+    if((custUp.includes('LIFEWAT')||custUp.includes('LWM'))&&(pAff.includes('LIFEWAT')||pAff.includes('LWM')))return true;
+    if(custUp.includes('EMPIRE')&&pAff.includes('EMPIRE'))return true;
+    if(custUp.includes('SPARKLOOP')&&pAff.includes('SPARKLOOP'))return true;
+    if(custUp.includes('PLATFORM')&&pAff.includes('PLATFORM'))return true;
+    if(custUp.includes('NETEFFECT')&&pAff.includes('NETEFFECT'))return true;
+    if(custUp.includes('CRYPTO')&&pAff.includes('CRYPTO'))return true;
+    if(custUp.includes('OXFORD')&&pAff.includes('OXFORD'))return true;
+    if(custUp.includes('INTERACTIVE')&&pAff.includes('INTERACTIVE'))return true;
+    if(custUp.includes('MARKETWISE')&&pAff.includes('MARKETWISE'))return true;
+    if(custUp.includes('GOLDEN')&&pAff.includes('GOLDEN'))return true;
+    if(custUp.includes('SELLET')&&pAff.includes('SELLET'))return true;
+    if(custUp.includes('GUYSTOCKS')&&pAff.includes('GUYSTOCKS'))return true;
+    if(custUp.includes('MILLIONAIRE')&&pAff.includes('MILLIONAIRE'))return true;
+    if(custUp.includes('STOCK TO TRADE')&&pAff.includes('STOCK'))return true;
+    if(custUp.includes('INVESTINGCHANNEL')&&pAff.includes('INVESTING CHANNEL'))return true;
+    if(custUp.includes('TRADING TIPS')&&pAff.includes('TRADING TIPS'))return true;
+    if(custUp.includes('STANSBERRY')&&pAff.includes('STANSBERRY'))return true;
+    if(custUp.includes('BROWNSTONE')&&pAff.includes('BROWNSTONE'))return true;
+    if(custUp.includes('MEZA')&&pAff.includes('MEZA'))return true;
+    if(custUp.includes('FIRSTBALLOT')&&pAff.includes('FIRSTBALLOT'))return true;
+    if(custUp.includes('WEISS')&&pAff.includes('WEISS'))return true;
+    if(custUp.includes('PARADIGM')&&pAff.includes('PARADIGM'))return true;
+    if(custUp.includes('PORTER')&&pAff.includes('PORTER'))return true;
+    if(custUp.includes('ANGEL')&&pAff.includes('ANGEL'))return true;
+    if(custUp.includes('PARETO')&&pAff.includes('PARETO'))return true;
+    if(custUp.includes('WISER')&&pAff.includes('WISER'))return true;
+    if(custUp.includes('SECCO')&&pAff.includes('SECCO'))return true;
+    if(custUp.includes('KARMAHOLIC')&&pAff.includes('KARMAHOLIC'))return true;
+    if(custUp.includes('MARKETJAR')&&pAff.includes('MARKETJAR'))return true;
+    return false;
+  }
+  /* Pass 1: amount + name match */
   const matchPNL=allPNL.some(p=>{
     if(p._isSummary||p._source==='qb')return false;
     const pAff=(p.affiliate||'').toUpperCase();
     const pAmt=p.rcvd>0?p.rcvd:p.displayAmt;
     if(p._month!==monthName&&p._month!==prevMonthName)return false;
+    /* Doc number match (regardless of amount) */
+    if(doc&&p.invId&&p.invId===doc)return true;
     if(Math.abs(pAmt-amt)<1){
-      const custUp=cust.toUpperCase();
-      if(doc&&p.invId&&p.invId===doc)return true;
-      var cN=custUp.replace(/[\s\-\.]/g,''),pN=pAff.replace(/[\s\-\.]/g,'');
-      if(pN.includes(cN)||cN.includes(pN))return true;
-      if(pAff.includes(custUp)||custUp.includes(pAff))return true;
-      if((custUp.includes('LIFEWAT')||custUp.includes('LWM'))&&(pAff.includes('LIFEWAT')||pAff.includes('LWM')))return true;
-      if(custUp.includes('EMPIRE')&&pAff.includes('EMPIRE'))return true;
-      if(custUp.includes('SPARKLOOP')&&pAff.includes('SPARKLOOP'))return true;
-      if(custUp.includes('PLATFORM')&&pAff.includes('PLATFORM'))return true;
-      if(custUp.includes('NETEFFECT')&&pAff.includes('NETEFFECT'))return true;
-      if(custUp.includes('CRYPTO')&&pAff.includes('CRYPTO'))return true;
-      if(custUp.includes('OXFORD')&&pAff.includes('OXFORD'))return true;
-      if(custUp.includes('INTERACTIVE')&&pAff.includes('INTERACTIVE'))return true;
-      if(custUp.includes('MARKETWISE')&&pAff.includes('MARKETWISE'))return true;
-      if(custUp.includes('GOLDEN')&&pAff.includes('GOLDEN'))return true;
-      if(custUp.includes('SELLET')&&pAff.includes('SELLET'))return true;
-      if(custUp.includes('GUYSTOCKS')&&pAff.includes('GUYSTOCKS'))return true;
-      if(custUp.includes('MILLIONAIRE')&&pAff.includes('MILLIONAIRE'))return true;
-      if(custUp.includes('STOCK TO TRADE')&&pAff.includes('STOCK'))return true;
-      if(custUp.includes('INVESTINGCHANNEL')&&pAff.includes('INVESTING CHANNEL'))return true;
+      if(_qbNameMatch(pAff))return true;
     }
     return false;
   });
   if(matchPNL){qbSkipped++;return;}
+  /* Pass 2: name-only match — same company in same month with different amount (already in PNL sheet) */
+  const nameOnlyMatch=allPNL.some(p=>{
+    if(p._isSummary||p._source==='qb')return false;
+    if(p._month!==monthName)return false;
+    const pAff=(p.affiliate||'').toUpperCase();
+    return _qbNameMatch(pAff);
+  });
+  if(nameOnlyMatch){qbSkipped++;return;}
   const fmtDate=dateParts.length===3?(dateParts[1]+'/'+dateParts[2]+'/'+dateParts[0]):date;
   allPNL.push({
     _month:monthName,_source:'qb',invId:'QB#'+doc,
