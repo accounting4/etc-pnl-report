@@ -2292,6 +2292,9 @@ qbRows.forEach(r=>{
     return _qbNameMatch(pAff);
   });
   if(nameOnlyMatch){qbSkipped++;return;}
+  /* Jan–Apr: PNL sheet is sole source of truth — skip QB additions for those months */
+  var _historicalMonths=['January','February','March','April'];
+  if(_historicalMonths.indexOf(monthName)>=0){qbSkipped++;return;}
   const fmtDate=dateParts.length===3?(dateParts[1]+'/'+dateParts[2]+'/'+dateParts[0]):date;
   allPNL.push({
     _month:monthName,_source:'qb',invId:'QB#'+doc,
@@ -2340,7 +2343,7 @@ const rows=await fetchCSV(gv(FCST_ID,s));
 rows.forEach(r=>{r._period=s;r._source='sheet';r.date=r['Inv Date']||r['Date']||'';r.affiliate=r['Affiliate Name']||r['Affiliate']||'';r.amount=parseAmt(r['Invoice Amount']||'0');});
 allFC.push(...rows.filter(r=>r.affiliate));
 }
-allPNL.filter(r=>r._source==='sheet'||r._source==='qb').forEach(r=>{
+allPNL.filter(r=>{if(r._source==='sheet')return true;if(r._source==='qb'){/* Jan-Apr: sheet only */var _hm=['January','February','March','April'];return _hm.indexOf(r._month)<0;}return false;}).forEach(r=>{
 const amt=r.rcvd>0?r.rcvd:r.displayAmt;
 if(amt<=0)return;
 allRev.push({_source:r._source,_srcLabel:r._source==='qb'?'QB':'P&L',_key:'rev_'+r._key,date:r.date,_week:getWeekLabel(r.date)||(r._month+' (monthly)'),_month:r._month,affiliate:r.affiliate,amount:amt,status:r.status,remarks:r.remarks});
@@ -3770,11 +3773,14 @@ for(var mk in pnlSummaries){
   pnlSummaries[mk].beehiiv=0;pnlSummaries[mk].software=0;pnlSummaries[mk].contractors=0;pnlSummaries[mk].office=0;pnlSummaries[mk].otherExp=0;
 }
 /* Add QB + manual entries on top of sheet base (sheet entries already in summary, QB deduped) */
+/* Jan–Apr: PNL sheet is sole source — only add QB/manual for May onward */
+var _histMonths=['January','February','March','April'];
 var allEntries=allPNL.concat(allFMD);
 allEntries.forEach(function(r){
   if(r._isSummary)return;
   var src=r._source||'';
   if(src==='sheet'||src==='fmd_sheet')return;/* Already in sheet summary */
+  if(src==='qb'&&_histMonths.indexOf(r._month)>=0)return;/* Jan-Apr: sheet only */
   var k=r._key||'';if(k&&pnlDeletes.has(k))return;
   var m=r._month||'';if(!m||m==='Manual')return;
   if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
