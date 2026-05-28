@@ -1132,32 +1132,6 @@ Secured with Firebase Authentication
 <div class="q-grid" id="q-grid"></div>
 </div>
 
-<div class="section-toggle" onclick="toggleSec('pnl-expense-breakdown',this)"><h3>💸 Expense Breakdown</h3><span class="t-arrow">▾</span></div>
-<div id="pnl-expense-breakdown" class="section-toggle-body closed">
-<div class="stats-row" style="margin-bottom:14px">
-<div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="expb-total">$0</div><div class="sc-sub">All categories</div></div>
-<div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="expb-month">$0</div><div class="sc-sub" id="expb-month-label">Current month</div></div>
-<div class="stat-card purple"><div class="sc-label">Top Category</div><div class="sc-value" id="expb-top-cat" style="font-size:1rem">—</div><div class="sc-sub">By spend</div></div>
-<div class="stat-card blue"><div class="sc-label">Entries</div><div class="sc-value" id="expb-count">0</div><div class="sc-sub">Total records</div></div>
-</div>
-<div class="two-col" style="margin-bottom:20px;align-items:stretch">
-<div class="table-card" style="margin-bottom:0">
-<div class="section-title" style="margin-bottom:12px"><div class="icon-circle">📋</div> Expenses by Category</div>
-<table><thead><tr><th>Category</th><th>Entries</th><th>Amount</th><th>% of Total</th></tr></thead>
-<tbody id="expb-cat-tbody"></tbody>
-<tfoot id="expb-cat-tfoot"></tfoot>
-</table>
-</div>
-<div class="chart-card" style="margin-bottom:0"><h3>📊 Expense Distribution</h3><div class="chart-wrap" style="height:300px"><canvas id="expBreakdownChart"></canvas></div></div>
-</div>
-<div class="table-card" style="margin-bottom:0">
-<div class="section-title" style="margin-bottom:12px"><div class="icon-circle">📅</div> Monthly Expense Summary</div>
-<table><thead><tr><th>Month</th><th>Entries</th><th>Total</th><th>Top Category</th></tr></thead>
-<tbody id="expb-monthly-tbody"></tbody>
-<tfoot id="expb-monthly-tfoot"></tfoot>
-</table>
-</div>
-</div>
 
 <div class="section-header section-collapsible collapsed" onclick="toggleSection('sec-invoices')">
 <div class="section-title"><div class="icon-circle">&#128181;</div> Financial Records <span style="font-size:.72rem;font-weight:400;color:var(--text3);margin-left:6px">Invoices + Expenses — Unified P&L System</span> <span class="collapse-icon">&#9660;</span></div>
@@ -2361,7 +2335,7 @@ function buildMonthButtons(){
 const c=document.getElementById('pnl-month-buttons');if(!c)return;
 c.innerHTML='';
 const ab=document.createElement('button');ab.className='month-btn active';ab.textContent='All Months';
-ab.onclick=()=>{c.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('active'));ab.classList.add('active');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-summary-banner').style.display='none';applyPNLFilters();try{renderExpenseBreakdown();}catch(e){}};
+ab.onclick=()=>{c.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('active'));ab.classList.add('active');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-summary-banner').style.display='none';applyPNLFilters();};
 c.appendChild(ab);
 _getPNLMonths().forEach(m=>{
 const b=document.createElement('button');b.className='month-btn';b.textContent=m;
@@ -2395,10 +2369,10 @@ if(_bhDisplay>0){
   if(_bhDailyKeys.length){bhLine+='<div style="margin-left:16px;border-left:2px solid #f97316;padding-left:10px;margin-top:4px"><div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:2px">📅 Daily</div>';_bhDailyKeys.forEach(function(dk){var dl=dk;try{var dp=dk.split('-');dl=new Date(dp[0],dp[1]-1,dp[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch(e){}bhLine+='<div class="psb-line" style="font-size:.82rem"><span class="psb-key" style="color:var(--text3)">'+dl+'</span><span class="psb-value" style="font-size:.82rem;color:#f97316">'+$m(_bhApiDailyMap[dk])+'</span></div>';});bhLine+='</div>';}
   bhLine+='</div>';
 }
-cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div>'+bhLine+'</div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';try{renderExpenseBreakdown();}catch(e){}}
+cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">Revenue</div><div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value gold">'+$m(liveRcvd)+'</span></div><div class="psb-line"><span class="psb-key">Total Revenue</span><span class="psb-value gold">'+$m(liveRev)+'</span></div><div class="psb-line"><span class="psb-key">ETC Balance</span><span class="psb-value">'+$m(liveBal)+'</span></div>'+bhLine+'</div><div class="psb-group"><div class="psb-group-title">Expenses</div>'+expLines+'</div><div class="psb-group"><div class="psb-group-title">Net Result</div><div class="psb-line"><span class="psb-key">Net Profit</span><span class="psb-value green">'+$m(liveNet)+'</span></div></div>';}
 </script><script>
 function getRevFilt(){const q=((document.getElementById('rev-search')||{}).value||'').toLowerCase(),mf=(document.getElementById('rev-month-f')||{}).value||'',tf=(document.getElementById('rev-type-f')||{}).value||'',{from,to}=getDR('rev');var merged=allRev.map(function(r){return Object.assign({},r,{_recType:'revenue'});}).concat(allFC.map(function(r){return{_recType:'forecast',_source:'forecast',_srcLabel:'Forecast',_key:r._key||('fc_'+r.affiliate),date:r.date,_week:r._period||'',_month:r._period?r._period.replace(/\s*week.*/i,'').trim():'',affiliate:r.affiliate,amount:r.amount,status:'',remarks:''};}));return merged.filter(r=>{if(tf==='revenue'&&r._recType!=='revenue')return false;if(tf==='forecast'&&r._recType!=='forecast')return false;if(mf&&r._month!==mf&&!(r._week||'').toLowerCase().includes(mf.toLowerCase().substring(0,3)))return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
-function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{var dk=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(dk&&pnlDeletes.has(dk))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&!r._isExpense&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
+function getPNLFilt(){const q=(document.getElementById('pnl-search').value||'').toLowerCase(),mf=document.getElementById('pnl-month-f').value,sf=document.getElementById('pnl-status-f').value;return allPNL.filter(r=>{var dk=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(dk&&pnlDeletes.has(dk))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;if(!r._isSummary&&(r.displayAmt||0)===0&&(r.rcvd||0)===0){var sm=pnlSummaries[r._month];if(!sm||!sm.totalExpenses)return false;}return true;});}
 function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').toLowerCase();const tf=(document.getElementById('cto-type-f')||{}).value||'';const mf=(document.getElementById('cto-month-f')||{}).value||'';return allCTO.filter(r=>{var name=r['Advertiser/Offer']||r['Advertiser']||r['Offers']||'';if(!name||!name.trim())return false;if(mf&&r._month!==mf)return false;if(tf){var t=(r['Type']||r._ctoType||'').toUpperCase();if(!t.includes(tf))return false;}if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function getFcFilt(){const q=(document.getElementById('fc-search').value||'').toLowerCase(),pf=document.getElementById('fc-period-f').value;return allFC.filter(r=>{if(pf&&r._period!==pf)return false;if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;return true;});}
 function getFMDFilt(){const q=(document.getElementById('fmd-search').value||'').toLowerCase(),mf=document.getElementById('fmd-month-f').value,sf=document.getElementById('fmd-status-f').value,{from,to}=getDR('fmd');return allFMD.filter(r=>{var k=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(k&&fmdDeletes.has(k))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
@@ -2659,7 +2633,7 @@ if(ctEl)ctEl.style.display=range==='custom'?'block':'none';
 computeForecasts();
 }
 
-function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{if(r._source==='em'||r._source==='uexp')return;const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});var targetMonth=selMonthF;let lr=0,lb=0,lrv=0,ltexp=0;if(targetMonth){var ps=pnlSummaries[targetMonth]||{};lrv=ps.grossRevenue||0;lr=ps.paymentRcvd||0;lb=ps.balance||0;ltexp=ps.totalExpenses||0;}else{for(var mk in pnlSummaries){var ps=pnlSummaries[mk];lrv+=(ps.grossRevenue||0);lr+=(ps.paymentRcvd||0);lb+=(ps.balance||0);ltexp+=(ps.totalExpenses||0);}}setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));setStat('pnl-s-count',$m(ltexp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;var isSheet=(r._source==='sheet');var isEM=(r._source==='em');var isUExp=(r._source==='uexp');var isQB=(r._source==='qb');var srcBadge=(isEM||isUExp)?'<span style="font-size:9px;background:#ef4444;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Expense</span>':(isQB?'<span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">QB</span>':(isSheet?'<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Sheet</span>':(r._source==='user'?'<span style="font-size:9px;background:var(--green);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Manual</span>':'')));var _isExpRow=(isEM||isUExp);var actBtns=isEM?'<span style="font-size:.75rem;color:var(--text3)">via EM</span>':(isUExp?'<span style="font-size:.75rem;color:var(--text3)">via Expenses</span>':'<button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button>');var rk=_safeKey(r._key||r.invId||'gi'+gi);var _expAmt=_isExpRow?'<span style="color:#ef4444;font-weight:700">-'+$m(r.invAmt)+'</span>':'';return'<tr'+(_isExpRow?' style="background:rgba(239,68,68,0.04)"':'')+'><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong>'+srcBadge+'</td><td>'+(_isExpRow?_expAmt:(r.status==='Paid'?$m(0):$m(r.displayAmt)))+'</td><td>'+(_isExpRow?_expAmt:((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd)))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,\x27'+rk+'\x27)">&#128206;</label><span id="pnl-att-'+rk+'" class="attach-link" onclick="openPNLAttach(\x27'+rk+'\x27)" style="display:none">&#128204; View</span></td><td class="action-cell">'+actBtns+'</td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);try{renderAudit();}catch(e){}const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');
+function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});var targetMonth=selMonthF;let lr=0,lb=0,lrv=0,ltexp=0;if(targetMonth){var ps=pnlSummaries[targetMonth]||{};lrv=ps.grossRevenue||0;lr=ps.paymentRcvd||0;lb=ps.balance||0;ltexp=ps.totalExpenses||0;}else{for(var mk in pnlSummaries){var ps=pnlSummaries[mk];lrv+=(ps.grossRevenue||0);lr+=(ps.paymentRcvd||0);lb+=(ps.balance||0);ltexp+=(ps.totalExpenses||0);}}setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));setStat('pnl-s-count',$m(ltexp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;var isSheet=(r._source==='sheet');var isQB=(r._source==='qb');var srcBadge=isQB?'<span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">QB</span>':(isSheet?'<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Sheet</span>':(r._source==='user'?'<span style="font-size:9px;background:var(--green);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Manual</span>':''));var actBtns='<button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button>';var rk=_safeKey(r._key||r.invId||'gi'+gi);return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong>'+srcBadge+'</td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,\x27'+rk+'\x27)">&#128206;</label><span id="pnl-att-'+rk+'" class="attach-link" onclick="openPNLAttach(\x27'+rk+'\x27)" style="display:none">&#128204; View</span></td><td class="action-cell">'+actBtns+'</td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);try{renderAudit();}catch(e){}const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');
 /* Show attachment indicators using _safeKey-based IDs */
 Object.keys(pnlAtts).forEach(function(k){var sp=document.getElementById('pnl-att-'+k);if(sp)sp.style.display='inline';var sk=_safeKey(k);if(sk!==k){var sp2=document.getElementById('pnl-att-'+sk);if(sp2)sp2.style.display='inline';}});}
 function getCTORow(r){
@@ -2781,7 +2755,7 @@ var totRev=0,totLeads=0,activeOffers=0,affRevMap={};
 rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=r._name||'Unknown';affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
 // Compute P&L source totals for synced Tracking Revenue
 var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0,_pnlBH=0;
-allPNL.filter(function(r){if(r._isSummary||r._source==='em'||r._source==='uexp')return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
+allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
 var syncedTotal=totRev+_pnlIR+_pnlPS+_pnlCPC+_pnlBH;
 setStat('cto-s-rev',$m(syncedTotal));setStat('cto-s-leads',totLeads.toLocaleString());setStat('cto-s-count',activeOffers);
 var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
@@ -3171,14 +3145,12 @@ function renderAll(){
 mergeUserInvoices();
 mergeUserExpenses();
 try{mergeEMExpenses();}catch(e){}
-try{injectEMIntoPNL();}catch(e){}
-try{injectUserExpIntoPNL();}catch(e){}
-renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}try{renderExpenseBreakdown();}catch(e){}}
+renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
 function getFMDSorted(){return sortArr(getFMDFilt(),fmdSort);}
-function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;uStatus[_safeKey(r._key)]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();try{mergeEMExpenses();}catch(e){}try{injectEMIntoPNL();}catch(e){}try{injectUserExpIntoPNL();}catch(e){}renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();try{renderOverview();}catch(e){}var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else{renderRevenue();try{renderOverview();}catch(e){}}}
+function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;uStatus[_safeKey(r._key)]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();try{mergeEMExpenses();}catch(e){}renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();try{renderOverview();}catch(e){}var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else{renderRevenue();try{renderOverview();}catch(e){}}}
 function updRemark(ta,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.remarks=ta.value;if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));fbSyncRemarks();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}}
 function savePNLRecord(){
 var amt=parseFloat(document.getElementById('f-invAmt').value)||0;
@@ -3609,7 +3581,7 @@ function fbStartListeners(){
       try{renderCTO();}catch(e){}
       try{renderFMD();}catch(e){}
       try{renderQuarterlySummary();}catch(e){}
-      try{renderExpenseBreakdown();}catch(e){}
+      
       var mb=document.querySelector('#pnl-month-buttons button.active');
       if(mb&&mb.textContent!=='All Months')try{showMonthlySummary(mb.textContent);}catch(e){}
       console.log('🔄 Real-time sync update applied');
@@ -3876,67 +3848,29 @@ pnlSummaries[monthName][field]=(pnlSummaries[monthName][field]||0)+amt;
 }
 
 /* Inject Expense Manager transactions into P&L Financial Records table */
-function injectEMIntoPNL(){
-/* Remove previous EM entries to prevent duplicates */
-for(var i=allPNL.length-1;i>=0;i--){if(allPNL[i]._source==='em')allPNL.splice(i,1);}
-if(typeof emTransactions==='undefined'||!emTransactions||!emTransactions.length)return;
-emTransactions.forEach(function(tx){
-if(!tx.date||!tx.amount)return;
-var amt=typeof tx.amount==='number'?tx.amount:parseFloat(tx.amount)||0;
-if(!amt)return;
-var monthName=_emDateToMonth(tx.date);
-if(!monthName)return;
-allPNL.push({
-invId:tx.reference||'—',
-date:tx.date,
-_month:monthName,
-affiliate:tx.payee||tx.merchant||'Unknown',
-invAmt:amt,
-displayAmt:amt,
-rcvd:amt,
-status:'Paid',
-remarks:(tx.category||'')+(tx.reference?' | '+tx.reference:''),
-_source:'em',
-_key:tx._key,
-_isExpense:true
+function _getAllExpenses(){
+/* Merge userExpenses + emTransactions into a single list for the Expenses tab */
+var combined=[];
+userExpenses.forEach(function(e){
+if(expDeletes.has(e._key))return;
+combined.push({date:e.date||'',month:e.month||'',category:e.category||'Other',payee:e.payee||'',description:e.description||'',advertiser:e.advertiser||'',amount:e.amount||0,recurring:e.recurring||'No',notes:e.notes||'',addedBy:e.addedBy||'—',lastUpdated:e.lastUpdated||e.createdAt||'',_key:e._key,_source:'manual',_origIdx:userExpenses.indexOf(e)});
 });
+if(typeof emTransactions!=='undefined'&&emTransactions&&emTransactions.length){
+var mNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+emTransactions.forEach(function(t,ti){
+var monthName=t.month||'';
+if(!monthName&&t.date){try{var dt=new Date(t.date+'T00:00:00');monthName=mNames[dt.getMonth()]||'';}catch(e){}}
+combined.push({date:t.date||'',month:monthName,category:t.category||'Uncategorized',payee:t.payeeName||t.merchant||'',description:t.description||t.purposeDescription||'',advertiser:'',amount:typeof t.amount==='number'?t.amount:(parseFloat(t.amount)||0),recurring:'No',notes:t.reference||'',addedBy:'EM Import',lastUpdated:t.importedAt||'',_key:t._key||('em_'+ti),_source:'em',_emIdx:ti});
 });
 }
-
-/* Inject P&L Expense tab entries into the unified Financial Records table */
-function injectUserExpIntoPNL(){
-for(var i=allPNL.length-1;i>=0;i--){if(allPNL[i]._source==='uexp')allPNL.splice(i,1);}
-if(!userExpenses||!userExpenses.length)return;
-userExpenses.forEach(function(ex){
-if(expDeletes.has(ex._key))return;
-var amt=typeof ex.amount==='number'?ex.amount:parseFloat(ex.amount)||0;
-if(!amt)return;
-var monthName=ex.month||'';
-if(!monthName&&ex.date){try{var dt=new Date(ex.date+'T00:00:00');var mN=['January','February','March','April','May','June','July','August','September','October','November','December'];monthName=mN[dt.getMonth()]||'';}catch(e){}}
-if(!monthName)return;
-allPNL.push({
-invId:ex._key||'—',
-date:ex.date||'',
-_month:monthName,
-affiliate:ex.payee||ex.advertiser||ex.category||'Expense',
-invAmt:amt,
-displayAmt:amt,
-rcvd:amt,
-status:'Paid',
-remarks:(ex.category||'')+(ex.description?' | '+ex.description:''),
-_source:'uexp',
-_key:ex._key,
-_isExpense:true
-});
-});
+return combined;
 }
 
 function getExpFilt(){
 var q=(document.getElementById('exp-search').value||'').toLowerCase();
 var mf=(document.getElementById('exp-month-f')||{}).value||'';
 var cf=(document.getElementById('exp-cat-f')||{}).value||'';
-return userExpenses.filter(function(e){
-if(expDeletes.has(e._key))return false;
+return _getAllExpenses().filter(function(e){
 if(mf&&e.month!==mf)return false;
 if(cf&&e.category!==cf)return false;
 if(q&&!(e.description||'').toLowerCase().includes(q)&&!(e.category||'').toLowerCase().includes(q)&&!(e.payee||'').toLowerCase().includes(q)&&!(e.notes||'').toLowerCase().includes(q))return false;
@@ -3946,10 +3880,10 @@ return true;
 
 function renderExpenses(){
 var f=getExpFilt();
+var allExp=_getAllExpenses();
 var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
 var totalAll=0,totalMonth=0,cats={};
-userExpenses.forEach(function(e){
-if(expDeletes.has(e._key))return;
+allExp.forEach(function(e){
 totalAll+=e.amount||0;
 if(e.month===curMonth)totalMonth+=e.amount||0;
 cats[e.category||'Other']=true;
@@ -3958,7 +3892,7 @@ setStat('exp-s-total','$'+totalAll.toLocaleString('en',{minimumFractionDigits:2,
 setStat('exp-s-month','$'+totalMonth.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
 var smLbl=document.getElementById('exp-s-month-label');if(smLbl)smLbl.textContent=curMonth;
 setStat('exp-s-cats',Object.keys(cats).length.toString());
-setStat('exp-s-count',userExpenses.filter(function(e){return!expDeletes.has(e._key);}).length.toString());
+setStat('exp-s-count',allExp.length.toString());
 var catColors={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#f97316'};
 var tbody=document.getElementById('exp-tbody');
 if(!tbody)return;
@@ -3966,8 +3900,10 @@ if(!f.length){tbody.innerHTML='<tr><td colspan="12" class="empty-state">No expen
 var rows=f.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
 tbody.innerHTML=rows.map(function(e,i){
 var cc=catColors[e.category]||'#64748b';
-return'<tr>'+
-'<td>'+fmtDate(e.date)+'</td>'+
+var srcTag=e._source==='em'?'<span style="font-size:8px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">EM</span>':'<span style="font-size:8px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Manual</span>';
+var actCell=e._source==='em'?'<span style="font-size:.75rem;color:var(--text3)">Imported</span>':'<button class="btn-edit" onclick="editExpense('+e._origIdx+')">✎</button> <button class="btn-del" onclick="deleteExpense('+e._origIdx+')">🗑</button>';
+return'<tr'+(e._source==='em'?' style="background:rgba(245,158,11,0.04)"':'')+'>'+
+'<td>'+fmtDate(e.date)+srcTag+'</td>'+
 '<td>'+(e.month||'—')+'</td>'+
 '<td><span style="display:inline-block;padding:3px 10px;border-radius:20px;background:'+cc+'18;color:'+cc+';font-size:.78rem;font-weight:600;border:1px solid '+cc+'30">'+(e.category||'Other')+'</span></td>'+
 '<td style="font-size:.82rem">'+(e.payee||'—')+'</td>'+
@@ -3977,8 +3913,8 @@ return'<tr>'+
 '<td style="font-size:.82rem">'+(e.recurring||'No')+'</td>'+
 '<td style="font-size:.82rem;color:var(--text3)">'+(e.notes||'')+'</td>'+
 '<td style="font-size:.78rem;color:var(--text3)">'+(e.addedBy||'—')+'</td>'+
-'<td style="font-size:.78rem;color:var(--text3)">'+(e.lastUpdated||e.createdAt||'—')+'</td>'+
-'<td class="action-cell"><button class="btn-edit" onclick="editExpense('+i+')">✎</button> <button class="btn-del" onclick="deleteExpense('+i+')">🗑</button></td>'+
+'<td style="font-size:.78rem;color:var(--text3)">'+(e.lastUpdated||'—')+'</td>'+
+'<td class="action-cell">'+actCell+'</td>'+
 '</tr>';
 }).join('');
 }
@@ -4087,73 +4023,14 @@ pnlSummaries[m].beehiiv=0;pnlSummaries[m].software=0;pnlSummaries[m].contractors
 mergeUserInvoices();
 mergeUserExpenses();
 try{mergeEMExpenses();}catch(e){}
-try{injectEMIntoPNL();}catch(e){}
-try{injectUserExpIntoPNL();}catch(e){}
 renderExpenses();
 renderPNL();
 try{var _smb=document.querySelector('#pnl-month-buttons button.active');if(_smb&&_smb.textContent!=='All Months')showMonthlySummary(_smb.textContent);}catch(e){}
 try{renderQuarterlySummary();}catch(e){}
 try{renderOverview();}catch(e){}
 try{renderExpenseCategories();}catch(e){}
-try{renderExpenseBreakdown();}catch(e){}
-try{renderMonthlySummary();}catch(e){}
-}
 
-function renderExpenseBreakdown(){
-var catColors={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#f97316'};
-var selMonth=(document.getElementById('pnl-month-f')||{}).value||'';
-var curMonth=selMonth||new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
-var allRaw=userExpenses.filter(function(e){return!expDeletes.has(e._key);});
-var all=selMonth?allRaw.filter(function(e){return e.month===selMonth;}):allRaw;
-var totalAll=0,totalMonth=0,cats={},byMonth={};
-all.forEach(function(e){
-  var amt=e.amount||0;totalAll+=amt;
-  if(e.month===curMonth)totalMonth+=amt;
-  var c=e.category||'Other';if(!cats[c])cats[c]={amount:0,count:0};cats[c].amount+=amt;cats[c].count++;
-  var m=e.month||'Other';if(!byMonth[m])byMonth[m]={amount:0,count:0,cats:{}};byMonth[m].amount+=amt;byMonth[m].count++;
-  if(!byMonth[m].cats[c])byMonth[m].cats[c]=0;byMonth[m].cats[c]+=amt;
-});
-/* stat cards */
-var setV=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
-setV('expb-total','$'+totalAll.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
-setV('expb-month','$'+totalMonth.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
-setV('expb-month-label',selMonth||curMonth);
-setV('expb-count',all.length.toString());
-var topCat='—';var topAmt=0;Object.keys(cats).forEach(function(c){if(cats[c].amount>topAmt){topAmt=cats[c].amount;topCat=c;}});
-setV('expb-top-cat',topCat);
-/* category table */
-var catTb=document.getElementById('expb-cat-tbody');var catTf=document.getElementById('expb-cat-tfoot');
-if(catTb){
-  var sorted=Object.keys(cats).sort(function(a,b){return cats[b].amount-cats[a].amount;});
-  catTb.innerHTML=sorted.map(function(c){
-    var cc=catColors[c]||'#64748b';
-    var pct=totalAll>0?(cats[c].amount/totalAll*100).toFixed(1):'0';
-    return'<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+cc+';margin-right:6px;vertical-align:middle"></span><strong>'+c+'</strong></td><td>'+cats[c].count+'</td><td style="color:var(--red);font-weight:600">$'+cats[c].amount.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>'+pct+'%</td></tr>';
-  }).join('');
-}
-if(catTf){catTf.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+all.length+'</td><td style="color:var(--red)">$'+totalAll.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>100%</td></tr>';}
-/* monthly table */
-var mTb=document.getElementById('expb-monthly-tbody');var mTf=document.getElementById('expb-monthly-tfoot');
-if(mTb){
-  var mOrder=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var mKeys=Object.keys(byMonth).sort(function(a,b){var ia=mOrder.indexOf(a),ib=mOrder.indexOf(b);return(ia===-1?99:ia)-(ib===-1?99:ib);});
-  mTb.innerHTML=mKeys.map(function(m){
-    var d=byMonth[m];var topC='—';var topCA=0;Object.keys(d.cats).forEach(function(c){if(d.cats[c]>topCA){topCA=d.cats[c];topC=c;}});
-    return'<tr><td><strong>'+m+'</strong></td><td>'+d.count+'</td><td style="color:var(--red);font-weight:600">$'+d.amount.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>'+topC+'</td></tr>';
-  }).join('');
-  if(mTf){mTf.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+all.length+'</td><td style="color:var(--red)">$'+totalAll.toLocaleString('en',{minimumFractionDigits:2})+'</td><td>'+topCat+'</td></tr>';}
-}
-/* doughnut chart */
-try{
-  var cEl=document.getElementById('expBreakdownChart');
-  if(cEl){
-    var ex=Chart.getChart('expBreakdownChart');if(ex)ex.destroy();
-    var cLabels=Object.keys(cats).sort(function(a,b){return cats[b].amount-cats[a].amount;});
-    var cData=cLabels.map(function(c){return cats[c].amount;});
-    var cColors=cLabels.map(function(c){return catColors[c]||'#64748b';});
-    new Chart(cEl,{type:'doughnut',data:{labels:cLabels,datasets:[{data:cData,backgroundColor:cColors,borderWidth:2,borderColor:'var(--surface)',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle',padding:12}},tooltip:{callbacks:{label:function(c){return c.label+': $'+c.raw.toLocaleString('en',{minimumFractionDigits:2})+' ('+(totalAll>0?(c.raw/totalAll*100).toFixed(1):0)+'%)';}}}}}});
-  }
-}catch(e){console.warn('Expense chart error:',e);}
+try{renderMonthlySummary();}catch(e){}
 }
 
 // === 15-MINUTE AUTO-SYNC ===
@@ -4431,7 +4308,7 @@ function renderOverview(){
     
     // Collection rate — PNL sheet + user entries only (QB excluded for now)
     var ovPaid=0,ovTotal=0;
-    allPNL.forEach(function(r){if(r._source==='qb'||r._source==='em'||r._source==='uexp')return;if(r._isSummary||!r._month||r._month!==curMonth)return;var a=r.displayAmt||0;if(a<=0)return;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
+    allPNL.forEach(function(r){if(r._source==='qb')return;if(r._isSummary||!r._month||r._month!==curMonth)return;var a=r.displayAmt||0;if(a<=0)return;ovTotal+=a;if((r.status||'').toLowerCase()==='paid')ovPaid+=a;});
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
@@ -6461,11 +6338,10 @@ setTimeout(function(){_emFbSuppress=false;},600);
 /* Refresh P&L totals so EM expenses appear in Financial Summary */
 try{
 if(typeof mergeEMExpenses==='function'){mergeEMExpenses();}
-if(typeof injectEMIntoPNL==='function'){injectEMIntoPNL();}
-if(typeof injectUserExpIntoPNL==='function'){injectUserExpIntoPNL();}
+
 if(typeof renderPNL==='function'){renderPNL();}
 if(typeof renderOverview==='function'){renderOverview();}
-if(typeof renderExpenseBreakdown==='function'){renderExpenseBreakdown();}
+
 if(typeof renderMonthlySummary==='function'){renderMonthlySummary();}
 if(typeof renderQuarterlySummary==='function'){renderQuarterlySummary();}
 var _smb2=document.querySelector('#pnl-month-buttons button.active');
@@ -6490,12 +6366,11 @@ _emMigrateCategories();
 emRenderAll();
 try{
 if(typeof mergeEMExpenses==='function'){mergeEMExpenses();}
-if(typeof injectEMIntoPNL==='function'){injectEMIntoPNL();}
-if(typeof injectUserExpIntoPNL==='function'){injectUserExpIntoPNL();}
+
 if(typeof renderPNL==='function'){renderPNL();}
 if(typeof renderOverview==='function'){renderOverview();}
 if(typeof renderMonthlySummary==='function'){renderMonthlySummary();}
-if(typeof renderExpenseBreakdown==='function'){renderExpenseBreakdown();}
+
 var _smb3=document.querySelector('#pnl-month-buttons button.active');
 if(_smb3&&_smb3.textContent!=='All Months'&&typeof showMonthlySummary==='function')showMonthlySummary(_smb3.textContent);
 }catch(e){console.warn('EM load→P&L:',e);}
