@@ -2389,7 +2389,7 @@ var bhLine='';var bhm=s.beehiivRev||0;
 var _bhApiMo=0,_bhApiPubMap={},_bhApiDailyMap={};
 if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April'].indexOf(m)===-1){
   for(var _bpn in window._bhApiEarnings.publications){
-
+    if(_bpn.toLowerCase().indexOf('five minute')>-1||_bpn.toLowerCase()==='fmd')continue;
     var _bpd=(window._bhApiEarnings.publications[_bpn]||{})[m];
     if(_bpd&&_bpd.total>0){_bhApiMo+=_bpd.total;_bhApiPubMap[_bpn]=_bpd.total;if(_bpd.daily){for(var _bdk in _bpd.daily){_bhApiDailyMap[_bdk]=(_bhApiDailyMap[_bdk]||0)+_bpd.daily[_bdk];}}}
   }
@@ -3352,6 +3352,7 @@ if(window._bhApiEarnings&&window._bhApiEarnings.publications){
   var _bhPubs=window._bhApiEarnings.publications;
   var _bhMonthFilter=_sm||'';
   for(var _bhPubName in _bhPubs){
+    if(_bhPubName.toLowerCase().indexOf('five minute')>-1||_bhPubName.toLowerCase().indexOf('fmd')>-1)continue;
     var _bhMonths=_bhPubs[_bhPubName];
     for(var _bhMo in _bhMonths){
       if(_bhMonthFilter&&_bhMo!==_bhMonthFilter)continue;
@@ -4358,6 +4359,7 @@ function renderOverview(){
     if(window._bhApiEarnings&&window._bhApiEarnings.publications){
       var _ovBhPubs=window._bhApiEarnings.publications;
       for(var _ovPn in _ovBhPubs){
+        if(_ovPn.toLowerCase().indexOf('five minute')>-1)continue;
         var _ovMoData=(_ovBhPubs[_ovPn]||{})[curMonth];
         if(_ovMoData&&_ovMoData.total>0)bhTotal+=_ovMoData.total;
       }
@@ -4407,6 +4409,7 @@ function renderStatSparklines(curMonth){
       if(_bhSkip.indexOf(m)>-1){bhByM[m]=0;return;}
       if(window._bhApiEarnings&&window._bhApiEarnings.publications){
         var _spBh=0;for(var _spPn in window._bhApiEarnings.publications){
+          if(_spPn.toLowerCase().indexOf('five minute')>-1)continue;
           _spBh+=(((window._bhApiEarnings.publications[_spPn]||{})[m]||{}).total||0);
         }bhByM[m]=_spBh;
       } else {bhByM[m]=(window._beehiivByMonth||{})[m]||0;}
