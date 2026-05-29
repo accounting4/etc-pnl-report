@@ -2223,14 +2223,17 @@ qbRows.forEach(r=>{
   if(!cust||amt<=0)return;
   const dateParts=date.split('-');
   let monthName='';
-  if(dateParts.length===3){
+  /* QB invoice month overrides — when billing date ≠ accounting month */
+  var _qbMonthOverrides={'1371':'June'};
+  if(_qbMonthOverrides[doc]){monthName=_qbMonthOverrides[doc];}
+  else if(dateParts.length===3){
     if(dateParts[0]!=='2026')return;
     const mm=dateParts[1];
     monthName=mNames[mm]||'';
   }
   if(!monthName)return;
   if(cust.toUpperCase().includes('FINANCE BUZZ'))return;
-  if(dateParts[0]==='2026'){if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;}
+  if(dateParts[0]==='2026'||_qbMonthOverrides[doc]){if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;}
   var _mo=['January','February','March','April','May','June','July','August','September','October','November','December'];var qbMi=_mo.indexOf(monthName);var prevMonthName=qbMi>0?_mo[qbMi-1]:'';
   const custUp=cust.toUpperCase();
   var cN=custUp.replace(/[\s\-\.]/g,'');
