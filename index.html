@@ -952,7 +952,7 @@ Secured with Firebase Authentication
 <div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">TRACKING REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">CTO + IO + Everflow →</div></div>
 <div class="stat-card" style="border-left:3px solid #14b8a6"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid vs Total (QB)</div></div>
 <div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #f97316" title="Click to view Beehiiv Revenue"><div class="sc-label">BEEHIIV EARNINGS</div><div class="sc-value" id="ov-beehiiv">$0</div><div class="sc-sub">Daily earnings →</div></div>
-<div class="stat-card" onclick="showTab('fmd')" style="cursor:pointer;border-left:3px solid #f59e0b" title="Click to view FMD"><div class="sc-label">FMD REVENUE</div><div class="sc-value" id="ov-fmd">$0</div><div class="sc-sub">Five Minute Daily →</div></div>
+
 <div class="stat-card" style="border-left:3px solid #8b5cf6"><div class="sc-label">ACTIVE AFFILIATES</div><div class="sc-value" id="ov-affiliates">0</div><div class="sc-sub">This month</div></div>
 </div>
 <!-- Goal Tracking -->
@@ -2389,7 +2389,7 @@ var bhLine='';var bhm=s.beehiivRev||0;
 var _bhApiMo=0,_bhApiPubMap={},_bhApiDailyMap={};
 if(window._bhApiEarnings&&window._bhApiEarnings.publications&&['January','February','March','April'].indexOf(m)===-1){
   for(var _bpn in window._bhApiEarnings.publications){
-    if(_bpn.toLowerCase().indexOf('five minute')>-1||_bpn.toLowerCase()==='fmd')continue;
+
     var _bpd=(window._bhApiEarnings.publications[_bpn]||{})[m];
     if(_bpd&&_bpd.total>0){_bhApiMo+=_bpd.total;_bhApiPubMap[_bpn]=_bpd.total;if(_bpd.daily){for(var _bdk in _bpd.daily){_bhApiDailyMap[_bdk]=(_bhApiDailyMap[_bdk]||0)+_bpd.daily[_bdk];}}}
   }
@@ -3352,8 +3352,6 @@ if(window._bhApiEarnings&&window._bhApiEarnings.publications){
   var _bhPubs=window._bhApiEarnings.publications;
   var _bhMonthFilter=_sm||'';
   for(var _bhPubName in _bhPubs){
-    // Skip FMD — goes to FMD tab only
-    if(_bhPubName.toLowerCase().indexOf('five minute')>-1||_bhPubName.toLowerCase().indexOf('fmd')>-1)continue;
     var _bhMonths=_bhPubs[_bhPubName];
     for(var _bhMo in _bhMonths){
       if(_bhMonthFilter&&_bhMo!==_bhMonthFilter)continue;
@@ -4354,24 +4352,21 @@ function renderOverview(){
     var pct=ovTotal>0?Math.round(ovPaid/ovTotal*100):0;
     setStat('ov-collection',pct+'%');
     
-    // Beehiiv Earnings (prefer API data, fallback to PNL sheet — skip Jan-May, already in PNL Sheet)
+    // Beehiiv Earnings — current month only, all pubs including FMD
     var bhTotal=0;
     var _bhSheetMonths=['January','February','March','April'];
     if(window._bhApiEarnings&&window._bhApiEarnings.publications){
       var _ovBhPubs=window._bhApiEarnings.publications;
       for(var _ovPn in _ovBhPubs){
-        if(_ovPn.toLowerCase().indexOf('five minute')>-1)continue;
-        for(var _ovMo in _ovBhPubs[_ovPn]){if(_bhSheetMonths.indexOf(_ovMo)>-1)continue;bhTotal+=(_ovBhPubs[_ovPn][_ovMo].total||0);}
+        var _ovMoData=(_ovBhPubs[_ovPn]||{})[curMonth];
+        if(_ovMoData&&_ovMoData.total>0)bhTotal+=_ovMoData.total;
       }
     } else {
-      for(var _bk in (window._beehiivByMonth||{})){if(_bhSheetMonths.indexOf(_bk)>-1)continue;bhTotal+=window._beehiivByMonth[_bk];}
+      bhTotal=(window._beehiivByMonth||{})[curMonth]||0;
     }
     setStat('ov-beehiiv','$'+bhTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // FMD (same structure as PNL)
-    var fmdTotal=0;
-    allFMD.forEach(function(r){fmdTotal+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
-    setStat('ov-fmd','$'+fmdTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+
     
     // Affiliates
     var affSet=new Set();
@@ -4402,18 +4397,16 @@ function renderStatSparklines(curMonth){
     var curIdx=months.indexOf(curMonth);if(curIdx<0)curIdx=months.length-1;
     var activeMonths=months.slice(0,curIdx+1);
     // Gather monthly data for each metric
-    var revByM={},pnlByM={},ctoByM={},fmdByM={};
-    activeMonths.forEach(function(m){revByM[m]=0;pnlByM[m]=0;ctoByM[m]=0;fmdByM[m]=0;});
+    var revByM={},pnlByM={},ctoByM={};
+    activeMonths.forEach(function(m){revByM[m]=0;pnlByM[m]=0;ctoByM[m]=0;});
     allRev.forEach(function(r){if(revByM.hasOwnProperty(r._month))revByM[r._month]+=parseFloat(r.amount)||0;});
     activeMonths.forEach(function(m){pnlByM[m]=(pnlSummaries[m]||{}).grossRevenue||0;});
     allCTO.forEach(function(r){var m=r._month||'';if(ctoByM.hasOwnProperty(m))ctoByM[m]+=parseMoney(r['Total Revenue ($)'])||0;});
-    allFMD.forEach(function(r){var m=r._month||r.Month||'';if(fmdByM.hasOwnProperty(m))fmdByM[m]+=parseMoney(r.displayAmt)||parseMoney(r.invAmt)||parseMoney(r['Invoice Amount'])||0;});
     
     var bhByM={};var _bhSkip=['January','February','March','April'];activeMonths.forEach(function(m){
       if(_bhSkip.indexOf(m)>-1){bhByM[m]=0;return;}
       if(window._bhApiEarnings&&window._bhApiEarnings.publications){
         var _spBh=0;for(var _spPn in window._bhApiEarnings.publications){
-          if(_spPn.toLowerCase().indexOf('five minute')>-1)continue;
           _spBh+=(((window._bhApiEarnings.publications[_spPn]||{})[m]||{}).total||0);
         }bhByM[m]=_spBh;
       } else {bhByM[m]=(window._beehiivByMonth||{})[m]||0;}
@@ -4423,7 +4416,7 @@ function renderStatSparklines(curMonth){
       'ov-pnl':activeMonths.map(function(m){return pnlByM[m];}),
       'ov-tracking':activeMonths.map(function(m){return ctoByM[m];}),
       'ov-beehiiv':activeMonths.map(function(m){return bhByM[m];}),
-      'ov-fmd':activeMonths.map(function(m){return fmdByM[m];})
+
     };
     Object.keys(sparkMap).forEach(function(id){
       var card=document.getElementById(id);if(!card)return;
