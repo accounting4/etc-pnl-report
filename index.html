@@ -4664,7 +4664,7 @@ function classifyPNLSource(aff,month){
   var a=(aff||'').toUpperCase();
   if(a.startsWith('IR ')||a.startsWith('IR-')||a.startsWith('IR -')||a==='IR'||a.indexOf(' IR ')>-1||a.indexOf(' IR-')>-1||a.startsWith('NATE')||a.indexOf('3 WEEKS IR')>-1)return 'IR';
   if(a.indexOf('PLATFORM')>-1||a.indexOf('SOFTWARE')>-1)return 'Platform Softwares';
-  if(a.indexOf('BEEHIV')>-1&&a.indexOf('ADS')>-1){if(({'January':1,'February':1,'March':1,'April':1})[month])return 'CPC';return 'Beehiiv Ads';}
+  if(a.indexOf('BEEHIV')>-1&&a.indexOf('ADS')>-1)return 'Beehiiv Ads';
   return 'CPC';
 }
 
