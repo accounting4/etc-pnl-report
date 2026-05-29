@@ -2449,19 +2449,15 @@ var qbPaid=0,qbUnpaid=0;
 /* CTO + IO + Everflow */
 var trackRev=0;
 allRev.forEach(function(r){if(r._srcLabel==='CTO'||r._srcLabel==='IO'||r._srcLabel==='CPA'){var m=r._month||'';if(selM&&m!==selM)return;if(!selM&&filterMonths.indexOf(m)===-1)return;trackRev+=r.amount;}});
-/* FMD */
-var fmdRev=0;
-allFMD.forEach(function(r){if(selM&&r._month!==selM)return;if(!selM&&filterMonths.indexOf(r._month)===-1)return;fmdRev+=(r.displayAmt||r.rcvd||0);});
 var totalPaid=pnlRcvd;
 var totalBal=pnlBal;
-var totalRev=pnlRev+trackRev+fmdRev;
+var totalRev=pnlRev+trackRev;
 bEl.style.display='block';
 var lbl=selM||'All Months';
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">'+lbl+' — Revenue Breakdown</div>'+
 '<div class="psb-line"><span class="psb-key">P&L Revenue</span><span class="psb-value gold">'+$m(pnlRev)+'</span></div>'+
 (qbPaid+qbUnpaid>0?'<div class="psb-line"><span class="psb-key">QB Invoices</span><span class="psb-value gold">'+$m(qbPaid+qbUnpaid)+'</span></div>':'')+
 (trackRev>0?'<div class="psb-line"><span class="psb-key">CTO / IO / Everflow</span><span class="psb-value gold">'+$m(trackRev)+'</span></div>':'')+
-(fmdRev>0?'<div class="psb-line"><span class="psb-key">FMD Revenue</span><span class="psb-value gold">'+$m(fmdRev)+'</span></div>':'')+
 '</div>'+
 '<div class="psb-group"><div class="psb-group-title">Collections</div>'+
 '<div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value green">'+$m(totalPaid)+'</span></div>'+
