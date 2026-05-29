@@ -2284,10 +2284,13 @@ qbRows.forEach(r=>{
     return false;
   });
   if(matchPNL){qbSkipped++;return;}
-  /* Pass 2: name-only match — same company in same month with different amount (already in PNL sheet) */
+  /* Pass 2: name-only match — same company in same month with a real amount already in PNL sheet */
   const nameOnlyMatch=allPNL.some(p=>{
     if(p._isSummary||p._source==='qb')return false;
     if(p._month!==monthName)return false;
+    /* Only match if PNL entry has actual revenue — skip $0 placeholders */
+    const pAmt=p.rcvd>0?p.rcvd:(p.displayAmt||p.invAmt||0);
+    if(pAmt<=0)return false;
     const pAff=(p.affiliate||'').toUpperCase();
     return _qbNameMatch(pAff);
   });
