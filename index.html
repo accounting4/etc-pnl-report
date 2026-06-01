@@ -696,6 +696,9 @@ table tbody tr:last-child td{border-bottom:none}
 #sync-status{animation:fadeIn .5s}
 @keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.4}}
 #sync-dot[style*="f59e0b"]{animation:syncPulse 1s infinite}
+/* Stable refresh — highlight only changed values */
+@keyframes valPulse{0%{background:rgba(16,185,129,.18)}100%{background:transparent}}
+.val-changed{animation:valPulse 1.2s ease-out;border-radius:4px}
 
 /* Collapsible sections */
 .section-collapsible{cursor:pointer;user-select:none}
@@ -2069,7 +2072,15 @@ function getWeekLabel(ds){if(!ds)return null;const d=new Date(ds);if(isNaN(d.get
 function getDR(p){const f=document.getElementById(p+'-date-from'),t=document.getElementById(p+'-date-to');return{from:f&&f.value?new Date(f.value):null,to:t&&t.value?new Date(t.value+'T23:59:59'):null};}
 function inDR(ds,f,t){if(!f&&!t)return true;const d=parseD(ds);if(!d)return true;if(f&&d<f)return false;if(t&&d>t)return false;return true;}
 function calcS(recs,ak,pk){let paid=0,pend=0,tot=0;recs.forEach(r=>{const s=(r.status||'').toLowerCase(),a=parseFloat(r[ak])||0,rc=pk?(parseFloat(r[pk])||0):a;tot+=a;if(s==='paid')paid+=a;else if(s.includes('partial')){paid+=rc;pend+=a-rc;}else pend+=a;});return{paid,pend,tot,n:recs.length,rate:tot>0?Math.round(paid/tot*100):0};}
-function setStat(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function setStat(id,v){const e=document.getElementById(id);if(!e)return;if(e.textContent===String(v))return;e.textContent=v;if(window._stableRefresh){e.classList.remove('val-changed');void e.offsetWidth;e.classList.add('val-changed');}}
+/* Smart innerHTML setter — only update DOM when content actually changed */
+function _setHTML(el,html){if(typeof el==='string')el=document.getElementById(el);if(!el)return false;if(el.innerHTML===html)return false;el.innerHTML=html;return true;}
+/* Suppress chart animations during refresh to prevent visual jumping */
+function _suppressChartAnim(){try{if(Chart&&Chart.defaults)Chart.defaults.animation=false;}catch(e){}}
+function _restoreChartAnim(){try{if(Chart&&Chart.defaults)Chart.defaults.animation={duration:600,easing:'easeInOutQuart'};}catch(e){}}
+/* Data fingerprint — fast hash of all data arrays to detect real changes */
+var _lastDataFP='';
+function _dataFingerprint(){var h='';try{var s=function(a){return a.length+':'+a.slice(0,500).map(function(r){return(r._key||r.invId||r.affiliate||'')+'='+(r.amount||r.displayAmt||r.rcvd||0);}).join(',');};h+=s(allPNL)+s(allFMD)+s(allRev)+s(allFC)+s(allCTO);for(var m in pnlSummaries){var p=pnlSummaries[m];h+=m+':'+(p.grossRevenue||0)+','+(p.paymentRcvd||0)+','+(p.balance||0)+','+(p.totalExpenses||0)+','+(p.beehiivRev||0);}for(var q in qbRawTotals){h+=q+':'+(qbRawTotals[q].p||0)+','+(qbRawTotals[q].u||0);}}catch(e){h=Math.random().toString();}return h;}
 async function fetchCSV(url){try{const sep=url.includes('?')?'&':'?';const r=await fetch(url+sep+'_t='+Date.now());if(!r.ok)return[];const t=await r.text();const lines=t.split('\n').filter(l=>l.trim());if(lines.length<2)return[];const hdr=parseLine(lines[0]);return lines.slice(1).map(l=>{const v=parseLine(l);const o={_rawVals:v};hdr.forEach((h,i)=>o[h.trim()||('_c'+i)]=(v[i]||'').trim());return o;}).filter(r=>Object.values(r).some(v=>v));}catch(e){return[];}}
 function parseLine(l){const r=[];let c='',q=false;for(let i=0;i<l.length;i++){if(l[i]==='"')q=!q;else if(l[i]===','&&!q){r.push(c);c='';}else c+=l[i];}r.push(c);return r;}
 function gv(id,s){return'https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(s);}
@@ -2363,12 +2374,12 @@ var curMonthName=new Date().toLocaleString('en-US',{timeZone:'America/New_York',
 var revMonthF=document.getElementById('rev-month-f');
 if(revMonthF){revMonthF.value=curMonthName;}
 _injectFMDBhEntries();
-renderAll();buildCharts();
+if(!window._deferRender){renderAll();buildCharts();}
 startAutoRefresh();
 }
 function startAutoRefresh(){
 var liveEl=document.querySelector('.header-badge');
-if(liveEl){liveEl.title='Click to refresh data';liveEl.textContent='↻ Refresh';liveEl.style.cursor='pointer';liveEl.onclick=async function(){if(typeof _isEditModalOpen==='function'&&_isEditModalOpen()){alert('Please close the edit modal before refreshing.');return;}liveEl.textContent='⏳ Loading...';try{allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;allCTO.length=0;Object.keys(pnlSummaries).forEach(k=>delete pnlSummaries[k]);Object.keys(qbRawTotals).forEach(k=>delete qbRawTotals[k]);await fetchAllData();liveEl.textContent='✅ Updated';setTimeout(function(){liveEl.textContent='↻ Refresh';},2000);}catch(e){liveEl.textContent='↻ Refresh';console.warn('Refresh error',e);}};}
+if(liveEl){liveEl.title='Click to refresh data';liveEl.textContent='↻ Refresh';liveEl.style.cursor='pointer';liveEl.onclick=async function(){if(typeof _isEditModalOpen==='function'&&_isEditModalOpen()){alert('Please close the edit modal before refreshing.');return;}liveEl.textContent='⏳ Loading...';try{var prevFP=_lastDataFP;window._deferRender=true;await fetchAllData();window._deferRender=false;try{loadManualCTOEntries();}catch(e){}try{loadCTOEditsLocal();}catch(e){}var newFP=_dataFingerprint();if(newFP!==prevFP){window._stableRefresh=true;_suppressChartAnim();renderAll();buildCharts();_restoreChartAnim();window._stableRefresh=false;}_syncCountdown=300;liveEl.textContent='✅ Updated';setTimeout(function(){liveEl.textContent='↻ Refresh';},2000);}catch(e){window._deferRender=false;liveEl.textContent='↻ Refresh';console.warn('Refresh error',e);}};}
 }
 function buildMonthButtons(){
 const c=document.getElementById('pnl-month-buttons');if(!c)return;
@@ -3180,7 +3191,8 @@ function renderAll(){
 mergeUserInvoices();
 mergeUserExpenses();
 try{mergeEMExpenses();}catch(e){}
-renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}}
+renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
+_lastDataFP=_dataFingerprint();}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
@@ -3609,12 +3621,14 @@ function fbStartListeners(){
       for(var di=allPNL.length-1;di>=0;di--){var dk=allPNL[di]._key||allPNL[di].invId||'';if(dk&&pnlDeletes.has(dk))allPNL.splice(di,1);}
       _injectFMDBhEntries();
       mergeUserInvoices();mergeUserExpenses();
+      window._stableRefresh=true;_suppressChartAnim();
       renderPNL();try{renderOverview();}catch(e){}
       try{renderExpenses();}catch(e){}
       try{renderRevenue();}catch(e){}
       try{renderCTO();}catch(e){}
       try{renderFMD();}catch(e){}
       try{renderQuarterlySummary();}catch(e){}
+      _restoreChartAnim();window._stableRefresh=false;
       
       var mb=document.querySelector('#pnl-month-buttons button.active');
       if(mb&&mb.textContent!=='All Months')try{showMonthlySummary(mb.textContent);}catch(e){}
@@ -4111,16 +4125,24 @@ gNext.textContent=_syncCountdown<=0?'Syncing soon...':'Next sync in '+m+'m '+Str
 async function manualSync(){
 try{
 updateSyncIndicator('syncing');
-allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;allCTO.length=0;
-Object.keys(pnlSummaries).forEach(function(k){delete pnlSummaries[k];});
-Object.keys(qbRawTotals).forEach(function(k){delete qbRawTotals[k];});
+var prevFP=_lastDataFP;
+window._deferRender=true;
 await fetchAllData();
+window._deferRender=false;
 try{loadManualCTOEntries();}catch(e){}
 try{loadCTOEditsLocal();}catch(e){}
+var newFP=_dataFingerprint();
+var changed=(newFP!==prevFP);
+if(changed){
+window._stableRefresh=true;_suppressChartAnim();
+renderAll();buildCharts();
+_restoreChartAnim();window._stableRefresh=false;
+}
 updateSyncIndicator('done');
-// Show toast
-showSyncToast('✅ Sync complete — all sources updated');
+_syncCountdown=300;
+showSyncToast(changed?'✅ Sync complete — data updated':'✅ Sync complete — no changes');
 }catch(e){
+window._deferRender=false;
 console.warn('Manual sync error:',e);
 updateSyncIndicator('error');
 showSyncToast('❌ Sync failed — will retry automatically');
@@ -4150,16 +4172,28 @@ async function autoSyncData(){
 if(_isEditModalOpen()){console.log('Auto-sync skipped: edit modal open');return;}
 try{
 updateSyncIndicator('syncing');
-// Clear and refetch
-allPNL.length=0;allFMD.length=0;allRev.length=0;allFC.length=0;allCTO.length=0;
-Object.keys(pnlSummaries).forEach(function(k){delete pnlSummaries[k];});
-Object.keys(qbRawTotals).forEach(function(k){delete qbRawTotals[k];});
+var prevFP=_lastDataFP;
+// fetchAllData clears arrays internally and re-populates them
+window._deferRender=true;
 await fetchAllData();
+window._deferRender=false;
 // Re-apply manual overrides from localStorage
 try{loadManualCTOEntries();}catch(e){}
 try{loadCTOEditsLocal();}catch(e){}
+var newFP=_dataFingerprint();
+if(newFP!==prevFP){
+// Data actually changed — re-render with change highlights
+window._stableRefresh=true;_suppressChartAnim();
+renderAll();buildCharts();
+_restoreChartAnim();window._stableRefresh=false;
+console.log('Auto-sync: data changed, re-rendered');
+} else {
+console.log('Auto-sync: no data changes, skipping render');
+}
 updateSyncIndicator('done');
+_syncCountdown=300;
 }catch(e){
+window._deferRender=false;
 console.warn('Auto-sync error:',e);
 updateSyncIndicator('error');
 setTimeout(function(){updateSyncIndicator('done');},5000);
