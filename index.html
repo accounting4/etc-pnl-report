@@ -980,7 +980,7 @@ Secured with Firebase Authentication
 <button class="btn-export" onclick="sendWeeklyDigest()" style="background:#d97706;color:#fff">📧 Weekly Digest</button>
 </div>
 <div class="stats-row" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-<div class="stat-card" onclick="showTab('revenue')" style="cursor:pointer" title="Click to view Revenue & Forecast"><div class="sc-label">TOTAL REVENUE (MAY)</div><div class="sc-value" id="ov-revenue">$0</div><div class="sc-sub">All sources combined →</div></div>
+<div class="stat-card" onclick="showTab('revenue')" style="cursor:pointer" title="Click to view Revenue & Forecast"><div class="sc-label" id="ov-revenue-label">TOTAL REVENUE</div><div class="sc-value" id="ov-revenue">$0</div><div class="sc-sub">All sources combined →</div></div>
 <div class="stat-card green" onclick="showTab('revenue')" style="cursor:pointer" title="Click to view Forecast"><div class="sc-label">MONTH-END FORECAST</div><div class="sc-value" id="ov-forecast">$0</div><div class="sc-sub">Projected total →</div></div>
 <div class="stat-card purple" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view Profit & Loss"><div class="sc-label">TOTAL INVOICED (PNL)</div><div class="sc-value" id="ov-pnl">$0</div><div class="sc-sub">All invoices →</div></div>
 <div class="stat-card red" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view P&L expenses"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary →</div></div>
@@ -2529,15 +2529,20 @@ cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">'+lbl+' — R
 function renderRevenue(){const f=getRevFilt(),pp=parseInt((document.getElementById('rev-entries')||{}).value)||25,tp=Math.max(1,Math.ceil(f.length/pp));revPage=Math.min(revPage,tp);renderMonthlySummary();renderRevTracker();
 var selM=(document.getElementById('rev-month-f')||{}).value||'';
 var months=_getPNLMonths();
+var _rvCurMonth=new Date().toLocaleString('en',{month:'long'});
 var ctoByMonth={};allRev.forEach(function(r){if(r._srcLabel==='CTO'||r._srcLabel==='IO'||r._srcLabel==='CPA'||r._srcLabel==='RPP'){var m=r._month||'';if(m)ctoByMonth[m]=(ctoByMonth[m]||0)+r.amount;}});
 var mTotRev=0,mTotExp=0,mFcTot=0;
 var filterMonths=selM?[selM]:months;
 filterMonths.forEach(function(m){
 var ps=pnlSummaries[m]||{};
-var pnlRev=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
-var ctoRev=ctoByMonth[m]||0;
-mTotRev+=pnlRev+ctoRev;
 mTotExp+=ps.totalExpenses||0;
+if(m===_rvCurMonth&&window._mtdGrandByMonth&&window._mtdGrandByMonth[m]){
+  mTotRev+=window._mtdGrandByMonth[m];
+} else {
+  var pnlRev=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
+  var ctoRev=ctoByMonth[m]||0;
+  mTotRev+=pnlRev+ctoRev;
+}
 });
 var mAbbr=selM?selM.toLowerCase().substring(0,3):'';
 var fcFiltered=selM?allFC.filter(function(r){return (r._period||'').toLowerCase().includes(mAbbr);}):allFC;
@@ -2582,15 +2587,21 @@ if(filterFrom&&mEnd<filterFrom)return false;
 if(filterTo&&mStart>filterTo)return false;
 return true;
 }
+var _fcCurMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
 var monthlyActual=[];
 months.forEach(function(m,i){
 var ps=pnlSummaries[m]||{};
-var pnlRev=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
-var ctoRev=ctoByMonth[m]||0;
-var total=pnlRev+ctoRev;
+var total;
+if(m===_fcCurMonth&&window._mtdGrandByMonth&&window._mtdGrandByMonth[m]){
+  total=window._mtdGrandByMonth[m];
+} else {
+  var pnlRev=(ps.grossRevenue||(ps.paymentRcvd||0)+(ps.balance||0))||0;
+  var ctoRev=ctoByMonth[m]||0;
+  total=pnlRev+ctoRev;
+}
 if(total>0&&monthInRange(m))monthlyActual.push({month:m,idx:i,revenue:total,expenses:ps.totalExpenses||0});
 });
-var curMonthName=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
+var curMonthName=_fcCurMonth;
 var curMonthIdx=months.indexOf(curMonthName);
 var today=new Date();
 var dayOfMonth=today.getDate();
@@ -4595,10 +4606,12 @@ function parseMoney(v){if(typeof v==='number')return v;if(!v)return 0;return par
 function renderOverview(){
   try{
     var curMonth=new Date().toLocaleString('en',{month:'long'});
-    // Revenue total (from allRev which already has normalized 'amount')
-    var revTotal=0;
-    allRev.forEach(function(r){if(r._month===curMonth)revTotal+=parseFloat(r.amount)||0;});
-    setStat('ov-revenue','$'+revTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+    // Update TOTAL REVENUE label with current month
+    var revLabel=document.getElementById('ov-revenue-label');
+    if(revLabel)revLabel.textContent='TOTAL REVENUE ('+curMonth.toUpperCase()+')';
+    // Revenue total — use MTD revenue (same source as Tracking Dashboard)
+    var ovMTDRev=(window._mtdGrandByMonth||{})[curMonth]||0;
+    setStat('ov-revenue','$'+ovMTDRev.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
     // Forecast
     var fcEl=document.getElementById('fc-projected-total');
