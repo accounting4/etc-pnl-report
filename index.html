@@ -2294,7 +2294,7 @@ qbRows.forEach(r=>{
   if(!monthName)return;
   if(cust.toUpperCase().includes('FINANCE BUZZ'))return;
   if(dateParts[0]==='2026'||_qbMonthOverrides[doc]){if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;}
-  var _mo=['January','February','March','April','May','June','July','August','September','October','November','December'];var qbMi=_mo.indexOf(monthName);var prevMonthName=qbMi>0?_mo[qbMi-1]:'';
+  var _mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const custUp=cust.toUpperCase();
   var cN=custUp.replace(/[\s\-\.]/g,'');
   /* Two-pass dedup: 1) amount+name match  2) name-only match (same company, different amount) */
@@ -2338,7 +2338,9 @@ qbRows.forEach(r=>{
     if(p._isSummary||p._source==='qb')return false;
     const pAff=(p.affiliate||'').toUpperCase();
     const pAmt=p.rcvd>0?p.rcvd:p.displayAmt;
-    if(p._month!==monthName&&p._month!==prevMonthName)return false;
+    if(p._month!==monthName)return false;
+    /* Skip deleted entries during dedup — they shouldn't cause false matches */
+    var _dpk=p._key||p.invId||'';if(_dpk&&_isDeletedKey(pnlDeletes,_dpk))return false;
     /* Doc number match (regardless of amount) */
     if(doc&&p.invId&&p.invId===doc)return true;
     if(Math.abs(pAmt-amt)<1){
@@ -2351,6 +2353,8 @@ qbRows.forEach(r=>{
   const nameOnlyMatch=allPNL.some(p=>{
     if(p._isSummary||p._source==='qb')return false;
     if(p._month!==monthName)return false;
+    /* Skip deleted entries during dedup */
+    var _dpk2=p._key||p.invId||'';if(_dpk2&&_isDeletedKey(pnlDeletes,_dpk2))return false;
     /* Only match if PNL entry has actual revenue — skip $0 placeholders */
     const pAmt=p.rcvd>0?p.rcvd:(p.displayAmt||p.invAmt||0);
     if(pAmt<=0)return false;
