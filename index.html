@@ -2380,6 +2380,9 @@ qbRows.forEach(r=>{
 for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].invId||'';if(_qk&&_isDeletedKey(pnlDeletes,_qk))allPNL.splice(_qi,1);}
 // Apply pnlEdits (including _month overrides) to QB entries
 allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2._month)r._month=_pe2._month;if(_pe2.date)r.date=_pe2.date;if(_pe2.affiliate)r.affiliate=_pe2.affiliate;if(_pe2.invAmt!=null){r.invAmt=_pe2.invAmt;r.displayAmt=_pe2.displayAmt!=null?_pe2.displayAmt:r.displayAmt;r.rcvd=_pe2.rcvd!=null?_pe2.rcvd:r.rcvd;}if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;}}});
+/* Post-edit dedup: after pnlEdits may move QB entries to different months, remove QB entries
+   whose doc# now collides with a non-QB entry (sheet/user) in the same month */
+(function(){var _sheetIdx={};allPNL.forEach(function(e){if(e._source!=='qb'){var d=(e.invId||'').replace('QB#','');if(d){var mk=e._month+'_'+d;_sheetIdx[mk]=true;}}});for(var _pi=allPNL.length-1;_pi>=0;_pi--){var _e=allPNL[_pi];if(_e._source==='qb'){var _d=(_e.invId||'').replace('QB#','');if(_d){var _mk=_e._month+'_'+_d;if(_sheetIdx[_mk]){allPNL.splice(_pi,1);}}}}})();
 ss('Loading Interactive Offers data from Everflow...');
 const EF_ID='1Xe2WHIHBJWP6GHmpQcDYPB9AUXa6FxzWSYFnfZ-RY-A';
 const ioRows=await fetchCSV(gvg(EF_ID,'1598687220'));
