@@ -1,4 +1,4 @@
-const CACHE_NAME = 'etc-dashboard-v15';
+const CACHE_NAME = 'etc-dashboard-v16';
 const ASSETS = ['/etc-pnl-report/', '/etc-pnl-report/index.html'];
 
 self.addEventListener('install', e => {
