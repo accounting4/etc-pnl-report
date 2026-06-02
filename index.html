@@ -2064,6 +2064,7 @@ function initAuth() {
 <script>
 const PNL_ID='1rrYVlV4-ITMt7BVG57wAgD0JA0OAC_btmCXhHF_g35E',CTO_ID='1I7kWbN783mXY_qKe51PIsQjUKoMQGMdXz7zh5GmValo',FCST_ID='1Ms692jnHxt1rJExssJUsWjjSH1fLscmhTbhGRwYH16s',FMD_ID='1Dusfg5vn01369iT5bLnRmk7bpTqgUhNoZLZV4HxhLB4';
 let allPNL=[],allRev=[],allFC=[],allCTO=[],allFMD=[],pnlSummaries={},qbRawTotals={};
+window._mtdGrandByMonth=window._mtdGrandByMonth||{};
 let userPNL=JSON.parse(localStorage.getItem('uPNL')||'[]'),userRev=JSON.parse(localStorage.getItem('uRev')||'[]'),userFMD=JSON.parse(localStorage.getItem('uFMD')||'[]');
 let uStatus=JSON.parse(localStorage.getItem('uStatus')||'{}'),uRemarks=JSON.parse(localStorage.getItem('uRemarks')||'{}');
 let revPage=1,pnlPage=1,ctoPage=1,fcPage=1,fmdPage=1;
@@ -2505,18 +2506,24 @@ filterMonths.forEach(function(m){var ps=pnlSummaries[m]||{};pnlRcvd+=(ps.payment
 /* QB additions */
 var qbPaid=0,qbUnpaid=0;
 /* QB excluded from P&L totals — PNL Sheet is source of truth for now */
-/* CTO + IO + Everflow */
+/* CTO + IO + Everflow (RPP excluded) */
+var _rtCurMonth=new Date().toLocaleString('en',{month:'long'});
 var trackRev=0;
-allRev.forEach(function(r){if(r._srcLabel==='CTO'||r._srcLabel==='IO'||r._srcLabel==='CPA'||r._srcLabel==='RPP'){var m=r._month||'';if(selM&&m!==selM)return;if(!selM&&filterMonths.indexOf(m)===-1)return;trackRev+=r.amount;}});
+allRev.forEach(function(r){if(r._srcLabel==='CTO'||r._srcLabel==='IO'||r._srcLabel==='CPA'){var m=r._month||'';if(selM&&m!==selM)return;if(!selM&&filterMonths.indexOf(m)===-1)return;trackRev+=r.amount;}});
 var totalPaid=pnlRcvd;
 var totalBal=pnlBal;
-var totalRev=pnlRev+trackRev;
+var totalRev;
+if(selM===_rtCurMonth&&window._mtdGrandByMonth&&window._mtdGrandByMonth[_rtCurMonth]){
+  totalRev=window._mtdGrandByMonth[_rtCurMonth];
+} else {
+  totalRev=pnlRev+trackRev;
+}
 bEl.style.display='block';
 var lbl=selM||'All Months';
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">'+lbl+' — Revenue Breakdown</div>'+
 '<div class="psb-line"><span class="psb-key">P&L Revenue</span><span class="psb-value gold">'+$m(pnlRev)+'</span></div>'+
 (qbPaid+qbUnpaid>0?'<div class="psb-line"><span class="psb-key">QB Invoices</span><span class="psb-value gold">'+$m(qbPaid+qbUnpaid)+'</span></div>':'')+
-(trackRev>0?'<div class="psb-line"><span class="psb-key">CTO / CPA / IO / RPP</span><span class="psb-value gold">'+$m(trackRev)+'</span></div>':'')+
+(trackRev>0?'<div class="psb-line"><span class="psb-key">CTO / CPA / IO</span><span class="psb-value gold">'+$m(trackRev)+'</span></div>':'')+
 '</div>'+
 '<div class="psb-group"><div class="psb-group-title">Collections</div>'+
 '<div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value green">'+$m(totalPaid)+'</span></div>'+
@@ -3250,7 +3257,7 @@ function renderAll(){
 mergeUserInvoices();
 mergeUserExpenses();
 try{mergeEMExpenses();}catch(e){}
-renderRevenue();renderPNL();renderCTO();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
+renderCTO();renderRevenue();renderPNL();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
 _lastDataFP=_dataFingerprint();}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
@@ -4665,7 +4672,7 @@ function renderOverview(){
     renderStatSparklines(curMonth);
     
     // Alerts
-    renderAlerts(revTotal);
+    renderAlerts(ovMTDRev);
     
     // MoM charts
     renderMoMCharts();
