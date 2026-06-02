@@ -3442,6 +3442,7 @@ var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
 
 var grand=totRev+irRev+psRev+cpcRev+bhFinalRev;
 setStat('cto-s-rev',$m(grand));
+window._mtdGrandByMonth=window._mtdGrandByMonth||{};window._mtdGrandByMonth[_sm||'all']=grand;
 
 // Sources config
 var sources=[
@@ -4245,9 +4246,8 @@ setFinTab('expenses');
 
 var _editExpIdx=-1;
 function editExpense(i){
-var f=getExpFilt().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
-var ex=f[i];if(!ex)return;
-_editExpIdx=userExpenses.indexOf(ex);
+var ex=userExpenses[i];if(!ex)return;
+_editExpIdx=i;
 document.getElementById('fee-date').value=ex.date||'';
 document.getElementById('fee-month').value=ex.month||'';
 document.getElementById('fee-category').value=ex.category||'Other';
@@ -4612,14 +4612,9 @@ function renderOverview(){
     var ovExpTotal=(pnlSummaries[curMonth]||{}).totalExpenses||0;
     setStat('ov-expenses','$'+ovExpTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // MTD revenue — current month from all sources (CTO+CPA+IO+IR+PS+CPC+Beehiiv)
-    var ctoTotal=0;
-    allCTO.forEach(function(r){if(r._month===curMonth)ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});
-    var ovIR=0,ovPS=0,ovCPC=0,ovBH=0;
-    allPNL.filter(function(r){return !r._isSummary&&r._month===curMonth&&((r.displayAmt||0)>0||(r.rcvd||0)>0);}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')ovIR+=tot;else if(cat==='Platform Softwares')ovPS+=tot;else if(cat==='Beehiiv Ads')ovBH+=tot;else ovCPC+=tot;});
-    var ovBhApi=0;if(window._bhApiEarnings&&window._bhApiEarnings.publications){for(var _p in window._bhApiEarnings.publications){if(_p.toLowerCase().indexOf('five minute')>-1||_p.toLowerCase().indexOf('fmd')>-1)continue;var _pm=window._bhApiEarnings.publications[_p];if(_pm[curMonth])ovBhApi+=(_pm[curMonth].total||0);}}
-    var ovBhFinal=ovBhApi>0?ovBhApi:ovBH;
-    var ovMTD=ctoTotal+ovIR+ovPS+ovCPC+ovBhFinal;
+    // MTD revenue — use grand total from Tracking Dashboard (all sources)
+    var ovMTD=(window._mtdGrandByMonth||{})[curMonth]||0;
+    if(!ovMTD){var ctoTotal=0;allCTO.forEach(function(r){if(r._month===curMonth)ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});ovMTD=ctoTotal;}
     setStat('ov-tracking','$'+ovMTD.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
     // Collection rate — PNL sheet + user entries only (QB excluded for now)
@@ -4692,7 +4687,7 @@ function renderStatSparklines(curMonth){
     var sparkMap={
       'ov-revenue':activeMonths.map(function(m){return revByM[m];}),
       'ov-pnl':activeMonths.map(function(m){return pnlByM[m];}),
-      'ov-tracking':activeMonths.map(function(m){return ctoByM[m];}),
+      'ov-tracking':activeMonths.map(function(m){return (window._mtdGrandByMonth||{})[m]||ctoByM[m]||0;}),
       'ov-beehiiv':activeMonths.map(function(m){return bhByM[m];}),
 
     };
