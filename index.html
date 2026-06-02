@@ -760,6 +760,37 @@ table tbody tr:last-child td{border-bottom:none}
 .summary-hero{grid-template-columns:1fr}
 }
 
+/* === BULK ACTIONS === */
+.pnl-bulk-bar{position:sticky;top:0;z-index:90;display:none;align-items:center;gap:12px;padding:10px 18px;margin:-2px -2px 12px;background:linear-gradient(135deg,#4f46e5,#6366f1);border-radius:12px;color:#fff;box-shadow:0 4px 20px rgba(99,102,241,.35);animation:bulkSlide .25s ease}
+@keyframes bulkSlide{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.pnl-bulk-bar .bulk-count{font-weight:700;font-size:.92rem;white-space:nowrap}
+.pnl-bulk-bar .bulk-actions{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.pnl-bulk-bar .bulk-btn{padding:5px 12px;border:1.5px solid rgba(255,255,255,.4);border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.pnl-bulk-bar .bulk-btn:hover{background:rgba(255,255,255,.25);border-color:#fff}
+.pnl-bulk-bar .bulk-btn.danger{border-color:rgba(239,68,68,.6);background:rgba(239,68,68,.2)}
+.pnl-bulk-bar .bulk-btn.danger:hover{background:rgba(239,68,68,.4)}
+.pnl-bulk-bar .bulk-close{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.7);font-size:1.2rem;cursor:pointer;padding:2px 6px}
+.pnl-bulk-bar .bulk-close:hover{color:#fff}
+.pnl-chk{width:17px;height:17px;accent-color:#6366f1;cursor:pointer;margin:0}
+.pnl-chk-th{width:40px;text-align:center}
+.pnl-chk-td{text-align:center;width:40px;padding:6px 4px!important}
+tr.bulk-selected{background:rgba(99,102,241,.08)!important}
+[data-theme="dark"] tr.bulk-selected{background:rgba(99,102,241,.18)!important}
+/* Bulk modal */
+.bulk-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;animation:fadeIn .2s}
+.bulk-modal{background:var(--card);border-radius:16px;padding:28px;width:min(440px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.bulk-modal h3{margin:0 0 18px;font-size:1.05rem;color:var(--navy)}
+.bulk-modal .form-row{margin-bottom:14px}
+.bulk-modal .form-row label{display:block;font-size:.82rem;font-weight:600;color:var(--text2);margin-bottom:5px}
+.bulk-modal select,.bulk-modal textarea,.bulk-modal input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;background:var(--surface);color:var(--navy);font-family:inherit;box-sizing:border-box}
+.bulk-modal textarea{resize:vertical;min-height:60px}
+.bulk-modal .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.bulk-modal .modal-btns button{padding:8px 20px;border:none;border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer}
+.bulk-modal .btn-cancel{background:var(--surface2);color:var(--text2)}
+.bulk-modal .btn-save{background:#6366f1;color:#fff}
+.bulk-modal .btn-save:hover{background:#4f46e5}
+.bulk-modal .preview{margin-top:10px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:.8rem;color:var(--text3);max-height:120px;overflow-y:auto}
+.bulk-modal .preview strong{color:var(--navy);font-size:.82rem}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -1155,7 +1186,18 @@ Secured with Firebase Authentication
 <button class="btn-clear" onclick="clearPNLFilters()">Clear</button>
 </div>
 <div class="table-card">
-<table><thead><tr><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Reporting Month</th><th onclick="sortPNL('affiliate')">Affiliate Name</th><th onclick="sortPNL('displayAmt')">Invoice Amount</th><th onclick="sortPNL('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Attachment</th><th>Actions</th></tr></thead>
+<!-- Bulk Action Bar -->
+<div class="pnl-bulk-bar" id="pnl-bulk-bar">
+<span class="bulk-count" id="pnl-bulk-count">0 selected</span>
+<div class="bulk-actions">
+<button class="bulk-btn" onclick="bulkPNLMonth()">📅 Change Month</button>
+<button class="bulk-btn" onclick="bulkPNLStatus()">🔄 Change Status</button>
+<button class="bulk-btn" onclick="bulkPNLNote()">📝 Add Note</button>
+<button class="bulk-btn danger" onclick="bulkPNLDelete()">🗑 Delete</button>
+</div>
+<button class="bulk-close" onclick="clearPNLSelection()" title="Clear selection">&times;</button>
+</div>
+<table><thead><tr><th class="pnl-chk-th"><input type="checkbox" class="pnl-chk" id="pnl-select-all" onchange="togglePNLSelectAll(this.checked)" title="Select all on this page"></th><th onclick="sortPNL('invId')">Invoice #</th><th onclick="sortPNL('date')">Date</th><th onclick="sortPNL('_month')">Reporting Month</th><th onclick="sortPNL('affiliate')">Affiliate Name</th><th onclick="sortPNL('displayAmt')">Invoice Amount</th><th onclick="sortPNL('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Attachment</th><th>Actions</th></tr></thead>
 <tbody id="pnl-tbody"></tbody></table>
 <div class="pagination" id="pnl-pagination"></div>
 </div>
@@ -2024,6 +2066,7 @@ let allPNL=[],allRev=[],allFC=[],allCTO=[],allFMD=[],pnlSummaries={},qbRawTotals
 let userPNL=JSON.parse(localStorage.getItem('uPNL')||'[]'),userRev=JSON.parse(localStorage.getItem('uRev')||'[]'),userFMD=JSON.parse(localStorage.getItem('uFMD')||'[]');
 let uStatus=JSON.parse(localStorage.getItem('uStatus')||'{}'),uRemarks=JSON.parse(localStorage.getItem('uRemarks')||'{}');
 let revPage=1,pnlPage=1,ctoPage=1,fcPage=1,fmdPage=1;
+var _pnlBulkSet=new Set();
 let revSort={c:'date',d:1},pnlSort={c:'date',d:1},ctoSort={c:'date',d:1},fcSort={c:'_period',d:1},fmdSort={c:'date',d:1};
 const NAVY='#1a2340',ACCENT='#2563eb',GREEN='#16a34a',RED='#dc2626',PURPLE='#7c3aed',YELLOW='#d97706';
 const CC=[ACCENT,'#3b82f6',GREEN,PURPLE,RED,'#06b6d4','#ec4899','#84cc16','#f97316','#8b5cf6','#10b981','#6366f1','#14b8a6','#e11d48','#0ea5e9'];
@@ -2431,10 +2474,10 @@ function getCTOFilt(){const q=(document.getElementById('cto-search').value||'').
 function getFcFilt(){const q=(document.getElementById('fc-search').value||'').toLowerCase(),pf=document.getElementById('fc-period-f').value;return allFC.filter(r=>{if(pf&&r._period!==pf)return false;if(q&&!(r.affiliate||'').toLowerCase().includes(q))return false;return true;});}
 function getFMDFilt(){const q=(document.getElementById('fmd-search').value||'').toLowerCase(),mf=document.getElementById('fmd-month-f').value,sf=document.getElementById('fmd-status-f').value,{from,to}=getDR('fmd');return allFMD.filter(r=>{var k=r._key||r.invId||(r._idx!=null?String(r._idx):'');if(k&&_isDeletedKey(fmdDeletes,k))return false;if(mf&&r._month!==mf)return false;if(sf&&r.status!==sf)return false;if(!inDR(r.date,from,to))return false;if(q&&!Object.values(r).join(' ').toLowerCase().includes(q))return false;return true;});}
 function sortArr(a,sc){return[...a].sort((x,y)=>{let av=x[sc.c]||'',bv=y[sc.c]||'';const an=parseFloat(av);if(!isNaN(an)){av=an;bv=parseFloat(bv)||0;}return av>bv?sc.d:av<bv?-sc.d:0;});}
-function doSort(tab,col){const m={rev:{s:revSort,fn:renderRevenue},pnl:{s:pnlSort,fn:renderPNL},cto:{s:ctoSort,fn:renderCTO},fc:{s:fcSort,fn:renderFC},fmd:{s:fmdSort,fn:renderFMD}};const o=m[tab];if(!o)return;if(o.s.c===col)o.s.d*=-1;else{o.s.c=col;o.s.d=1;}if(tab==='rev')revPage=1;if(tab==='pnl')pnlPage=1;if(tab==='cto')ctoPage=1;if(tab==='fc')fcPage=1;if(tab==='fmd')fmdPage=1;o.fn();}
+function doSort(tab,col){const m={rev:{s:revSort,fn:renderRevenue},pnl:{s:pnlSort,fn:renderPNL},cto:{s:ctoSort,fn:renderCTO},fc:{s:fcSort,fn:renderFC},fmd:{s:fmdSort,fn:renderFMD}};const o=m[tab];if(!o)return;if(o.s.c===col)o.s.d*=-1;else{o.s.c=col;o.s.d=1;}if(tab==='rev')revPage=1;if(tab==='pnl'){pnlPage=1;_pnlBulkSet.clear();}if(tab==='cto')ctoPage=1;if(tab==='fc')fcPage=1;if(tab==='fmd')fmdPage=1;o.fn();}
 function sortRev(c){doSort('rev',c);}function sortPNL(c){doSort('pnl',c);}function sortCTO(c){doSort('cto',c);}function sortFc(c){doSort('fc',c);}function sortFMD(c){doSort('fmd',c);}
 function renderPagination(px,pg,tp,pp,tot){const el=document.getElementById(px+'-pagination');if(!el)return;const s=tot===0?0:(pg-1)*pp+1,e=Math.min(pg*pp,tot);let b='<button class="page-btn" '+(pg<=1?'disabled':'')+' onclick="goPage(\x27'+px+'\x27,'+(pg-1)+')">&#171; Prev</button>';for(let p=Math.max(1,pg-2);p<=Math.min(tp,pg+2);p++)b+='<button class="page-btn'+(p===pg?' active':'')+'" onclick="goPage(\x27'+px+'\x27,'+p+')">'+p+'</button>';b+='<button class="page-btn" '+(pg>=tp?'disabled':'')+' onclick="goPage(\x27'+px+'\x27,'+(pg+1)+')">Next &#187;</button>';el.innerHTML='<span class="pg-info">Showing '+s+'&#8211;'+e+' of '+tot+'</span><div class="pg-btns">'+b+'</div>';}
-function goPage(px,p){if(px==='rev'){revPage=p;renderRevenue();}if(px==='pnl'){pnlPage=p;renderPNL();}if(px==='cto'){ctoPage=p;renderCTO();}if(px==='fc'){fcPage=p;renderFC();}if(px==='fmd'){fmdPage=p;renderFMD();}}
+function goPage(px,p){if(px==='rev'){revPage=p;renderRevenue();}if(px==='pnl'){pnlPage=p;_pnlBulkSet.clear();renderPNL();}if(px==='cto'){ctoPage=p;renderCTO();}if(px==='fc'){fcPage=p;renderFC();}if(px==='fmd'){fmdPage=p;renderFMD();}}
 
 /* Dynamic months: only months with actual PNL sheet data */
 function _getPNLMonths(){
@@ -2683,7 +2726,7 @@ if(ctEl)ctEl.style.display=range==='custom'?'block':'none';
 computeForecasts();
 }
 
-function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});var targetMonth=selMonthF;let lr=0,lb=0,lrv=0,ltexp=0;if(targetMonth){var ps=pnlSummaries[targetMonth]||{};lrv=ps.grossRevenue||0;lr=ps.paymentRcvd||0;lb=ps.balance||0;ltexp=ps.totalExpenses||0;}else{for(var mk in pnlSummaries){var ps=pnlSummaries[mk];lrv+=(ps.grossRevenue||0);lr+=(ps.paymentRcvd||0);lb+=(ps.balance||0);ltexp+=(ps.totalExpenses||0);}}setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));setStat('pnl-s-count',$m(ltexp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;var isSheet=(r._source==='sheet');var isQB=(r._source==='qb');var srcBadge=isQB?'<span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">QB</span>':(isSheet?'<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Sheet</span>':(r._source==='user'?'<span style="font-size:9px;background:var(--green);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Manual</span>':''));var actBtns='<button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button>';var rk=_safeKey(r._key||r.invId||'gi'+gi);return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong>'+srcBadge+'</td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,\x27'+rk+'\x27)">&#128206;</label><span id="pnl-att-'+rk+'" class="attach-link" onclick="openPNLAttach(\x27'+rk+'\x27)" style="display:none">&#128204; View</span></td><td class="action-cell">'+actBtns+'</td></tr>';}).join(''):'<tr><td colspan="10" class="empty-state">No records found</td></tr>';renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);try{renderAudit();}catch(e){}const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');
+function renderPNL(){renderMonthlySummary();const f=getPNLFilt(),pp=parseInt(document.getElementById('pnl-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));pnlPage=Math.min(pnlPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});const rate=tot>0?Math.round(paid/tot*100):0;const selMonthF=(document.getElementById('pnl-month-f')||{}).value||'';var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});var targetMonth=selMonthF;let lr=0,lb=0,lrv=0,ltexp=0;if(targetMonth){var ps=pnlSummaries[targetMonth]||{};lrv=ps.grossRevenue||0;lr=ps.paymentRcvd||0;lb=ps.balance||0;ltexp=ps.totalExpenses||0;}else{for(var mk in pnlSummaries){var ps=pnlSummaries[mk];lrv+=(ps.grossRevenue||0);lr+=(ps.paymentRcvd||0);lb+=(ps.balance||0);ltexp+=(ps.totalExpenses||0);}}setStat('pnl-s-paid',$m(lr));setStat('pnl-s-pend',$m(lb));setStat('pnl-s-total',$m(lrv));setStat('pnl-s-count',$m(ltexp));setStat('pnl-s-net',$m(lrv-ltexp));const sl=sortArr(f,pnlSort).slice((pnlPage-1)*pp,pnlPage*pp);document.getElementById('pnl-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(pnlPage-1)*pp+i;var isSheet=(r._source==='sheet');var isQB=(r._source==='qb');var srcBadge=isQB?'<span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">QB</span>':(isSheet?'<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Sheet</span>':(r._source==='user'?'<span style="font-size:9px;background:var(--green);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Manual</span>':''));var actBtns='<button class="btn-edit" onclick="editPNLRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delPNLRow(event,'+gi+')">🗑</button>';var rk=_safeKey(r._key||r.invId||'gi'+gi);var _bSel=_pnlBulkSet.has(gi);return'<tr data-pnl-gi="'+gi+'"'+(_bSel?' class="bulk-selected"':'')+'><td class="pnl-chk-td"><input type="checkbox" class="pnl-chk" data-gi="'+gi+'"'+(_bSel?' checked':'')+' onchange="togglePNLCheck('+gi+',this.checked)"></td><td>'+(r.invId||'&#8212;')+'</td><td>'+fmtDate(r.date)+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong>'+srcBadge+'</td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27pnl\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27pnl\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="attach-btn" title="Upload attachment"><input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handlePNLAttach(this,\x27'+rk+'\x27)">&#128206;</label><span id="pnl-att-'+rk+'" class="attach-link" onclick="openPNLAttach(\x27'+rk+'\x27)" style="display:none">&#128204; View</span></td><td class="action-cell">'+actBtns+'</td></tr>';}).join(''):'<tr><td colspan="11" class="empty-state">No records found</td></tr>';_updateBulkBar();var saEl=document.getElementById('pnl-select-all');if(saEl)saEl.checked=false;renderPagination('pnl',pnlPage,tp,pp,f.length);updatePNLCharts(f);try{renderAudit();}catch(e){}const pnlAtts=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');
 /* Show attachment indicators using _safeKey-based IDs */
 Object.keys(pnlAtts).forEach(function(k){var sp=document.getElementById('pnl-att-'+k);if(sp)sp.style.display='inline';var sk=_safeKey(k);if(sk!==k){var sp2=document.getElementById('pnl-att-'+sk);if(sp2)sp2.style.display='inline';}});}
 function getCTORow(r){
@@ -3303,7 +3346,7 @@ function delFMDRow(e,gi){
 }
 function applyRevFilters(){revPage=1;renderRevenue();}
 function clearRevFilters(){['rev-search','rev-date-from','rev-date-to'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});var rmf=document.getElementById('rev-month-f');if(rmf)rmf.value='';var tf=document.getElementById('rev-type-f');if(tf)tf.value='';document.getElementById('rev-entries').value='25';applyRevFilters();}
-function applyPNLFilters(){pnlPage=1;renderPNL();var smb=document.querySelector('#pnl-month-buttons button.active');if(smb&&smb.textContent!=='All Months')showMonthlySummary(smb.textContent);}
+function applyPNLFilters(){pnlPage=1;clearPNLSelection();renderPNL();var smb=document.querySelector('#pnl-month-buttons button.active');if(smb&&smb.textContent!=='All Months')showMonthlySummary(smb.textContent);}
 function clearPNLFilters(){['pnl-search'].forEach(id=>document.getElementById(id).value='');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-status-f').value='';document.getElementById('pnl-entries').value='10';document.querySelectorAll('#pnl-month-buttons .month-btn').forEach((b,i)=>b.classList.toggle('active',i===0));document.getElementById('pnl-summary-banner').style.display='none';applyPNLFilters();}
 function applyCTOFilters(){ctoPage=1;renderCTO();try{renderCTOPnlSummary();}catch(e){}}
 function clearCTOFilters(){document.getElementById('cto-search').value='';var mf=document.getElementById('cto-month-f');if(mf)mf.value='May';var tf=document.getElementById('cto-type-f');if(tf)tf.value='';document.getElementById('cto-entries').value='25';applyCTOFilters();}
@@ -3787,6 +3830,163 @@ function delPNLRow(e,gi){
 }
 
 
+// === BULK INVOICE ACTIONS ===
+function togglePNLCheck(gi,checked){
+  if(checked)_pnlBulkSet.add(gi);else _pnlBulkSet.delete(gi);
+  var tr=document.querySelector('tr[data-pnl-gi="'+gi+'"]');
+  if(tr)tr.classList.toggle('bulk-selected',checked);
+  _updateBulkBar();
+}
+function togglePNLSelectAll(checked){
+  var cbs=document.querySelectorAll('#pnl-tbody .pnl-chk');
+  cbs.forEach(function(cb){var gi=parseInt(cb.dataset.gi);cb.checked=checked;
+    if(checked)_pnlBulkSet.add(gi);else _pnlBulkSet.delete(gi);
+    var tr=cb.closest('tr');if(tr)tr.classList.toggle('bulk-selected',checked);
+  });
+  _updateBulkBar();
+}
+function clearPNLSelection(){
+  _pnlBulkSet.clear();
+  document.querySelectorAll('#pnl-tbody .pnl-chk').forEach(function(cb){cb.checked=false;});
+  document.querySelectorAll('#pnl-tbody tr.bulk-selected').forEach(function(tr){tr.classList.remove('bulk-selected');});
+  var sa=document.getElementById('pnl-select-all');if(sa)sa.checked=false;
+  _updateBulkBar();
+}
+function _updateBulkBar(){
+  var bar=document.getElementById('pnl-bulk-bar');if(!bar)return;
+  var n=_pnlBulkSet.size;
+  bar.style.display=n>0?'flex':'none';
+  document.getElementById('pnl-bulk-count').textContent=n+' selected';
+}
+function _getBulkPNLRows(){
+  var sorted=getPNLSorted();
+  var rows=[];
+  _pnlBulkSet.forEach(function(gi){if(sorted[gi])rows.push({gi:gi,row:sorted[gi]});});
+  rows.sort(function(a,b){return a.gi-b.gi;});
+  return rows;
+}
+function _bulkPreviewHTML(rows){
+  return '<div class="preview"><strong>'+rows.length+' invoice'+(rows.length>1?'s':'')+':</strong><br>'+
+    rows.slice(0,8).map(function(x){return(x.row.invId||'—')+' — '+(x.row.affiliate||'Unknown')+' ('+$m(x.row.displayAmt||x.row.rcvd||0)+')';}).join('<br>')+
+    (rows.length>8?'<br>… and '+(rows.length-8)+' more':'')+'</div>';
+}
+function _showBulkModal(title,bodyHTML,saveFn){
+  var old=document.getElementById('pnl-bulk-modal');if(old)old.remove();
+  var el=document.createElement('div');el.id='pnl-bulk-modal';el.className='bulk-modal-overlay';
+  el.onclick=function(e){if(e.target===el){el.remove();}};
+  el.innerHTML='<div class="bulk-modal"><h3>'+title+'</h3>'+bodyHTML+
+    '<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById(\'pnl-bulk-modal\').remove()">Cancel</button>'+
+    '<button class="btn-save" id="pnl-bulk-save">Apply</button></div></div>';
+  document.body.appendChild(el);
+  document.getElementById('pnl-bulk-save').onclick=saveFn;
+}
+function bulkPNLMonth(){
+  var rows=_getBulkPNLRows();if(!rows.length)return;
+  var opts='<option value="">— Select Month —</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option>';
+  _showBulkModal('📅 Reassign Month',
+    '<div class="form-row"><label>New Reporting Month</label><select id="bulk-month">'+opts+'</select></div>'+_bulkPreviewHTML(rows),
+    function(){
+      var m=document.getElementById('bulk-month').value;
+      if(!m){alert('Please select a month.');return;}
+      rows.forEach(function(x){
+        var r=x.row;var k=r._key||r.invId||(r._idx!=null?String(r._idx):'gi'+x.gi);
+        r._month=m;
+        if(!pnlEdits[k])pnlEdits[k]={};
+        pnlEdits[k]._month=m;pnlEdits[k].lastEditedBy=currentUser?currentUser.email:'';pnlEdits[k].lastEditedAt=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
+        Object.assign(r,pnlEdits[k]);
+      });
+      localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));fbSyncEdits();
+      document.getElementById('pnl-bulk-modal').remove();
+      clearPNLSelection();
+      mergeUserInvoices();mergeUserExpenses();renderPNL();try{renderOverview();}catch(e){}
+    }
+  );
+}
+function bulkPNLStatus(){
+  var rows=_getBulkPNLRows();if(!rows.length)return;
+  var opts='<option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option><option>No Final Count</option>';
+  _showBulkModal('🔄 Change Status',
+    '<div class="form-row"><label>New Status</label><select id="bulk-status">'+opts+'</select></div>'+_bulkPreviewHTML(rows),
+    function(){
+      var newSt=document.getElementById('bulk-status').value;
+      rows.forEach(function(x){
+        var r=x.row;
+        var k=r._key||r.invId||(r._idx!=null?String(r._idx):'gi'+x.gi);
+        /* Apply status logic (same as updStatus) */
+        r.status=newSt;
+        if(newSt==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}
+        else if(newSt==='Unpaid'||newSt==='Pending'||newSt==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}
+        if(r._key){uStatus[r._key]=newSt;uStatus[_safeKey(r._key)]=newSt;}
+        if(!pnlEdits[k])pnlEdits[k]={};
+        pnlEdits[k].status=newSt;pnlEdits[k].displayAmt=r.displayAmt;pnlEdits[k].rcvd=r.rcvd;pnlEdits[k].invAmt=r.invAmt;
+        pnlEdits[k].lastEditedBy=currentUser?currentUser.email:'';pnlEdits[k].lastEditedAt=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
+        Object.assign(r,pnlEdits[k]);
+        if(r._source==='user'){var ui=userPNL.findIndex(function(u){return u._key===r._key;});if(ui>-1){userPNL[ui].status=newSt;userPNL[ui].displayAmt=r.displayAmt;userPNL[ui].rcvd=r.rcvd;}}
+      });
+      localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();
+      localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));fbSyncEdits();
+      var hasUser=rows.some(function(x){return x.row._source==='user';});
+      if(hasUser){localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSyncAllPNL();}
+      document.getElementById('pnl-bulk-modal').remove();
+      clearPNLSelection();
+      mergeUserInvoices();mergeUserExpenses();try{mergeEMExpenses();}catch(e){}renderPNL();try{renderOverview();}catch(e){}
+    }
+  );
+}
+function bulkPNLNote(){
+  var rows=_getBulkPNLRows();if(!rows.length)return;
+  _showBulkModal('📝 Add Note to Selected',
+    '<div class="form-row"><label>Note / Remark</label><textarea id="bulk-note" rows="3" placeholder="Enter note to add to all selected invoices..."></textarea></div>'+
+    '<div class="form-row"><label style="font-size:.78rem;color:var(--text3)"><input type="checkbox" id="bulk-note-append" checked style="margin-right:6px;accent-color:#6366f1">Append to existing remarks (uncheck to replace)</label></div>'+
+    _bulkPreviewHTML(rows),
+    function(){
+      var note=document.getElementById('bulk-note').value.trim();
+      if(!note){alert('Please enter a note.');return;}
+      var append=document.getElementById('bulk-note-append').checked;
+      rows.forEach(function(x){
+        var r=x.row;var k=r._key||r.invId||(r._idx!=null?String(r._idx):'gi'+x.gi);
+        var newRemark=append?((r.remarks?r.remarks+' | ':'')+note):note;
+        r.remarks=newRemark;
+        if(r._key){uRemarks[r._key]=newRemark;uRemarks[_safeKey(r._key)]=newRemark;}
+        if(!pnlEdits[k])pnlEdits[k]={};
+        pnlEdits[k].remarks=newRemark;
+        pnlEdits[k].lastEditedBy=currentUser?currentUser.email:'';pnlEdits[k].lastEditedAt=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
+        if(r._source==='user'){var ui=userPNL.findIndex(function(u){return u._key===r._key;});if(ui>-1)userPNL[ui].remarks=newRemark;}
+      });
+      localStorage.setItem('uRemarks',JSON.stringify(uRemarks));fbSyncRemarks();
+      localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));fbSyncEdits();
+      var hasUser=rows.some(function(x){return x.row._source==='user';});
+      if(hasUser){localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSyncAllPNL();}
+      document.getElementById('pnl-bulk-modal').remove();
+      clearPNLSelection();
+      renderPNL();
+    }
+  );
+}
+function bulkPNLDelete(){
+  var rows=_getBulkPNLRows();if(!rows.length)return;
+  _showBulkModal('🗑 Delete Selected Invoices',
+    '<div style="color:#ef4444;font-weight:600;margin-bottom:12px">⚠️ This cannot be undone. The following invoices will be permanently deleted:</div>'+
+    _bulkPreviewHTML(rows),
+    function(){
+      if(!confirm('Are you sure you want to delete '+rows.length+' invoice'+(rows.length>1?'s':'')+'? This cannot be undone.'))return;
+      rows.forEach(function(x){
+        var r=x.row;var k=r._key||r.invId||(r._idx!=null?String(r._idx):'gi'+x.gi);
+        pnlDeletes.add(k);pnlDeletes.add(_safeKey(k));
+        var idx=allPNL.indexOf(r);if(idx>-1)allPNL.splice(idx,1);
+        if(r._source==='user'){var ui=userPNL.indexOf(r);if(ui>-1)userPNL.splice(ui,1);}
+      });
+      localStorage.setItem('pnlDeletes',JSON.stringify([...pnlDeletes]));fbSyncDeletes();
+      var hasUser=rows.some(function(x){return x.row._source==='user';});
+      if(hasUser){localStorage.setItem('uPNL',JSON.stringify(userPNL));fbSyncAllPNL();}
+      document.getElementById('pnl-bulk-modal').remove();
+      clearPNLSelection();
+      mergeUserInvoices();mergeUserExpenses();renderPNL();try{renderOverview();}catch(e){}
+    }
+  );
+}
+
+
 // === EXPENSE TRACKER ===
 var userExpenses=JSON.parse(localStorage.getItem('userExpenses')||'[]');
 var expDeletes=new Set(JSON.parse(localStorage.getItem('expDeletes')||'[]'));
@@ -4201,7 +4401,8 @@ return (document.getElementById('pnl-edit-modal')&&document.getElementById('pnl-
 (document.getElementById('fmd-edit-modal')&&document.getElementById('fmd-edit-modal').style.display==='flex')||
 (document.getElementById('ctoEditModal')&&document.getElementById('ctoEditModal').style.display==='flex')||
 (document.getElementById('addExpenseModal')&&document.getElementById('addExpenseModal').classList.contains('open'))||
-(document.getElementById('editExpenseModal')&&document.getElementById('editExpenseModal').classList.contains('open'));
+(document.getElementById('editExpenseModal')&&document.getElementById('editExpenseModal').classList.contains('open'))||
+(document.getElementById('pnl-bulk-modal')!==null);
 }
 async function autoSyncData(){
 if(_isEditModalOpen()){console.log('Auto-sync skipped: edit modal open');return;}
