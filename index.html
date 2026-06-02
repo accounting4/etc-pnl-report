@@ -2642,10 +2642,10 @@ forecasts.push({month:fMonth,value:fVal});
 }
 }
 }else if(method==='movavg'){
-var window=Math.min(3,completedMonths.length);
+var lookback=Math.min(3,completedMonths.length);
 for(var j=0;j<ahead;j++){
 var src=j===0?completedMonths.map(function(d){return d.revenue;}):completedMonths.map(function(d){return d.revenue;}).concat(forecasts.map(function(f){return f.value;}));
-var recent=src.slice(-window);
+var recent=src.slice(-lookback);
 var avg=recent.reduce(function(a,b){return a+b;},0)/recent.length;
 var fIdx=(completedMonths.length>0?completedMonths[completedMonths.length-1].idx+1+j:curMonthIdx+j);
 forecasts.push({month:months[fIdx%12],value:avg});
@@ -4751,8 +4751,8 @@ function updateGoalTracker(){
     var target=parseFloat((document.getElementById('goal-input').value||'').replace(/[^0-9.]/g,''))||200000;
     localStorage.setItem('etc_goal_target',target);
     var curMonth=new Date().toLocaleString('en',{month:'long'});
-    var revTotal=0;
-    allRev.forEach(function(r){if(r._month===curMonth)revTotal+=parseFloat(r.amount)||0;});
+    var revTotal=(window._mtdGrandByMonth||{})[curMonth]||0;
+    if(!revTotal){allRev.forEach(function(r){if(r._month===curMonth)revTotal+=parseFloat(r.amount)||0;});}
     var pct=Math.min(100,Math.round(revTotal/target*100));
     var bar=document.getElementById('goal-bar');
     var pctEl=document.getElementById('goal-pct');
