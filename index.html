@@ -2428,7 +2428,7 @@ startAutoRefresh();
 }
 function startAutoRefresh(){
 var liveEl=document.querySelector('.header-badge');
-if(liveEl){liveEl.title='Click to refresh data';liveEl.textContent='↻ Refresh';liveEl.style.cursor='pointer';liveEl.onclick=async function(){if(typeof _isEditModalOpen==='function'&&_isEditModalOpen()){alert('Please close the edit modal before refreshing.');return;}liveEl.textContent='⏳ Loading...';try{var prevFP=_lastDataFP;window._deferRender=true;await fetchAllData();window._deferRender=false;try{loadManualCTOEntries();}catch(e){}try{loadCTOEditsLocal();}catch(e){}var newFP=_dataFingerprint();if(newFP!==prevFP){window._stableRefresh=true;_suppressChartAnim();renderAll();buildCharts();_restoreChartAnim();window._stableRefresh=false;}_syncCountdown=300;liveEl.textContent='✅ Updated';setTimeout(function(){liveEl.textContent='↻ Refresh';},2000);}catch(e){window._deferRender=false;liveEl.textContent='↻ Refresh';console.warn('Refresh error',e);}};}
+if(liveEl){liveEl.title='Click to refresh data';liveEl.textContent='↻ Refresh';liveEl.style.cursor='pointer';liveEl.onclick=async function(){if(_syncLock){return;}if(typeof _isEditModalOpen==='function'&&_isEditModalOpen()){alert('Please close the edit modal before refreshing.');return;}liveEl.textContent='⏳ Loading...';_syncLock=true;_fbSuppressListener=true;try{var prevFP=_lastDataFP;window._deferRender=true;await fetchAllData();window._deferRender=false;try{loadManualCTOEntries();}catch(e){}try{loadCTOEditsLocal();}catch(e){}_fbSuppressListener=false;_syncLock=false;var newFP=_dataFingerprint();if(newFP!==prevFP){window._stableRefresh=true;_suppressChartAnim();renderAll();buildCharts();_restoreChartAnim();window._stableRefresh=false;}_syncCountdown=300;liveEl.textContent='✅ Updated';setTimeout(function(){liveEl.textContent='↻ Refresh';},2000);}catch(e){window._deferRender=false;_fbSuppressListener=false;_syncLock=false;liveEl.textContent='↻ Refresh';console.warn('Refresh error',e);}};}
 }
 function buildMonthButtons(){
 const c=document.getElementById('pnl-month-buttons');if(!c)return;
@@ -3712,7 +3712,11 @@ function fbStartListeners(){
     allFMD.forEach(function(r){var fk=r._key||r.invId||'';var _fe=fmdEdits[fk]||fmdEdits[_safeKey(fk)];if(_fe){if(_fe._month)r._month=_fe._month;if(_fe.date)r.date=_fe.date;if(_fe.affiliate)r.affiliate=_fe.affiliate;if(_fe.invAmt!=null){r.invAmt=_fe.invAmt;r.displayAmt=_fe.displayAmt!=null?_fe.displayAmt:r.displayAmt;r.rcvd=_fe.rcvd!=null?_fe.rcvd:r.rcvd;}if(_fe.status)r.status=_fe.status;if(_fe.remarks!=null)r.remarks=_fe.remarks;}});
     // Skip re-render if edit modal is open (prevents stale index issues)
     if(typeof _isEditModalOpen==='function'&&_isEditModalOpen()){console.log('🔄 Listener data updated but skipping render (modal open)');return;}
-    // Re-render everything
+    // Debounce re-render to avoid rapid flickers from Firebase updates
+    if(window._fbRenderTimer)clearTimeout(window._fbRenderTimer);
+    window._fbRenderTimer=setTimeout(function(){
+    // Skip if a full sync is in progress (fetchAllData will handle rendering)
+    if(_syncLock){console.log('🔄 Listener skipped render: sync in progress');return;}
     try{
       allPNL=allPNL.filter(function(r){return r._source!=='user';});
       allPNL.push(...userPNL.map(function(r){return Object.assign({},r,{displayAmt:r.invAmt>0?r.invAmt:r.rcvd});}));
@@ -3720,10 +3724,10 @@ function fbStartListeners(){
       _injectFMDBhEntries();
       mergeUserInvoices();mergeUserExpenses();
       window._stableRefresh=true;_suppressChartAnim();
+      renderCTO();
+      try{renderRevenue();}catch(e){}
       renderPNL();try{renderOverview();}catch(e){}
       try{renderExpenses();}catch(e){}
-      try{renderRevenue();}catch(e){}
-      try{renderCTO();}catch(e){}
       try{renderFMD();}catch(e){}
       try{renderQuarterlySummary();}catch(e){}
       _restoreChartAnim();window._stableRefresh=false;
@@ -3732,6 +3736,7 @@ function fbStartListeners(){
       if(mb&&mb.textContent!=='All Months')try{showMonthlySummary(mb.textContent);}catch(e){}
       console.log('🔄 Real-time sync update applied');
     }catch(e){console.warn('Re-render error:',e);}
+    },500);
   });
 }
 
@@ -3747,7 +3752,14 @@ function fbSyncRemarks(){var o={};for(var k in uRemarks){o[_safeKey(k)]=uRemarks
 function fbSyncEdits(){fbSave('pnlEdits',Object.keys(pnlEdits).reduce(function(o,k){o[_safeKey(k)]=pnlEdits[k];return o;},{}));}
 function fbSyncFMDEdits(){fbSave('fmdEdits',Object.keys(fmdEdits).reduce(function(o,k){o[_safeKey(k)]=fmdEdits[k];return o;},{}));}
 function fbSyncAttachments(){var att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');var meta={};for(var k in att){meta[_safeKey(k)]={name:att[k].name,uploadedBy:att[k].uploadedBy||'',uploadedAt:att[k].uploadedAt||'',hasData:true};}fbSave('pnlAttachmentsMeta',meta);var data={};for(var k in att){data[_safeKey(k)]=att[k];}fbSave('pnlAttachments',data);}
-function loadAllData(){fbLoadUserData().then(function(){return fetchAllData();}).then(function(){try{loadManualCTOEntries();loadCTOEditsLocal();}catch(e){}}).catch(e=>{console.error(e);document.getElementById('loadingOverlay').style.display='none';});}
+function loadAllData(){
+_syncLock=true;_fbSuppressListener=true;window._deferRender=true;
+fbLoadUserData().then(function(){return fetchAllData();}).then(function(){
+try{loadManualCTOEntries();loadCTOEditsLocal();}catch(e){}
+window._deferRender=false;_fbSuppressListener=false;_syncLock=false;
+renderAll();buildCharts();
+}).catch(function(e){console.error(e);window._deferRender=false;_fbSuppressListener=false;_syncLock=false;document.getElementById('loadingOverlay').style.display='none';});
+}
 initAuth();
 
 function handlePNLAttach(input,key){const file=input.files[0];if(!file)return;if(file.size>5*1024*1024){alert('File too large (max 5MB)');return;}const reader=new FileReader();reader.onload=function(e){const att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');att[key]={name:file.name,data:e.target.result,uploadedBy:currentUser?currentUser.email:'',uploadedAt:new Date().toLocaleString('en-US',{timeZone:'America/New_York'})};localStorage.setItem('pnlAttachments',JSON.stringify(att));fbSyncAttachments();const sp=document.getElementById('pnl-att-'+key);if(sp)sp.style.display='inline';input.value='';};reader.readAsDataURL(file);}
@@ -4369,6 +4381,7 @@ if(gBtn){gBtn.disabled=false;gBtn.textContent='⟳ Retry';}
 }
 }
 var _syncCountdown=300;
+var _syncLock=false; // Prevent concurrent fetchAllData calls
 setInterval(function(){
 if(_syncCountdown>0)_syncCountdown--;
 var gNext=document.getElementById('gsync-next');
@@ -4380,6 +4393,8 @@ gNext.textContent=_syncCountdown<=0?'Syncing soon...':'Next sync in '+m+'m '+Str
 
 // === MANUAL SYNC ===
 async function manualSync(){
+if(_syncLock){showSyncToast('⏳ Sync already in progress');return;}
+_syncLock=true;_fbSuppressListener=true;
 try{
 updateSyncIndicator('syncing');
 var prevFP=_lastDataFP;
@@ -4388,6 +4403,7 @@ await fetchAllData();
 window._deferRender=false;
 try{loadManualCTOEntries();}catch(e){}
 try{loadCTOEditsLocal();}catch(e){}
+_fbSuppressListener=false;_syncLock=false;
 var newFP=_dataFingerprint();
 var changed=(newFP!==prevFP);
 if(changed){
@@ -4399,7 +4415,7 @@ updateSyncIndicator('done');
 _syncCountdown=300;
 showSyncToast(changed?'✅ Sync complete — data updated':'✅ Sync complete — no changes');
 }catch(e){
-window._deferRender=false;
+window._deferRender=false;_fbSuppressListener=false;_syncLock=false;
 console.warn('Manual sync error:',e);
 updateSyncIndicator('error');
 showSyncToast('❌ Sync failed — will retry automatically');
@@ -4427,7 +4443,9 @@ return (document.getElementById('pnl-edit-modal')&&document.getElementById('pnl-
 (document.getElementById('pnl-bulk-modal')!==null);
 }
 async function autoSyncData(){
+if(_syncLock){console.log('Auto-sync skipped: sync in progress');return;}
 if(_isEditModalOpen()){console.log('Auto-sync skipped: edit modal open');return;}
+_syncLock=true;_fbSuppressListener=true;
 try{
 updateSyncIndicator('syncing');
 var prevFP=_lastDataFP;
@@ -4438,6 +4456,7 @@ window._deferRender=false;
 // Re-apply manual overrides from localStorage
 try{loadManualCTOEntries();}catch(e){}
 try{loadCTOEditsLocal();}catch(e){}
+_fbSuppressListener=false;_syncLock=false;
 var newFP=_dataFingerprint();
 if(newFP!==prevFP){
 // Data actually changed — re-render with change highlights
@@ -4451,7 +4470,7 @@ console.log('Auto-sync: no data changes, skipping render');
 updateSyncIndicator('done');
 _syncCountdown=300;
 }catch(e){
-window._deferRender=false;
+window._deferRender=false;_fbSuppressListener=false;_syncLock=false;
 console.warn('Auto-sync error:',e);
 updateSyncIndicator('error');
 setTimeout(function(){updateSyncIndicator('done');},5000);
@@ -6692,6 +6711,7 @@ if(changed){localStorage.setItem('emTransactions',JSON.stringify(emTransactions)
 function _emAfterLoad(){
 _emMigrateCategories();
 emRenderAll();
+if(_syncLock)return; // Skip re-render during full data sync
 try{
 if(typeof mergeEMExpenses==='function'){mergeEMExpenses();}
 
