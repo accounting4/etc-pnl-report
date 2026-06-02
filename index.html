@@ -3383,12 +3383,12 @@ var bEl=document.getElementById('cto-summary-banner'),cEl=document.getElementByI
 if(!bEl||!cEl)return;
 bEl.style.display='block';
 var f=getCTOFilt();
-var ctoRev=0,ioRev=0,efRev=0,rppRev=0,ctoLeads=0,ioLeads=0,efLeads=0,rppLeads=0;
-var ctoAffs={},ioAffs={},efAffs={},rppAffs={};
+var ctoRev=0,ioRev=0,efRev=0,ctoLeads=0,ioLeads=0,efLeads=0;
+var ctoAffs={},ioAffs={},efAffs={};
 f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').toUpperCase();
   if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;ioAffs[row._name]=(ioAffs[row._name]||0)+row._revenue;}
-  else if(t==='CPA'||t==='EF-ETC'||t==='EF'){efRev+=row._revenue;efLeads+=row._leads;efAffs[row._name]=(efAffs[row._name]||0)+row._revenue;}
-  else if(t==='RPP'){rppRev+=row._revenue;rppLeads+=row._leads;rppAffs[row._name]=(rppAffs[row._name]||0)+row._revenue;}
+  else if(t==='CPA'||t==='EF-ETC'||t==='EF'){if(r._efDate){efRev+=row._revenue;efLeads+=row._leads;efAffs[row._name]=(efAffs[row._name]||0)+row._revenue;}}
+  else if(t==='RPP'){}
   else{ctoRev+=row._revenue;ctoLeads+=row._leads;ctoAffs[row._name]=(ctoAffs[row._name]||0)+row._revenue;}
 });
 var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length;
@@ -3440,14 +3440,14 @@ var bhFinalAffs=bhApiRev>0?bhApiPubs:bhAffs;
 var bhFinalMetric=bhApiRev>0?'Publications':'Invoices';
 var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
 
-var grand=totRev+irRev+psRev+cpcRev+bhFinalRev;
+var grand=ctoRev+ioRev+efRev+irRev+psRev+cpcRev+bhFinalRev;
 setStat('cto-s-rev',$m(grand));
 window._mtdGrandByMonth=window._mtdGrandByMonth||{};window._mtdGrandByMonth[_sm||'all']=grand;
 
-// Sources config
+// Sources config — MTD Revenue sources of truth (no RPP, no PerfDash CPA)
+// CTO→Performance Dashboard, IO→Interactive Offers, CPA→Everflow, IR/PS/CPC→P&L, Beehiiv→API
 var sources=[
   {id:'cto',name:'CTO',color:'#6366f1',rev:ctoRev,metric:'Leads',metricVal:ctoLeads,affs:ctoAffs},
-  {id:'rpp',name:'RPP',color:'#ef4444',rev:rppRev,metric:'Leads',metricVal:rppLeads,affs:rppAffs},
   {id:'io',name:'IO (Interactive Offers)',color:'#ec4899',rev:ioRev,metric:'Clicks',metricVal:ioLeads,affs:ioAffs},
   {id:'cpa',name:'CPA (Everflow)',color:'#f59e0b',rev:efRev,metric:'Conversions',metricVal:efLeads,affs:efAffs},
   {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
