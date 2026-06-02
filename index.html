@@ -984,7 +984,7 @@ Secured with Firebase Authentication
 <div class="stat-card green" onclick="showTab('revenue')" style="cursor:pointer" title="Click to view Forecast"><div class="sc-label">MONTH-END FORECAST</div><div class="sc-value" id="ov-forecast">$0</div><div class="sc-sub">Projected total →</div></div>
 <div class="stat-card purple" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view Profit & Loss"><div class="sc-label">TOTAL INVOICED (PNL)</div><div class="sc-value" id="ov-pnl">$0</div><div class="sc-sub">All invoices →</div></div>
 <div class="stat-card red" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view P&L expenses"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary →</div></div>
-<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">TRACKING REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">CTO + IO + Everflow →</div></div>
+<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">MTD REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">All sources →</div></div>
 <div class="stat-card" style="border-left:3px solid #14b8a6"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid vs Total (QB)</div></div>
 <div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #f97316" title="Click to view Beehiiv Revenue"><div class="sc-label">BEEHIIV EARNINGS</div><div class="sc-value" id="ov-beehiiv">$0</div><div class="sc-sub">Daily earnings →</div></div>
 
@@ -1243,7 +1243,7 @@ Secured with Firebase Authentication
 <button class="btn-export excel" onclick="exportExcel('cto')">📊 Export Excel</button>
 </div>
 <div class="stats-row">
-<div class="stat-card"><div class="sc-label">Tracking Revenue</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">All sources combined</div></div>
+<div class="stat-card"><div class="sc-label">MTD REVENUE</div><div class="sc-value" id="cto-s-rev">$0</div><div class="sc-sub">All sources combined</div></div>
 <div class="stat-card green"><div class="sc-label">Total Leads</div><div class="sc-value" id="cto-s-leads">0</div><div class="sc-sub">Current count</div></div>
 <div class="stat-card purple"><div class="sc-label">Active Offers</div><div class="sc-value" id="cto-s-count">0</div><div class="sc-sub">With revenue</div></div>
 <div class="stat-card"><div class="sc-label">Top Affiliate</div><div class="sc-value" id="cto-s-top" style="font-size:1rem">—</div><div class="sc-sub">By revenue</div></div>
@@ -2516,7 +2516,7 @@ var lbl=selM||'All Months';
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">'+lbl+' — Revenue Breakdown</div>'+
 '<div class="psb-line"><span class="psb-key">P&L Revenue</span><span class="psb-value gold">'+$m(pnlRev)+'</span></div>'+
 (qbPaid+qbUnpaid>0?'<div class="psb-line"><span class="psb-key">QB Invoices</span><span class="psb-value gold">'+$m(qbPaid+qbUnpaid)+'</span></div>':'')+
-(trackRev>0?'<div class="psb-line"><span class="psb-key">CTO / IO / Everflow</span><span class="psb-value gold">'+$m(trackRev)+'</span></div>':'')+
+(trackRev>0?'<div class="psb-line"><span class="psb-key">CTO / CPA / IO / RPP</span><span class="psb-value gold">'+$m(trackRev)+'</span></div>':'')+
 '</div>'+
 '<div class="psb-group"><div class="psb-group-title">Collections</div>'+
 '<div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value green">'+$m(totalPaid)+'</span></div>'+
@@ -3441,6 +3441,7 @@ var bhFinalMetric=bhApiRev>0?'Publications':'Invoices';
 var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
 
 var grand=totRev+irRev+psRev+cpcRev+bhFinalRev;
+setStat('cto-s-rev',$m(grand));
 
 // Sources config
 var sources=[
@@ -4611,10 +4612,15 @@ function renderOverview(){
     var ovExpTotal=(pnlSummaries[curMonth]||{}).totalExpenses||0;
     setStat('ov-expenses','$'+ovExpTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
-    // Tracking revenue — current month from allCTO
+    // MTD revenue — current month from all sources (CTO+CPA+IO+IR+PS+CPC+Beehiiv)
     var ctoTotal=0;
     allCTO.forEach(function(r){if(r._month===curMonth)ctoTotal+=parseMoney(r['Total Revenue ($)'])||0;});
-    setStat('ov-tracking','$'+ctoTotal.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
+    var ovIR=0,ovPS=0,ovCPC=0,ovBH=0;
+    allPNL.filter(function(r){return !r._isSummary&&r._month===curMonth&&((r.displayAmt||0)>0||(r.rcvd||0)>0);}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')ovIR+=tot;else if(cat==='Platform Softwares')ovPS+=tot;else if(cat==='Beehiiv Ads')ovBH+=tot;else ovCPC+=tot;});
+    var ovBhApi=0;if(window._bhApiEarnings&&window._bhApiEarnings.publications){for(var _p in window._bhApiEarnings.publications){if(_p.toLowerCase().indexOf('five minute')>-1||_p.toLowerCase().indexOf('fmd')>-1)continue;var _pm=window._bhApiEarnings.publications[_p];if(_pm[curMonth])ovBhApi+=(_pm[curMonth].total||0);}}
+    var ovBhFinal=ovBhApi>0?ovBhApi:ovBH;
+    var ovMTD=ctoTotal+ovIR+ovPS+ovCPC+ovBhFinal;
+    setStat('ov-tracking','$'+ovMTD.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));
     
     // Collection rate — PNL sheet + user entries only (QB excluded for now)
     var ovPaid=0,ovTotal=0;
