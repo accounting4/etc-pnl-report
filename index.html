@@ -2270,6 +2270,9 @@ ss('Loading QB Invoices...');
 const QB_ID='1J054vIZKXwNYr_Z0MXT11Boaor2elCXw4utRd-c79LU';
 const qbRows=await fetchCSV(gvg(QB_ID,'0'));
 let qbAdded=0,qbSkipped=0;
+/* QB P&L month mapping: invoices billed in month X represent revenue for month X-1.
+   E.g. June invoices = May revenue. This is permanent — QB is source of truth. */
+var _prevMonthMap={'01':'December','02':'January','03':'February','04':'March','05':'April','06':'May','07':'June','08':'July','09':'August','10':'September','11':'October','12':'November'};
 qbRows.forEach(r=>{
   const cust=(r['Customer']||'').trim();
   const amtStr=(r['Invoice Amount']||'0').replace(/[\$,]/g,'');
@@ -2282,18 +2285,13 @@ qbRows.forEach(r=>{
   const desc=(r['Description']||'').trim();
   if(!cust||amt<=0)return;
   const dateParts=date.split('-');
-  let monthName='';
-  /* QB invoice month overrides — when billing date ≠ accounting month */
-  var _qbMonthOverrides={'1371':'June'};
-  if(_qbMonthOverrides[doc]){monthName=_qbMonthOverrides[doc];}
-  else if(dateParts.length===3){
-    if(dateParts[0]!=='2026')return;
-    const mm=dateParts[1];
-    monthName=mNames[mm]||'';
-  }
-  if(!monthName)return;
+  if(dateParts.length!==3||dateParts[0]!=='2026')return;
+  const mm=dateParts[1];
+  var invoiceMonth=mNames[mm]||''; /* month the invoice was created */
+  var monthName=_prevMonthMap[mm]||''; /* P&L month = previous month */
+  if(!monthName||!invoiceMonth)return;
   if(cust.toUpperCase().includes('FINANCE BUZZ'))return;
-  if(dateParts[0]==='2026'||_qbMonthOverrides[doc]){if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;}
+  if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;
   var _mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const custUp=cust.toUpperCase();
   var cN=custUp.replace(/[\s\-\.]/g,'');
@@ -2362,8 +2360,8 @@ qbRows.forEach(r=>{
     return _qbNameMatch(pAff);
   });
   if(nameOnlyMatch){qbSkipped++;return;}
-  /* Jan–Apr: PNL sheet is sole source of truth — skip QB additions for those months */
-  var _historicalMonths=['January','February','March','April'];
+  /* Jan–Apr + Dec: PNL sheet is sole source of truth — skip QB additions for those months */
+  var _historicalMonths=['January','February','March','April','December'];
   if(_historicalMonths.indexOf(monthName)>=0){qbSkipped++;return;}
   const fmtDate=dateParts.length===3?(dateParts[1]+'/'+dateParts[2]+'/'+dateParts[0]):date;
   allPNL.push({
@@ -2372,14 +2370,14 @@ qbRows.forEach(r=>{
     affiliate:cust,invAmt:amt,rcvd:balance===0?amt:amt-balance,
     displayAmt:amt,status:statusCol||(balance===0?'Paid':'Unpaid'),
     remarks:'QB: '+desc,
-    _key:'qb_'+monthName+'_'+doc,_isSummary:false
+    _key:'qb_'+invoiceMonth+'_'+doc,_isSummary:false
   });
   qbAdded++;
 });
 // Filter deleted PNL from QB additions
 for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].invId||'';if(_qk&&_isDeletedKey(pnlDeletes,_qk))allPNL.splice(_qi,1);}
-// Apply pnlEdits (including _month overrides) to QB entries
-allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2._month)r._month=_pe2._month;if(_pe2.date)r.date=_pe2.date;if(_pe2.affiliate)r.affiliate=_pe2.affiliate;if(_pe2.invAmt!=null){r.invAmt=_pe2.invAmt;r.displayAmt=_pe2.displayAmt!=null?_pe2.displayAmt:r.displayAmt;r.rcvd=_pe2.rcvd!=null?_pe2.rcvd:r.rcvd;}if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;}}});
+// Apply pnlEdits to QB entries — QB is source of truth for amounts so skip amount overrides
+allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;}}});
 /* Post-edit dedup: after pnlEdits may move QB entries to different months, remove QB entries
    whose doc# now collides with a non-QB entry (sheet/user) in the same month */
 (function(){var _sheetIdx={};allPNL.forEach(function(e){if(e._source!=='qb'){var d=(e.invId||'').replace('QB#','');if(d){var mk=e._month+'_'+d;_sheetIdx[mk]=true;}}});for(var _pi=allPNL.length-1;_pi>=0;_pi--){var _e=allPNL[_pi];if(_e._source==='qb'){var _d=(_e.invId||'').replace('QB#','');if(_d){var _mk=_e._month+'_'+_d;if(_sheetIdx[_mk]){allPNL.splice(_pi,1);}}}}})();
@@ -3835,6 +3833,8 @@ function savePNLEdit(){
     var sp=document.getElementById('pnl-att-'+sk);if(sp)sp.style.display='inline';
     };reader.readAsDataURL(file);
   }
+  /* QB entries: QB is source of truth for amounts and months — only allow status/remarks edits */
+  if(r._source==='qb'){edit={status:newStatus,remarks:document.getElementById('med-remarks').value,lastEditedBy:edit.lastEditedBy,lastEditedAt:edit.lastEditedAt};}
   pnlEdits[k]=edit;
   Object.assign(r,edit);
   if(r._key){
@@ -3932,6 +3932,8 @@ function bulkPNLMonth(){
       if(!m){alert('Please select a month.');return;}
       rows.forEach(function(x){
         var r=x.row;var k=r._key||r.invId||(r._idx!=null?String(r._idx):'gi'+x.gi);
+        /* QB entries: month is auto-mapped from QB date — skip month overrides */
+        if(r._source==='qb'){return;}
         r._month=m;
         if(!pnlEdits[k])pnlEdits[k]={};
         pnlEdits[k]._month=m;pnlEdits[k].lastEditedBy=currentUser?currentUser.email:'';pnlEdits[k].lastEditedAt=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
