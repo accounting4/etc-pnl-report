@@ -4059,44 +4059,41 @@ if(row)row.style.display=(st==='Partially Paid')?'':'none';
 
 // === MERGE MANUAL INVOICES INTO P&L SUMMARIES ===
 function mergeUserInvoices(){
-/* Financial summary: sheet summary rows as base + QB invoices + manual entries.
-   Source of truth: QB Invoices + Manual entries (effective May 2026).
-   Sheet summary provides base; unmatched QB entries (already deduped) add on top.
-   PAID → Payment Received.  UNPAID → ETC Balance / Accounts Receivable. */
+/* Financial summary: Jan-Apr use PNL sheet summary rows. May+ calculate from entries.
+   Source of truth for May+: QB Invoices + Manual entries + PNL sheet entries.
+   grossRevenue = sum of all entry amounts (no sheet summary base to avoid drift).
+   FMD excluded from P&L (Change 60). */
 var snp=window._sheetInvoiceSnapshot||{};
 var expSnp=window._sheetExpenseSnapshot||{};
-/* Restore sheet summary as base for revenue; expenses always from sheet */
+var _histMonths=['January','February','March','April'];
 for(var mk in pnlSummaries){
-  if(snp[mk]){pnlSummaries[mk].grossRevenue=snp[mk].grossRevenue||0;pnlSummaries[mk].paymentRcvd=snp[mk].paymentRcvd||0;pnlSummaries[mk].balance=snp[mk].balance||0;}
+  /* Expenses always from sheet */
   if(expSnp[mk]){pnlSummaries[mk].totalExpenses=expSnp[mk].totalExpenses||0;pnlSummaries[mk].salary=expSnp[mk].salary||0;pnlSummaries[mk].ads=expSnp[mk].ads||0;}
   pnlSummaries[mk].beehiiv=0;pnlSummaries[mk].software=0;pnlSummaries[mk].contractors=0;pnlSummaries[mk].office=0;pnlSummaries[mk].otherExp=0;
+  if(_histMonths.indexOf(mk)>=0){
+    /* Jan-Apr: PNL sheet summary is sole source */
+    if(snp[mk]){pnlSummaries[mk].grossRevenue=snp[mk].grossRevenue||0;pnlSummaries[mk].paymentRcvd=snp[mk].paymentRcvd||0;pnlSummaries[mk].balance=snp[mk].balance||0;}
+  }else{
+    /* May+: Zero out — will recalculate from entries below */
+    pnlSummaries[mk].grossRevenue=0;pnlSummaries[mk].paymentRcvd=0;pnlSummaries[mk].balance=0;
+  }
 }
-/* Add QB + manual entries on top of sheet base (sheet entries already in summary, QB deduped) */
-/* Jan–Apr: PNL sheet is sole source — only add QB/manual for May onward */
-var _histMonths=['January','February','March','April'];
-var allEntries=allPNL.concat(allFMD);
-allEntries.forEach(function(r){
+/* May+: Calculate revenue from ALL allPNL entries (sheet+QB+manual). No FMD. */
+allPNL.forEach(function(r){
   if(r._isSummary)return;
-  var src=r._source||'';
-  if(src==='sheet'||src==='fmd_sheet')return;/* Already in sheet summary */
-  if(src==='qb'&&_histMonths.indexOf(r._month)>=0)return;/* Jan-Apr: sheet only */
-  var k=r._key||'';if(k&&_isDeletedKey(pnlDeletes,k))return;
   var m=r._month||'';if(!m||m==='Manual')return;
+  if(_histMonths.indexOf(m)>=0)return;/* Jan-Apr handled above */
+  var k=r._key||'';if(k&&_isDeletedKey(pnlDeletes,k))return;
   if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0};
   var amt=r.displayAmt||r.invAmt||0;var rcvd=r.rcvd||0;
   var st=(r.status||'').toLowerCase();
   if(st==='paid'){
-    pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+(rcvd||amt);
-    pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+(rcvd||amt);
+    var pv=rcvd||amt;pnlSummaries[m].grossRevenue+=pv;pnlSummaries[m].paymentRcvd+=pv;
   }else if(st==='partially paid'){
     var total=amt>0?amt:(rcvd>0?rcvd:0);
-    pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+total;
-    pnlSummaries[m].paymentRcvd=(pnlSummaries[m].paymentRcvd||0)+rcvd;
-    pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+(total-rcvd);
+    pnlSummaries[m].grossRevenue+=total;pnlSummaries[m].paymentRcvd+=rcvd;pnlSummaries[m].balance+=(total-rcvd);
   }else{
-    /* Unpaid, Pending, No Final Count → Accounts Receivable */
-    pnlSummaries[m].grossRevenue=(pnlSummaries[m].grossRevenue||0)+amt;
-    pnlSummaries[m].balance=(pnlSummaries[m].balance||0)+amt;
+    pnlSummaries[m].grossRevenue+=amt;pnlSummaries[m].balance+=amt;
   }
 });
 }
