@@ -2272,10 +2272,12 @@ const qbRows=await fetchCSV(gvg(QB_ID,'0'));
 let qbAdded=0,qbSkipped=0;
 /* QB P&L month mapping: invoices billed in month X represent revenue for month X-1.
    E.g. June invoices = May revenue. This is permanent — QB is source of truth. */
-/* QB month mapping: invoices billed in month X represent revenue for month X-1.
-   Exception: May 2026 is the transition month — May-dated invoices stay in May.
-   June-dated → May, July → June, etc. This is permanent. */
-var _prevMonthMap={'01':'December','02':'January','03':'February','04':'March','05':'May','06':'May','07':'June','08':'July','09':'August','10':'September','11':'October','12':'November'};
+/* QB P&L month mapping: invoices billed in month X represent revenue for month X-1.
+   E.g. June invoices = May revenue. This is permanent — QB is source of truth.
+   May-dated invoices → April (historical, filtered). Exception: specific late-May
+   invoices not in PNL sheet are whitelisted to stay in May. */
+var _prevMonthMap={'01':'December','02':'January','03':'February','04':'March','05':'April','06':'May','07':'June','08':'July','09':'August','10':'September','11':'October','12':'November'};
+var _qbMonthKeep={'1369':'May','1370':'May','1371':'May','1372':'May'}; /* Late-May QB entries = May revenue */
 qbRows.forEach(r=>{
   const cust=(r['Customer']||'').trim();
   const amtStr=(r['Invoice Amount']||'0').replace(/[\$,]/g,'');
@@ -2291,7 +2293,7 @@ qbRows.forEach(r=>{
   if(dateParts.length!==3||dateParts[0]!=='2026')return;
   const mm=dateParts[1];
   var invoiceMonth=mNames[mm]||''; /* month the invoice was created */
-  var monthName=_prevMonthMap[mm]||''; /* P&L month = previous month */
+  var monthName=_qbMonthKeep[doc]||_prevMonthMap[mm]||''; /* P&L month: whitelist override → prev month */
   if(!monthName||!invoiceMonth)return;
   if(cust.toUpperCase().includes('FINANCE BUZZ'))return;
   if(!qbRawTotals[monthName])qbRawTotals[monthName]={p:0,u:0};if(balance===0)qbRawTotals[monthName].p+=amt;else qbRawTotals[monthName].u+=amt;
