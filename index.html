@@ -792,6 +792,24 @@ tr.bulk-selected{background:rgba(99,102,241,.08)!important}
 .bulk-modal .btn-save:hover{background:#4f46e5}
 .bulk-modal .preview{margin-top:10px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:.8rem;color:var(--text3);max-height:120px;overflow-y:auto}
 .bulk-modal .preview strong{color:var(--navy);font-size:.82rem}
+/* Expense Category Groups */
+.exp-cat-group{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--surface);transition:box-shadow .2s}
+.exp-cat-group:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.exp-cat-header{display:flex;align-items:center;padding:14px 18px;cursor:pointer;user-select:none;gap:12px;transition:background .15s}
+.exp-cat-header:hover{background:var(--surface2)}
+.exp-cat-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.exp-cat-name{font-weight:700;font-size:.92rem;flex:1}
+.exp-cat-count{font-size:.78rem;color:var(--text3);background:var(--surface2);padding:2px 10px;border-radius:12px;font-weight:600}
+.exp-cat-total{font-weight:700;font-size:.95rem;color:var(--red);min-width:100px;text-align:right}
+.exp-cat-arrow{font-size:.8rem;color:var(--text3);transition:transform .25s;flex-shrink:0}
+.exp-cat-group.open .exp-cat-arrow{transform:rotate(180deg)}
+.exp-cat-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.exp-cat-group.open .exp-cat-body{max-height:5000px}
+.exp-cat-body table{width:100%;border-collapse:collapse;font-size:.84rem}
+.exp-cat-body thead th{padding:8px 12px;text-align:left;font-size:.74rem;text-transform:uppercase;letter-spacing:.3px;color:var(--text3);font-weight:700;border-bottom:2px solid var(--border);background:var(--surface2)}
+.exp-cat-body tbody td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.exp-cat-body tbody tr:last-child td{border-bottom:none}
+.exp-cat-body tbody tr:hover{background:var(--surface2)}
 </style></head><body>
 
 <!-- Firebase Config Setup Screen -->
@@ -1229,11 +1247,7 @@ Secured with Firebase Authentication
 <div class="fg"><label>Month</label><select id="exp-month-f" onchange="renderExpenses()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
 <div class="fg"><label>Category</label><select id="exp-cat-f" onchange="renderExpenses()"><option value="">All Categories</option><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
 </div>
-<div class="table-card" style="margin-bottom:20px;overflow-x:auto">
-<table><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Category</th><th>Payee Name</th><th>Description</th><th>Advertiser</th><th>Amount</th><th>Recurring</th><th>Notes</th><th>Added By</th><th>Last Updated</th><th style="width:100px">Actions</th></tr></thead>
-<tbody id="exp-tbody"></tbody>
-</table>
-</div>
+<div id="exp-category-groups" style="margin-bottom:20px"></div>
 </div><!-- /fin-expenses-panel -->
 </div><!-- /sec-invoices (unified financial records) -->
 </div>
@@ -4210,6 +4224,8 @@ return true;
 });
 }
 
+var _expCatOpen={};/* Track which categories are expanded */
+function toggleExpCat(cat){_expCatOpen[cat]=!_expCatOpen[cat];var el=document.getElementById('ecg-'+CSS.escape(cat));if(el)el.classList.toggle('open',!!_expCatOpen[cat]);}
 function renderExpenses(){
 var f=getExpFilt();
 var allExp=_getAllExpenses();
@@ -4226,29 +4242,52 @@ var smLbl=document.getElementById('exp-s-month-label');if(smLbl)smLbl.textConten
 setStat('exp-s-cats',Object.keys(cats).length.toString());
 setStat('exp-s-count',allExp.length.toString());
 var catColors={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#f97316'};
-var tbody=document.getElementById('exp-tbody');
-if(!tbody)return;
-if(!f.length){tbody.innerHTML='<tr><td colspan="12" class="empty-state">No expenses recorded yet. Click "+ Add Expense" to start tracking.</td></tr>';return;}
-var rows=f.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
-tbody.innerHTML=rows.map(function(e,i){
-var cc=catColors[e.category]||'#64748b';
+var catIcons={'Salary':'👥','Software and Subscription':'💻','Dues and Subscriptions':'📋','Marketing':'📢','Office Supplies':'🏢','Meals and Entertainment':'🍽️','Other':'📦'};
+var container=document.getElementById('exp-category-groups');
+if(!container)return;
+if(!f.length){container.innerHTML='<div class="empty-state" style="padding:40px;text-align:center;color:var(--text3)">No expenses recorded yet. Click "+ Add Expense" to start tracking.</div>';return;}
+/* Group by category */
+var groups={};
+f.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');}).forEach(function(e){
+var cat=e.category||'Other';
+if(!groups[cat])groups[cat]={items:[],total:0};
+groups[cat].items.push(e);
+groups[cat].total+=e.amount||0;
+});
+/* Sort categories by total descending */
+var sortedCats=Object.keys(groups).sort(function(a,b){return groups[b].total-groups[a].total;});
+var html='';
+sortedCats.forEach(function(cat){
+var g=groups[cat];var cc=catColors[cat]||'#64748b';var icon=catIcons[cat]||'📦';
+var isOpen=!!_expCatOpen[cat];
+var esc=cat.replace(/'/g,"\\'");
+html+='<div class="exp-cat-group'+(isOpen?' open':'')+'" id="ecg-'+cat+'">';
+html+='<div class="exp-cat-header" onclick="toggleExpCat(\''+esc+'\')">';
+html+='<div class="exp-cat-dot" style="background:'+cc+'"></div>';
+html+='<div class="exp-cat-name">'+icon+' '+cat+'</div>';
+html+='<div class="exp-cat-count">'+g.items.length+' item'+(g.items.length!==1?'s':'')+'</div>';
+html+='<div class="exp-cat-total">$'+g.total.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>';
+html+='<div class="exp-cat-arrow">▼</div>';
+html+='</div>';
+html+='<div class="exp-cat-body"><table><thead><tr><th>Date</th><th>Month</th><th>Payee</th><th>Description</th><th>Advertiser</th><th>Amount</th><th>Recurring</th><th>Notes</th><th>Added By</th><th style="width:90px">Actions</th></tr></thead><tbody>';
+g.items.forEach(function(e){
 var srcTag=e._source==='em'?'<span style="font-size:8px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">EM</span>':'<span style="font-size:8px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">Manual</span>';
 var actCell=e._source==='em'?'<span style="font-size:.75rem;color:var(--text3)">Imported</span>':'<button class="btn-edit" onclick="editExpense('+e._origIdx+')">✎</button> <button class="btn-del" onclick="deleteExpense('+e._origIdx+')">🗑</button>';
-return'<tr'+(e._source==='em'?' style="background:rgba(245,158,11,0.04)"':'')+'>'+
-'<td>'+fmtDate(e.date)+srcTag+'</td>'+
-'<td>'+(e.month||'—')+'</td>'+
-'<td><span style="display:inline-block;padding:3px 10px;border-radius:20px;background:'+cc+'18;color:'+cc+';font-size:.78rem;font-weight:600;border:1px solid '+cc+'30">'+(e.category||'Other')+'</span></td>'+
-'<td style="font-size:.82rem">'+(e.payee||'—')+'</td>'+
-'<td><strong>'+(e.description||'—')+'</strong></td>'+
-'<td style="font-size:.82rem">'+(e.advertiser||'—')+'</td>'+
-'<td style="color:var(--red);font-weight:700">$'+(e.amount||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
-'<td style="font-size:.82rem">'+(e.recurring||'No')+'</td>'+
-'<td style="font-size:.82rem;color:var(--text3)">'+(e.notes||'')+'</td>'+
-'<td style="font-size:.78rem;color:var(--text3)">'+(e.addedBy||'—')+'</td>'+
-'<td style="font-size:.78rem;color:var(--text3)">'+(e.lastUpdated||'—')+'</td>'+
-'<td class="action-cell">'+actCell+'</td>'+
-'</tr>';
-}).join('');
+html+='<tr'+(e._source==='em'?' style="background:rgba(245,158,11,0.04)"':'')+'>';
+html+='<td>'+fmtDate(e.date)+srcTag+'</td>';
+html+='<td>'+(e.month||'—')+'</td>';
+html+='<td>'+(e.payee||'—')+'</td>';
+html+='<td><strong>'+(e.description||'—')+'</strong></td>';
+html+='<td>'+(e.advertiser||'—')+'</td>';
+html+='<td style="color:var(--red);font-weight:700">$'+(e.amount||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>';
+html+='<td>'+(e.recurring||'No')+'</td>';
+html+='<td style="color:var(--text3)">'+(e.notes||'')+'</td>';
+html+='<td style="font-size:.78rem;color:var(--text3)">'+(e.addedBy||'—')+'</td>';
+html+='<td class="action-cell">'+actCell+'</td></tr>';
+});
+html+='</tbody></table></div></div>';
+});
+container.innerHTML=html;
 }
 
 function saveExpense(){
@@ -4326,12 +4365,10 @@ refreshAfterExpenseChange();
 
 function deleteExpense(i){
 if(!confirm('Permanently delete this expense?'))return;
-var f=getExpFilt().sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
-var ex=f[i];if(!ex)return;
+var ex=userExpenses[i];if(!ex)return;
 expDeletes.add(ex._key);expDeletes.add(_safeKey(ex._key));
 localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));fbSyncExpDeletes();
-var idx=userExpenses.indexOf(ex);
-if(idx>-1)userExpenses.splice(idx,1);
+userExpenses.splice(i,1);
 localStorage.setItem('userExpenses',JSON.stringify(userExpenses));fbSyncAllExpenses();
 refreshAfterExpenseChange();
 }
