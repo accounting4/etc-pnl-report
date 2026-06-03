@@ -4112,42 +4112,15 @@ allPNL.forEach(function(r){
 });
 }
 
-function mergeUserExpenses(){
-// Merge user-entered expenses into pnlSummaries so all charts/summaries reflect them
-// Skip months where PNL sheet already has expense data to avoid double-counting
-userExpenses.forEach(function(ex){
-if(_isDeletedKey(expDeletes,ex._key))return;
-var m=ex.month||'';
-if(!m)return;
-var sheetExp=(window._sheetExpenseSnapshot&&window._sheetExpenseSnapshot[m])?window._sheetExpenseSnapshot[m].totalExpenses||0:0;
-if(sheetExp>0)return;/* PNL sheet already has expenses for this month — skip manual entries */
-if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
-pnlSummaries[m].totalExpenses=(pnlSummaries[m].totalExpenses||0)+(ex.amount||0);
-/* Migrate old category names */
-var rawCat=ex.category||'Other';
-var cat=(_EM_CAT_MIGRATE&&_EM_CAT_MIGRATE[rawCat])?_EM_CAT_MIGRATE[rawCat]:rawCat;
-var cu=cat.toUpperCase();
-if(cu.includes('SALARY'))pnlSummaries[m].salary=(pnlSummaries[m].salary||0)+(ex.amount||0);
-else if(cu==='MARKETING'||cu.includes('ADS'))pnlSummaries[m].ads=(pnlSummaries[m].ads||0)+(ex.amount||0);
-else if(cu.includes('DUES'))pnlSummaries[m].beehiiv=(pnlSummaries[m].beehiiv||0)+(ex.amount||0);
-else if(cu.includes('SOFTWARE'))pnlSummaries[m].software=(pnlSummaries[m].software||0)+(ex.amount||0);
-else if(cu.includes('MEALS'))pnlSummaries[m].contractors=(pnlSummaries[m].contractors||0)+(ex.amount||0);
-else if(cu.includes('OFFICE'))pnlSummaries[m].office=(pnlSummaries[m].office||0)+(ex.amount||0);
-else pnlSummaries[m].otherExp=(pnlSummaries[m].otherExp||0)+(ex.amount||0);
-});
-}
-
-/* Bridge Expense Manager transactions into P&L summaries */
-var _emPrevContrib={};
+/* Unified expense merge — idempotent, uses _getAllExpenses() as single source of truth */
 var _EM_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function _emDateToMonth(d){
 if(!d)return'';
 try{var dt=new Date(d);if(!isNaN(dt.getTime()))return _EM_MONTHS[dt.getMonth()]||'';}catch(e){}
 return'';
 }
-function _emCatToPNL(cat){
+function _expCatToField(cat){
 var c=(cat||'').toLowerCase();
-/* Migrate old names first */
 if(_EM_CAT_MIGRATE){var uc=cat||'';if(_EM_CAT_MIGRATE[uc])c=_EM_CAT_MIGRATE[uc].toLowerCase();}
 if(c==='salary'||c==='salaries')return'salary';
 if(c==='marketing'||c.includes('ads'))return'ads';
@@ -4157,41 +4130,38 @@ if(c==='meals and entertainment')return'contractors';
 if(c==='office supplies'||c==='office')return'office';
 return'otherExp';
 }
-function mergeEMExpenses(){
-/* Step 1: Subtract previous EM contributions to prevent accumulation */
-for(var pm in _emPrevContrib){
-if(pnlSummaries[pm]){
-var pc=_emPrevContrib[pm];
-pnlSummaries[pm].totalExpenses=Math.max(0,(pnlSummaries[pm].totalExpenses||0)-(pc.totalExpenses||0));
-pnlSummaries[pm].salary=Math.max(0,(pnlSummaries[pm].salary||0)-(pc.salary||0));
-pnlSummaries[pm].ads=Math.max(0,(pnlSummaries[pm].ads||0)-(pc.ads||0));
-pnlSummaries[pm].beehiiv=Math.max(0,(pnlSummaries[pm].beehiiv||0)-(pc.beehiiv||0));
-pnlSummaries[pm].software=Math.max(0,(pnlSummaries[pm].software||0)-(pc.software||0));
-pnlSummaries[pm].contractors=Math.max(0,(pnlSummaries[pm].contractors||0)-(pc.contractors||0));
-pnlSummaries[pm].office=Math.max(0,(pnlSummaries[pm].office||0)-(pc.office||0));
-pnlSummaries[pm].otherExp=Math.max(0,(pnlSummaries[pm].otherExp||0)-(pc.otherExp||0));
+var _emCatToPNL=_expCatToField;/* backwards compat alias */
+function mergeUserExpenses(){
+/* Step 1: Reset ALL months to zero for expense fields */
+var _expFields=['totalExpenses','salary','ads','beehiiv','software','contractors','office','otherExp'];
+for(var m in pnlSummaries){
+_expFields.forEach(function(f){pnlSummaries[m][f]=0;});
 }
-}
-_emPrevContrib={};
-/* Step 2: Add current EM expenses */
-if(typeof emTransactions==='undefined'||!emTransactions||!emTransactions.length)return;
-emTransactions.forEach(function(tx){
-if(!tx.date||!tx.amount)return;
-var amt=typeof tx.amount==='number'?tx.amount:parseFloat(tx.amount)||0;
-if(!amt)return;
-var monthName=_emDateToMonth(tx.date);
-if(!monthName)return;
-if(!pnlSummaries[monthName])pnlSummaries[monthName]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
-/* Track contribution */
-if(!_emPrevContrib[monthName])_emPrevContrib[monthName]={totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
-_emPrevContrib[monthName].totalExpenses+=amt;
-var field=_emCatToPNL(tx.category);
-_emPrevContrib[monthName][field]+=amt;
-/* Apply to P&L */
-pnlSummaries[monthName].totalExpenses=(pnlSummaries[monthName].totalExpenses||0)+amt;
-pnlSummaries[monthName][field]=(pnlSummaries[monthName][field]||0)+amt;
+/* Step 2: Collect all individual expense entries */
+var allExp=_getAllExpenses();
+var monthsWithEntries={};
+allExp.forEach(function(e){
+var m=e.month||'';if(!m)return;
+monthsWithEntries[m]=true;
+if(!pnlSummaries[m])pnlSummaries[m]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
+var amt=e.amount||0;
+pnlSummaries[m].totalExpenses+=amt;
+var field=_expCatToField(e.category);
+pnlSummaries[m][field]+=amt;
 });
+/* Step 3: For months with NO individual entries, fall back to PNL sheet snapshot */
+var snap=window._sheetExpenseSnapshot||{};
+for(var sm in snap){
+if(!monthsWithEntries[sm]&&snap[sm].totalExpenses>0){
+if(!pnlSummaries[sm])pnlSummaries[sm]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
+pnlSummaries[sm].totalExpenses=snap[sm].totalExpenses||0;
+pnlSummaries[sm].salary=snap[sm].salary||0;
+pnlSummaries[sm].ads=snap[sm].ads||0;
 }
+}
+}
+}
+function mergeEMExpenses(){/* Now handled inside mergeUserExpenses — kept as no-op for backwards compat */}
 
 /* Inject Expense Manager transactions into P&L Financial Records table */
 function _getAllExpenses(){
@@ -4374,23 +4344,8 @@ refreshAfterExpenseChange();
 }
 
 function refreshAfterExpenseChange(){
-// Reset pnlSummaries expense fields to sheet-only values, then re-merge
-// We need to recalculate — simplest: subtract old user expenses, re-add new
-// Since pnlSummaries already has sheet data + previously merged user expenses,
-// we store sheet-only expense snapshots
-if(window._sheetExpenseSnapshot){
-for(var m in window._sheetExpenseSnapshot){
-if(pnlSummaries[m]){
-pnlSummaries[m].totalExpenses=window._sheetExpenseSnapshot[m].totalExpenses||0;
-pnlSummaries[m].salary=window._sheetExpenseSnapshot[m].salary||0;
-pnlSummaries[m].ads=window._sheetExpenseSnapshot[m].ads||0;
-pnlSummaries[m].beehiiv=0;pnlSummaries[m].software=0;pnlSummaries[m].contractors=0;pnlSummaries[m].office=0;pnlSummaries[m].otherExp=0;
-}
-}
-}
 mergeUserInvoices();
-mergeUserExpenses();
-try{mergeEMExpenses();}catch(e){}
+mergeUserExpenses();/* idempotent — resets + recalculates all expense fields */
 renderExpenses();
 renderPNL();
 try{var _smb=document.querySelector('#pnl-month-buttons button.active');if(_smb&&_smb.textContent!=='All Months')showMonthlySummary(_smb.textContent);}catch(e){}
