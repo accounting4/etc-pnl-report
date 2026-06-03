@@ -762,7 +762,14 @@ table tbody tr:last-child td{border-bottom:none}
 }
 
 /* === BULK ACTIONS === */
-.pnl-bulk-bar{position:sticky;top:0;z-index:90;display:none;align-items:center;gap:12px;padding:10px 18px;margin:-2px -2px 12px;background:linear-gradient(135deg,#4f46e5,#6366f1);border-radius:12px;color:#fff;box-shadow:0 4px 20px rgba(99,102,241,.35);animation:bulkSlide .25s ease}
+.pnl-bulk-bar,.bulk-bar{position:sticky;top:0;z-index:90;display:none;align-items:center;gap:12px;padding:10px 18px;margin:-2px -2px 12px;background:linear-gradient(135deg,#4f46e5,#6366f1);border-radius:12px;color:#fff;box-shadow:0 4px 20px rgba(99,102,241,.35);animation:bulkSlide .25s ease}
+.bulk-bar .bulk-btn{padding:5px 12px;border:1.5px solid rgba(255,255,255,.4);border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.bulk-bar .bulk-btn:hover{background:rgba(255,255,255,.25);border-color:#fff}
+.bulk-bar .bulk-btn.danger{border-color:rgba(239,68,68,.6);background:rgba(239,68,68,.2)}
+.bulk-bar .bulk-btn.danger:hover{background:rgba(239,68,68,.4)}
+.bulk-bar .bulk-close{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.7);font-size:1.2rem;cursor:pointer;padding:2px 6px}
+.bulk-bar .bulk-close:hover{color:#fff}
+tr.bulk-selected{background:rgba(99,102,241,.08)!important}
 @keyframes bulkSlide{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 .pnl-bulk-bar .bulk-count{font-weight:700;font-size:.92rem;white-space:nowrap}
 .pnl-bulk-bar .bulk-actions{display:flex;gap:6px;flex-wrap:wrap;flex:1}
@@ -954,6 +961,34 @@ Secured with Firebase Authentication
 <div class="form-row"><label>Status</label><select id="fm-status"><option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option></select></div>
 <div class="form-row"><label>Remarks</label><textarea id="fm-remarks" placeholder="Notes..."></textarea></div>
 <div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addFMDModal').classList.remove('open')">Cancel</button><button class="btn-save" onclick="saveFMDRecord()">Save</button></div>
+</div></div>
+<!-- Add FMD Expense Modal -->
+<div class="modal-overlay" id="addFMDExpModal">
+<div class="modal"><h2 style="color:#ef4444">&#128184; Add FMD Expense</h2>
+<div class="form-row"><label>Date</label><input id="fmde-date" type="date"></div>
+<div class="form-row"><label>Reporting Month <span style="font-weight:400;font-size:.75rem;color:var(--text3)">(Accounting Period)</span></label><select id="fmde-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Category</label><select id="fmde-category"><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
+<div class="form-row"><label>Payee Name</label><input id="fmde-payee" placeholder="e.g. John Smith, Acme Corp"></div>
+<div class="form-row"><label>Description</label><input id="fmde-desc" placeholder="e.g. FMD Ad Spend - May"></div>
+<div class="form-row"><label>Amount ($)</label><input id="fmde-amount" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Recurring?</label><select id="fmde-recurring"><option value="No">No</option><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Annual">Annual</option></select></div>
+<div class="form-row"><label>Notes</label><textarea id="fmde-notes" placeholder="Optional notes..."></textarea></div>
+<div class="form-row"><label>Attachment</label><input id="fmde-file" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="font-size:.85rem"></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('addFMDExpModal').classList.remove('open')">Cancel</button><button class="btn-save" style="background:#ef4444" onclick="saveFMDExpense()">Save Expense</button></div>
+</div></div>
+<!-- Edit FMD Expense Modal -->
+<div class="modal-overlay" id="editFMDExpModal">
+<div class="modal"><h2 style="color:#ef4444">&#9998; Edit FMD Expense</h2>
+<div class="form-row"><label>Date</label><input id="fmdee-date" type="date"></div>
+<div class="form-row"><label>Reporting Month</label><select id="fmdee-month"><option value="">Auto from date</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="form-row"><label>Category</label><select id="fmdee-category"><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
+<div class="form-row"><label>Payee Name</label><input id="fmdee-payee" placeholder="e.g. John Smith"></div>
+<div class="form-row"><label>Description</label><input id="fmdee-desc" placeholder="e.g. FMD Ad Spend"></div>
+<div class="form-row"><label>Amount ($)</label><input id="fmdee-amount" type="number" step="0.01" placeholder="0.00"></div>
+<div class="form-row"><label>Recurring?</label><select id="fmdee-recurring"><option value="No">No</option><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Annual">Annual</option></select></div>
+<div class="form-row"><label>Notes</label><textarea id="fmdee-notes" placeholder="Optional notes..."></textarea></div>
+<div class="form-row"><label>Attachment</label><input id="fmdee-file" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="font-size:.85rem"></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('editFMDExpModal').classList.remove('open')">Cancel</button><button class="btn-save" style="background:#ef4444" onclick="saveEditFMDExpense()">Update</button></div>
 </div></div>
 <div class="header">
 <div class="logo-wrap"><img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/2f0a7f16-8131-4842-af34-1cbd8fd2a43c/ETC_logo__1_.png" alt="ETC" onerror="this.style.display='none'"></div>
@@ -1339,7 +1374,23 @@ Secured with Firebase Authentication
 <div class="stat-card green"><div class="sc-label">Total Received</div><div class="sc-value" id="fmd-s-paid">$0</div><div class="sc-sub">Collected</div></div>
 <div class="stat-card red"><div class="sc-label">Pending / Unpaid</div><div class="sc-value" id="fmd-s-pend">$0</div><div class="sc-sub">Outstanding</div></div>
 </div>
-<div class="month-selector" id="fmd-month-buttons"></div><div id="fmd-summary-banner" class="pnl-summary-banner" style="display:none"><div class="psb-title">&#128181; Monthly Financial Summary</div><div class="psb-row" id="fmd-summary-content"></div></div><div class="two-col" style="margin-bottom:20px"><div class="chart-card"><h3>&#128200; FMD Revenue vs Received by Month</h3><div class="chart-wrap" style="height:270px"><canvas id="fmdBarChart"></canvas></div></div><div class="chart-card"><h3>&#9679; FMD Payment Status</h3><div class="chart-wrap" style="height:270px"><canvas id="fmdDoughnutChart"></canvas></div></div></div><div class="section-header"><div class="section-title"><div class="icon-circle">&#9203;</div> Five Minute Daily Records</div><div class="action-bar"><button class="btn-add" onclick="document.getElementById('addFMDModal').classList.add('open')">+ Add Record</button></div></div>
+<div class="month-selector" id="fmd-month-buttons"></div><div id="fmd-summary-banner" class="pnl-summary-banner" style="display:none"><div class="psb-title">&#128181; Monthly Financial Summary</div><div class="psb-row" id="fmd-summary-content"></div></div><div class="two-col" style="margin-bottom:20px"><div class="chart-card"><h3>&#128200; FMD Revenue vs Received by Month</h3><div class="chart-wrap" style="height:270px"><canvas id="fmdBarChart"></canvas></div></div><div class="chart-card"><h3>&#9679; FMD Payment Status</h3><div class="chart-wrap" style="height:270px"><canvas id="fmdDoughnutChart"></canvas></div></div></div><!-- FMD Financial Records Sub-tabs -->
+<div class="section-header"><div class="section-title"><div class="icon-circle">&#128203;</div> FMD Financial Records</div></div>
+<div id="fmd-fin-subtabs" style="display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid var(--border);padding-bottom:8px">
+<button class="fmd-fin-tab active" onclick="setFMDFinTab('invoices')" id="fmd-fin-tab-invoices" style="padding:6px 16px;border:none;border-radius:8px 8px 0 0;font-size:.82rem;font-weight:600;cursor:pointer;background:#6366f1;color:#fff;transition:all .15s">&#128181; Invoices</button>
+<button class="fmd-fin-tab" onclick="setFMDFinTab('expenses')" id="fmd-fin-tab-expenses" style="padding:6px 16px;border:none;border-radius:8px 8px 0 0;font-size:.82rem;font-weight:600;cursor:pointer;background:var(--surface2);color:var(--text2);transition:all .15s">&#128184; Expenses</button>
+</div>
+<!-- FMD Invoices Panel -->
+<div id="fmd-inv-panel">
+<div class="action-bar" style="margin-bottom:10px"><button class="btn-add" onclick="document.getElementById('addFMDModal').classList.add('open')">+ Add Invoice</button></div>
+<div id="fmd-bulk-bar" class="bulk-bar" style="display:none">
+<span id="fmd-bulk-count">0 selected</span>
+<button class="bulk-btn" onclick="bulkFMDMonth()">&#128197; Change Month</button>
+<button class="bulk-btn" onclick="bulkFMDStatus()">&#128260; Change Status</button>
+<button class="bulk-btn" onclick="bulkFMDNote()">&#128221; Add Note</button>
+<button class="bulk-btn danger" onclick="bulkFMDDelete()">&#128465; Delete</button>
+<button class="bulk-close" onclick="clearFMDBulk()" title="Clear selection">&times;</button>
+</div>
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="fmd-search" type="search" placeholder="Search..." oninput="applyFMDFilters()"></div>
 <div class="fg"><label>Month</label><select id="fmd-month-f" onchange="applyFMDFilters()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option></select></div>
@@ -1350,10 +1401,27 @@ Secured with Firebase Authentication
 <button class="btn-clear" onclick="clearFMDFilters()">Clear</button>
 </div>
 <div class="table-card">
-<table><thead><tr><th onclick="sortFMD('invId')">Invoice #</th><th onclick="sortFMD('date')">Date</th><th onclick="sortFMD('_month')">Month</th><th onclick="sortFMD('affiliate')">Affiliate Name</th><th onclick="sortFMD('displayAmt')">Invoice Amount</th><th onclick="sortFMD('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead>
+<table><thead><tr><th style="width:36px"><input type="checkbox" id="fmd-select-all" onchange="toggleFMDSelectAll(this.checked)"></th><th onclick="sortFMD('invId')">Invoice #</th><th onclick="sortFMD('date')">Date</th><th onclick="sortFMD('_month')">Month</th><th onclick="sortFMD('affiliate')">Affiliate Name</th><th onclick="sortFMD('displayAmt')">Invoice Amount</th><th onclick="sortFMD('rcvd')">Amount Received</th><th>Status</th><th>Remarks</th><th>Attach</th><th>Action</th></tr></thead>
 <tbody id="fmd-tbody"></tbody></table>
 <div class="pagination" id="fmd-pagination"></div>
 </div>
+</div><!-- /fmd-inv-panel -->
+<!-- FMD Expenses Panel -->
+<div id="fmd-exp-panel" style="display:none">
+<div class="stats-row" style="margin-bottom:14px">
+<div class="stat-card red"><div class="sc-label">Total Expenses</div><div class="sc-value" id="fmdexp-s-total">$0</div><div class="sc-sub">All months combined</div></div>
+<div class="stat-card amber"><div class="sc-label">This Month</div><div class="sc-value" id="fmdexp-s-month">$0</div><div class="sc-sub" id="fmdexp-s-month-label">Current month</div></div>
+<div class="stat-card purple"><div class="sc-label">Categories</div><div class="sc-value" id="fmdexp-s-cats">0</div><div class="sc-sub">Unique categories</div></div>
+<div class="stat-card blue"><div class="sc-label">Entries</div><div class="sc-value" id="fmdexp-s-count">0</div><div class="sc-sub">Total expense records</div></div>
+</div>
+<div class="action-bar" style="margin-bottom:10px"><button class="btn-add" style="background:#ef4444" onclick="document.getElementById('addFMDExpModal').classList.add('open')">+ Add Expense</button></div>
+<div class="filter-bar" style="margin-bottom:8px">
+<div class="fg"><label>Search</label><input id="fmdexp-search" type="search" placeholder="Search expenses..." oninput="renderFMDExpenses()"></div>
+<div class="fg"><label>Month</label><select id="fmdexp-month-f" onchange="renderFMDExpenses()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+<div class="fg"><label>Category</label><select id="fmdexp-cat-f" onchange="renderFMDExpenses()"><option value="">All Categories</option><option>Salary</option><option>Software and Subscription</option><option>Dues and Subscriptions</option><option>Marketing</option><option>Office Supplies</option><option>Meals and Entertainment</option><option>Other</option></select></div>
+</div>
+<div id="fmdexp-category-groups" style="margin-bottom:20px"></div>
+</div><!-- /fmd-exp-panel -->
 </div>
 <div id="tab-analytics" class="tab-content">
 <div class="export-bar">
@@ -2956,7 +3024,7 @@ updateCTOCharts(rows,affRevMap);
 
 }
 function renderFC(){const f=getFcFilt(),pp=parseInt(document.getElementById('fc-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fcPage=Math.min(fcPage,tp);const tot=f.reduce((s,r)=>s+r.amount,0),filled=f.filter(r=>r.amount>0).length,pf=document.getElementById('fc-period-f').value;setStat('fc-s-total',$m(tot));setStat('fc-s-count',f.length);setStat('fc-s-filled',filled);setStat('fc-s-period',pf||'All');const sl=sortArr(f,fcSort).slice((fcPage-1)*pp,fcPage*pp);document.getElementById('fc-tbody').innerHTML=sl.length?sl.map(r=>'<tr><td>'+(r.date||'&#8212;')+'</td><td>'+(r._period||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.amount?$m(r.amount):'&#8212;')+'</td></tr>').join(''):'<tr><td colspan="4" class="empty-state">No forecast data</td></tr>';renderPagination('fc',fcPage,tp,pp,f.length);updateFcCharts(f);}
-function renderFMD(){const f=getFMDFilt(),pp=parseInt(document.getElementById('fmd-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fmdPage=Math.min(fmdPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});setStat('fmd-s-total',$m(tot));setStat('fmd-s-paid',$m(paid));setStat('fmd-s-pend',$m(pend));const fmdExpenses=f.reduce((a,r)=>a+(r.invAmt||0),0)-f.reduce((a,r)=>a+(r.rcvd||0),0);setStat('fmd-s-count',$m(fmdExpenses));setStat('fmd-s-rate',tot>0?Math.round(paid/tot*100)+'%':'0%');const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);document.getElementById('fmd-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(fmdPage-1)*pp+i;return'<tr><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="action-cell"><button class="btn-edit" onclick="editFMDRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delFMDRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty-state">No Five Minute Daily records found</td></tr>';renderPagination('fmd',fmdPage,tp,pp,f.length);updateFMDCharts(f);}
+function renderFMD(){const f=getFMDFilt(),pp=parseInt(document.getElementById('fmd-entries').value)||10,tp=Math.max(1,Math.ceil(f.length/pp));fmdPage=Math.min(fmdPage,tp);let paid=0,pend=0,tot=0;f.forEach(r=>{const s=(r.status||'').toLowerCase();tot+=r.displayAmt;if(s==='paid')paid+=r.rcvd||r.displayAmt;else if(s.includes('partial')){paid+=r.rcvd||0;pend+=r.displayAmt-(r.rcvd||0);}else pend+=r.displayAmt;});setStat('fmd-s-total',$m(tot));setStat('fmd-s-paid',$m(paid));setStat('fmd-s-pend',$m(pend));const fmdExpenses=f.reduce((a,r)=>a+(r.invAmt||0),0)-f.reduce((a,r)=>a+(r.rcvd||0),0);setStat('fmd-s-count',$m(fmdExpenses));setStat('fmd-s-rate',tot>0?Math.round(paid/tot*100)+'%':'0%');const sl=sortArr(f,fmdSort).slice((fmdPage-1)*pp,fmdPage*pp);document.getElementById('fmd-tbody').innerHTML=sl.length?sl.map((r,i)=>{const gi=(fmdPage-1)*pp+i;var _fk=r._key||r.invId||('fgi'+gi);var _fmdAtts=JSON.parse(localStorage.getItem('fmdAttachments')||'{}');var _hasAtt=!!_fmdAtts[_fk];return'<tr data-fmd-gi="'+gi+'"><td><input type="checkbox" class="fmd-chk" data-gi="'+gi+'"'+(_fmdBulkSet.has(gi)?' checked':'')+' onchange="toggleFMDCheck('+gi+',this.checked)"></td><td>'+(r.invId||'&#8212;')+'</td><td>'+(r.date||'&#8212;')+'</td><td>'+(r._month||'&#8212;')+'</td><td><strong>'+(r.affiliate||'&#8212;')+'</strong></td><td>'+(r.status==='Paid'?$m(0):$m(r.displayAmt))+'</td><td>'+((r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count')?$m(0):$m(r.rcvd))+'</td><td><select class="status-select" onchange="updStatus(this,\x27fmd\x27,'+gi+')">'+statusOpts(r.status)+'</select></td><td><textarea class="remarks-edit" rows="1" onblur="updRemark(this,\x27fmd\x27,'+gi+')">'+(r.remarks||'')+'</textarea></td><td class="attach-cell"><label class="btn-attach" style="cursor:pointer"><input type="file" style="display:none" onchange="handleFMDAttach(this,\x27'+_fk+'\x27)">📎</label>'+(_hasAtt?'<a onclick="openFMDAttach(\x27'+_fk+'\x27)" style="cursor:pointer;color:#6366f1">📄</a>':'')+'</td><td class="action-cell"><button class="btn-edit" onclick="editFMDRow(event,'+gi+')">✎ Edit</button><button class="btn-del" onclick="delFMDRow(event,'+gi+')">🗑</button></td></tr>';}).join(''):'<tr><td colspan="11" class="empty-state">No Five Minute Daily records found</td></tr>';renderPagination('fmd',fmdPage,tp,pp,f.length);updateFMDCharts(f);}
 
 function renderAudit(){
 var _m=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -3281,7 +3349,7 @@ function renderAll(){
 mergeUserInvoices();
 mergeUserExpenses();
 try{mergeEMExpenses();}catch(e){}
-renderCTO();renderRevenue();renderPNL();renderFC();renderFMD();try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
+renderCTO();renderRevenue();renderPNL();renderFC();renderFMD();try{renderFMDExpenses();}catch(e){}try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
 _lastDataFP=_dataFingerprint();}
 </script><script>
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
@@ -3397,6 +3465,337 @@ function applyFcFilters(){fcPage=1;renderFC();}
 function clearFcFilters(){document.getElementById('fc-search').value='';document.getElementById('fc-period-f').value='';document.getElementById('fc-entries').value='10';applyFcFilters();}
 function applyFMDFilters(){fmdPage=1;renderFMD();}
 function clearFMDFilters(){['fmd-search','fmd-date-from','fmd-date-to'].forEach(id=>document.getElementById(id).value='');document.getElementById('fmd-month-f').value='';document.getElementById('fmd-status-f').value='';document.getElementById('fmd-entries').value='10';document.querySelectorAll('#fmd-month-buttons .month-btn').forEach(function(b,i){b.classList.toggle('active',i===0);});var fb=document.getElementById('fmd-summary-banner');if(fb)fb.style.display='none';applyFMDFilters();}
+
+/* =====================================================
+   FMD FINANCIAL RECORDS — Sub-tabs, Bulk Actions, Expenses
+   ===================================================== */
+function setFMDFinTab(tab){
+  document.getElementById('fmd-inv-panel').style.display=tab==='invoices'?'':'none';
+  document.getElementById('fmd-exp-panel').style.display=tab==='expenses'?'':'none';
+  document.querySelectorAll('.fmd-fin-tab').forEach(function(b){b.style.background='var(--surface2)';b.style.color='var(--text2)';b.classList.remove('active');});
+  var btn=document.getElementById('fmd-fin-tab-'+tab);if(btn){btn.style.background=tab==='expenses'?'#ef4444':'#6366f1';btn.style.color='#fff';btn.classList.add('active');}
+  if(tab==='expenses')renderFMDExpenses();
+}
+
+/* --- FMD Invoice Bulk Actions --- */
+function toggleFMDCheck(gi,checked){
+  if(checked)_fmdBulkSet.add(gi);else _fmdBulkSet.delete(gi);
+  var tr=document.querySelector('tr[data-fmd-gi="'+gi+'"]');
+  if(tr)tr.classList.toggle('bulk-selected',checked);
+  _updateFMDBulkBar();
+}
+function toggleFMDSelectAll(checked){
+  document.querySelectorAll('#fmd-tbody .fmd-chk').forEach(function(cb){
+    var gi=parseInt(cb.dataset.gi);cb.checked=checked;
+    if(checked)_fmdBulkSet.add(gi);else _fmdBulkSet.delete(gi);
+    var tr=cb.closest('tr');if(tr)tr.classList.toggle('bulk-selected',checked);
+  });
+  _updateFMDBulkBar();
+}
+function clearFMDBulk(){
+  _fmdBulkSet.clear();
+  document.querySelectorAll('#fmd-tbody .fmd-chk').forEach(function(cb){cb.checked=false;});
+  document.querySelectorAll('#fmd-tbody tr.bulk-selected').forEach(function(tr){tr.classList.remove('bulk-selected');});
+  var sa=document.getElementById('fmd-select-all');if(sa)sa.checked=false;
+  _updateFMDBulkBar();
+}
+function _updateFMDBulkBar(){
+  var bar=document.getElementById('fmd-bulk-bar');if(!bar)return;
+  var n=_fmdBulkSet.size;
+  bar.style.display=n>0?'flex':'none';
+  document.getElementById('fmd-bulk-count').textContent=n+' selected';
+}
+function _getBulkFMDRows(){
+  var sorted=getFMDSorted();
+  var rows=[];
+  _fmdBulkSet.forEach(function(gi){if(sorted[gi])rows.push({gi:gi,row:sorted[gi]});});
+  rows.sort(function(a,b){return a.gi-b.gi;});
+  return rows;
+}
+function _fmdBulkPreview(rows){
+  return '<div class="preview"><strong>'+rows.length+' record'+(rows.length>1?'s':'')+':</strong><br>'+
+    rows.slice(0,8).map(function(x){return(x.row.invId||'\u2014')+' \u2014 '+(x.row.affiliate||'Unknown')+' ('+$m(x.row.displayAmt||x.row.rcvd||0)+')';}).join('<br>')+
+    (rows.length>8?'<br>\u2026 and '+(rows.length-8)+' more':'')+'</div>';
+}
+function _showFMDBulkModal(title,bodyHTML,saveFn){
+  var old=document.getElementById('fmd-bulk-modal');if(old)old.remove();
+  var el=document.createElement('div');el.id='fmd-bulk-modal';el.className='bulk-modal-overlay';
+  el.onclick=function(e){if(e.target===el){el.remove();}};
+  el.innerHTML='<div class="bulk-modal"><h3>'+title+'</h3>'+bodyHTML+
+    '<div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById(\'fmd-bulk-modal\').remove()">Cancel</button>'+
+    '<button class="btn-save" id="fmd-bulk-save">Apply</button></div></div>';
+  document.body.appendChild(el);
+  document.getElementById('fmd-bulk-save').onclick=saveFn;
+}
+function bulkFMDMonth(){
+  var rows=_getBulkFMDRows();if(!rows.length)return;
+  var opts='<option value="">\u2014 Select Month \u2014</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option>';
+  _showFMDBulkModal('\ud83d\udcc5 Reassign Month',
+    '<div class="form-row"><label>New Reporting Month</label><select id="fmd-bulk-month">'+opts+'</select></div>'+_fmdBulkPreview(rows),
+    function(){
+      var m=document.getElementById('fmd-bulk-month').value;
+      if(!m){alert('Please select a month.');return;}
+      rows.forEach(function(x){
+        var r=x.row;r._month=m;
+        var k=r._key||r.invId||('fgi'+x.gi);
+        if(!fmdEdits[k])fmdEdits[k]={};
+        fmdEdits[k]._month=m;
+        Object.assign(r,fmdEdits[k]);
+      });
+      localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));fbSyncFMDEdits();
+      document.getElementById('fmd-bulk-modal').remove();
+      clearFMDBulk();renderFMD();
+    }
+  );
+}
+function bulkFMDStatus(){
+  var rows=_getBulkFMDRows();if(!rows.length)return;
+  var opts='<option>Paid</option><option>Partially Paid</option><option>Unpaid</option><option>Pending</option><option>No Final Count</option>';
+  _showFMDBulkModal('\ud83d\udd04 Change Status',
+    '<div class="form-row"><label>New Status</label><select id="fmd-bulk-status">'+opts+'</select></div>'+_fmdBulkPreview(rows),
+    function(){
+      var newSt=document.getElementById('fmd-bulk-status').value;
+      rows.forEach(function(x){
+        var r=x.row;r.status=newSt;
+        if(newSt==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}
+        else if(newSt==='Unpaid'||newSt==='Pending'||newSt==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}
+        var k=r._key||r.invId||('fgi'+x.gi);
+        if(r._key){uStatus[r._key]=newSt;uStatus[_safeKey(r._key)]=newSt;}
+        if(!fmdEdits[k])fmdEdits[k]={};
+        fmdEdits[k].status=newSt;fmdEdits[k].displayAmt=r.displayAmt;fmdEdits[k].rcvd=r.rcvd;fmdEdits[k].invAmt=r.invAmt;
+        Object.assign(r,fmdEdits[k]);
+      });
+      localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();
+      localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));fbSyncFMDEdits();
+      document.getElementById('fmd-bulk-modal').remove();
+      clearFMDBulk();renderFMD();try{renderOverview();}catch(e){}
+    }
+  );
+}
+function bulkFMDNote(){
+  var rows=_getBulkFMDRows();if(!rows.length)return;
+  _showFMDBulkModal('\ud83d\udcdd Add Note',
+    '<div class="form-row"><label>Note</label><textarea id="fmd-bulk-note" rows="3" placeholder="Add a note to selected records..."></textarea></div>'+_fmdBulkPreview(rows),
+    function(){
+      var note=document.getElementById('fmd-bulk-note').value;
+      if(!note){alert('Please enter a note.');return;}
+      rows.forEach(function(x){
+        var r=x.row;
+        r.remarks=r.remarks?(r.remarks+'; '+note):note;
+        var k=r._key||r.invId||('fgi'+x.gi);
+        if(r._key){uRemarks[r._key]=r.remarks;uRemarks[_safeKey(r._key)]=r.remarks;}
+        if(!fmdEdits[k])fmdEdits[k]={};
+        fmdEdits[k].remarks=r.remarks;
+      });
+      localStorage.setItem('uRemarks',JSON.stringify(uRemarks));fbSyncRemarks();
+      localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));fbSyncFMDEdits();
+      document.getElementById('fmd-bulk-modal').remove();
+      clearFMDBulk();renderFMD();
+    }
+  );
+}
+function bulkFMDDelete(){
+  var rows=_getBulkFMDRows();if(!rows.length)return;
+  _showFMDBulkModal('🗑 Delete Records',
+    '<div style="color:#ef4444;font-weight:600;margin-bottom:10px">This action cannot be undone.</div>'+_fmdBulkPreview(rows),
+    function(){
+      rows.forEach(function(x){
+        var r=x.row;
+        if(r._source==='user'){allFMD.splice(allFMD.indexOf(r),1);var ui=userFMD.indexOf(r);if(ui>-1)userFMD.splice(ui,1);}
+        else{var k=r._key||r.invId||('fgi'+x.gi);fmdDeletes.add(k);fmdDeletes.add(_safeKey(k));var idx=allFMD.indexOf(r);if(idx>-1)allFMD.splice(idx,1);}
+      });
+      localStorage.setItem('uFMD',JSON.stringify(userFMD));fbSyncAllFMD();
+      localStorage.setItem('fmdDeletes',JSON.stringify([...fmdDeletes]));fbSyncFmdDeletes();
+      document.getElementById('fmd-bulk-modal').remove();
+      clearFMDBulk();renderFMD();try{renderOverview();}catch(e){}
+    }
+  );
+}
+
+/* --- FMD Invoice Attachments --- */
+function handleFMDAttach(input,key){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];var reader=new FileReader();
+  reader.onload=function(e){
+    var fmdAtts=JSON.parse(localStorage.getItem('fmdAttachments')||'{}');
+    fmdAtts[key]={name:file.name,data:e.target.result,ts:Date.now()};
+    localStorage.setItem('fmdAttachments',JSON.stringify(fmdAtts));
+    var link=document.getElementById('fmd-att-'+key);if(link)link.style.display='inline';
+    try{fbSaveKey('fmdAttachments',key,fmdAtts[key]);}catch(ex){}
+  };reader.readAsDataURL(file);
+}
+function openFMDAttach(key){
+  var fmdAtts=JSON.parse(localStorage.getItem('fmdAttachments')||'{}');
+  var att=fmdAtts[key];if(!att||!att.data)return;
+  var w=window.open('','_blank');
+  if(att.data.startsWith('data:image')){w.document.write('<img src="'+att.data+'" style="max-width:100%">');}
+  else{w.document.write('<embed src="'+att.data+'" width="100%" height="100%" type="application/pdf">');}
+}
+
+/* --- FMD Expense CRUD --- */
+function _getAllFMDExpenses(){
+  return userFMDExpenses.filter(function(e){return!_isDeletedKey(fmdExpDeletes,e._key);});
+}
+function saveFMDExpense(){
+  var dateVal=document.getElementById('fmde-date').value;
+  var monthVal=document.getElementById('fmde-month').value;
+  if(!monthVal&&dateVal){var d=new Date(dateVal+'T12:00:00');monthVal=d.toLocaleString('en-US',{month:'long'});}
+  var amt=parseFloat(document.getElementById('fmde-amount').value)||0;
+  if(!amt){alert('Please enter an amount.');return;}
+  var exp={
+    _key:'fmdexp_'+Date.now()+'_'+Math.random().toString(36).substr(2,4),
+    date:dateVal,month:monthVal||'',
+    category:document.getElementById('fmde-category').value,
+    payee:document.getElementById('fmde-payee').value,
+    description:document.getElementById('fmde-desc').value,
+    amount:amt,
+    recurring:document.getElementById('fmde-recurring').value,
+    notes:document.getElementById('fmde-notes').value,
+    createdAt:new Date().toISOString()
+  };
+  /* Handle file attachment */
+  var fileInput=document.getElementById('fmde-file');
+  if(fileInput&&fileInput.files&&fileInput.files[0]){
+    var file=fileInput.files[0];var reader=new FileReader();
+    reader.onload=function(e){
+      var fmdAtts=JSON.parse(localStorage.getItem('fmdExpAttachments')||'{}');
+      fmdAtts[exp._key]={name:file.name,data:e.target.result,ts:Date.now()};
+      localStorage.setItem('fmdExpAttachments',JSON.stringify(fmdAtts));
+      try{fbSaveKey('fmdExpAttachments',exp._key,fmdAtts[exp._key]);}catch(ex){}
+    };reader.readAsDataURL(file);
+  }
+  userFMDExpenses.push(exp);
+  localStorage.setItem('userFMDExpenses',JSON.stringify(userFMDExpenses));
+  _fbSyncFMDExpenses();
+  document.getElementById('addFMDExpModal').classList.remove('open');
+  ['fmde-date','fmde-payee','fmde-desc','fmde-amount','fmde-notes'].forEach(function(id){document.getElementById(id).value='';});
+  var fi=document.getElementById('fmde-file');if(fi)fi.value='';
+  renderFMDExpenses();
+}
+var _fmdExpEditIdx=null;
+function editFMDExpense(i){
+  var all=_getAllFMDExpenses();var e=all[i];if(!e)return;
+  _fmdExpEditIdx=i;
+  document.getElementById('fmdee-date').value=e.date||'';
+  document.getElementById('fmdee-month').value=e.month||'';
+  document.getElementById('fmdee-category').value=e.category||'Other';
+  document.getElementById('fmdee-payee').value=e.payee||'';
+  document.getElementById('fmdee-desc').value=e.description||'';
+  document.getElementById('fmdee-amount').value=e.amount||0;
+  document.getElementById('fmdee-recurring').value=e.recurring||'No';
+  document.getElementById('fmdee-notes').value=e.notes||'';
+  document.getElementById('editFMDExpModal').classList.add('open');
+}
+function saveEditFMDExpense(){
+  if(_fmdExpEditIdx==null)return;
+  var all=_getAllFMDExpenses();var e=all[_fmdExpEditIdx];if(!e)return;
+  var dateVal=document.getElementById('fmdee-date').value;
+  var monthVal=document.getElementById('fmdee-month').value;
+  if(!monthVal&&dateVal){var d=new Date(dateVal+'T12:00:00');monthVal=d.toLocaleString('en-US',{month:'long'});}
+  /* Find in userFMDExpenses by key */
+  var idx=userFMDExpenses.findIndex(function(x){return x._key===e._key;});
+  if(idx>-1){
+    userFMDExpenses[idx].date=dateVal;
+    userFMDExpenses[idx].month=monthVal||'';
+    userFMDExpenses[idx].category=document.getElementById('fmdee-category').value;
+    userFMDExpenses[idx].payee=document.getElementById('fmdee-payee').value;
+    userFMDExpenses[idx].description=document.getElementById('fmdee-desc').value;
+    userFMDExpenses[idx].amount=parseFloat(document.getElementById('fmdee-amount').value)||0;
+    userFMDExpenses[idx].recurring=document.getElementById('fmdee-recurring').value;
+    userFMDExpenses[idx].notes=document.getElementById('fmdee-notes').value;
+  }
+  /* Handle file attachment */
+  var fileInput=document.getElementById('fmdee-file');
+  if(fileInput&&fileInput.files&&fileInput.files[0]){
+    var file=fileInput.files[0];var reader=new FileReader();
+    reader.onload=function(ev){
+      var fmdAtts=JSON.parse(localStorage.getItem('fmdExpAttachments')||'{}');
+      fmdAtts[e._key]={name:file.name,data:ev.target.result,ts:Date.now()};
+      localStorage.setItem('fmdExpAttachments',JSON.stringify(fmdAtts));
+      try{fbSaveKey('fmdExpAttachments',e._key,fmdAtts[e._key]);}catch(ex){}
+    };reader.readAsDataURL(file);
+  }
+  localStorage.setItem('userFMDExpenses',JSON.stringify(userFMDExpenses));
+  _fbSyncFMDExpenses();
+  document.getElementById('editFMDExpModal').classList.remove('open');
+  _fmdExpEditIdx=null;
+  renderFMDExpenses();
+}
+function deleteFMDExpense(i){
+  if(!confirm('Delete this FMD expense? This cannot be undone.'))return;
+  var all=_getAllFMDExpenses();var e=all[i];if(!e)return;
+  var idx=userFMDExpenses.findIndex(function(x){return x._key===e._key;});
+  if(idx>-1)userFMDExpenses.splice(idx,1);
+  fmdExpDeletes.add(e._key);fmdExpDeletes.add(_safeKey(e._key));
+  localStorage.setItem('userFMDExpenses',JSON.stringify(userFMDExpenses));
+  localStorage.setItem('fmdExpDeletes',JSON.stringify([...fmdExpDeletes]));
+  _fbSyncFMDExpenses();_fbSyncFMDExpDeletes();
+  renderFMDExpenses();
+}
+function _fbSyncFMDExpenses(){
+  try{fbSave('fmdExpenses',userFMDExpenses.reduce(function(o,e){if(e._key)o[_safeKey(e._key)]=e;return o;},{}));}catch(e){}
+}
+function _fbSyncFMDExpDeletes(){
+  try{var o={};fmdExpDeletes.forEach(function(k){o[_safeKey(k)]=true;});fbSave('fmdExpDeletes',o);}catch(e){}
+}
+
+/* --- FMD Expense Renderer (collapsible categories) --- */
+function renderFMDExpenses(){
+  var all=_getAllFMDExpenses();
+  var q=(document.getElementById('fmdexp-search').value||'').toLowerCase();
+  var mf=(document.getElementById('fmdexp-month-f')||{}).value||'';
+  var cf=(document.getElementById('fmdexp-cat-f')||{}).value||'';
+  var filtered=all.filter(function(e){
+    if(mf&&e.month!==mf)return false;
+    if(cf&&e.category!==cf)return false;
+    if(q){var hay=(e.description+' '+e.payee+' '+e.category+' '+e.notes+' '+e.month).toLowerCase();if(!hay.includes(q))return false;}
+    return true;
+  });
+  /* Stats */
+  var total=0,curMonthTotal=0,cats=new Set();
+  var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
+  filtered.forEach(function(e){total+=e.amount;cats.add(e.category);if(e.month===curMonth)curMonthTotal+=e.amount;});
+  setStat('fmdexp-s-total',$m(total));
+  setStat('fmdexp-s-month',$m(curMonthTotal));
+  var ml=document.getElementById('fmdexp-s-month-label');if(ml)ml.textContent=curMonth;
+  setStat('fmdexp-s-cats',cats.size);
+  setStat('fmdexp-s-count',filtered.length);
+  /* Group by category */
+  var groups={};
+  var catIcons={'Salary':'💰','Software and Subscription':'💻','Dues and Subscriptions':'📄','Marketing':'📣','Office Supplies':'📎','Meals and Entertainment':'🍽️','Other':'📦'};
+  filtered.forEach(function(e,i){
+    var cat=e.category||'Other';
+    if(!groups[cat])groups[cat]={items:[],total:0};
+    groups[cat].items.push({expense:e,origIdx:i});
+    groups[cat].total+=e.amount;
+  });
+  var container=document.getElementById('fmdexp-category-groups');
+  if(!container)return;
+  if(!filtered.length){container.innerHTML='<div class="empty-state" style="padding:40px;text-align:center;color:var(--text3)">No FMD expenses recorded yet. Click "+ Add Expense" to start tracking.</div>';return;}
+  var html='';
+  var sortedCats=Object.keys(groups).sort(function(a,b){return groups[b].total-groups[a].total;});
+  sortedCats.forEach(function(cat){
+    var g=groups[cat];
+    var isOpen=_fmdExpCatOpen[cat];
+    var icon=catIcons[cat]||'📦';
+    html+='<div class="exp-cat-group'+(isOpen?' open':'')+'" id="fmdecg-'+cat.replace(/\s/g,'_')+'">';
+    html+='<div class="exp-cat-header" onclick="toggleFMDExpCat(\''+cat.replace(/'/g,"\\'")+'\')"><span class="exp-cat-icon">'+icon+'</span><span class="exp-cat-name">'+cat+'</span><span class="exp-cat-count">'+g.items.length+' item'+(g.items.length>1?'s':'')+'</span><span class="exp-cat-total">'+$m(g.total)+'</span><span class="exp-cat-arrow">\u25be</span></div>';
+    html+='<div class="exp-cat-body"><table class="data-table" style="margin:0;font-size:.82rem"><thead><tr style="background:var(--surface2)"><th>Date</th><th>Month</th><th>Payee</th><th>Description</th><th>Amount</th><th>Recurring</th><th>Notes</th><th>Action</th></tr></thead><tbody>';
+    g.items.forEach(function(item){
+      var e=item.expense;
+      html+='<tr><td>'+(e.date||'\u2014')+'</td><td>'+(e.month||'\u2014')+'</td><td><strong>'+(e.payee||'\u2014')+'</strong></td><td>'+(e.description||'\u2014')+'</td><td style="color:#ef4444;font-weight:600">'+$m(e.amount)+'</td><td>'+(e.recurring||'No')+'</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.notes||'\u2014')+'</td><td class="action-cell"><button class="btn-edit" onclick="editFMDExpense('+item.origIdx+')">\u270e Edit</button><button class="btn-del" onclick="deleteFMDExpense('+item.origIdx+')">🗑</button></td></tr>';
+    });
+    html+='</tbody></table></div></div>';
+  });
+  container.innerHTML=html;
+}
+function toggleFMDExpCat(cat){
+  _fmdExpCatOpen[cat]=!_fmdExpCatOpen[cat];
+  var el=document.getElementById('fmdecg-'+cat.replace(/\s/g,'_'));
+  if(el)el.classList.toggle('open',!!_fmdExpCatOpen[cat]);
+}
+
+
 function mkChart(id,type,labels,datasets){var ctx=document.getElementById(id);if(!ctx)return null;var ex=Chart.getChart(id);if(ex)ex.destroy();return new Chart(ctx,{type:type,data:{labels:labels,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600,easing:'easeInOutQuart'},plugins:{legend:{display:type==='doughnut'||datasets.length>1,position:'bottom',labels:{font:{size:11,weight:'600'},padding:14,usePointStyle:true,pointStyle:'circle',color:'#4a5578'}},tooltip:{backgroundColor:'rgba(26,35,64,0.95)',titleColor:'#fff',bodyColor:'rgba(255,255,255,0.85)',borderColor:ACCENT,borderWidth:1,padding:12,cornerRadius:8,callbacks:{label:function(c){return type==='doughnut'?c.label+': '+$m(c.raw):'  '+c.dataset.label+': '+$m(c.raw);}}}},scales:type!=='doughnut'?{x:{ticks:{font:{size:10,weight:'500'},color:'#8892a4'},grid:{display:false},border:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v.toLocaleString());},font:{size:10},color:'#8892a4'},grid:{color:'rgba(0,0,0,.06)'},border:{display:false},beginAtZero:true}}:undefined}});}
 function buildCharts(){updateRevCharts(allRev);updatePNLCharts(allPNL);updateFcCharts(allFC);}
 function updateRevCharts(f){const agg={};f.forEach(r=>{const a=r.affiliate||'Unknown';agg[a]=(agg[a]||0)+r.amount;});const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,15);mkChart('revBarChart','bar',sorted.map(x=>x[0].substring(0,20)),[{label:'Revenue',data:sorted.map(x=>x[1]),backgroundColor:CC.slice(0,sorted.length),borderRadius:4}]);const stAgg={Paid:0,'Partially Paid':0,Unpaid:0,Pending:0};f.forEach(r=>{const s=r.status||'Pending';if(stAgg[s]!==undefined)stAgg[s]+=r.amount;else stAgg['Pending']+=r.amount;});const stL=Object.keys(stAgg).filter(k=>stAgg[k]>0);var dayAgg={};f.forEach(function(r){if(!r.date)return;var d=r.date;if(d.length>10)d=d.substring(0,10);dayAgg[d]=(dayAgg[d]||0)+r.amount;});var dayEntries=Object.entries(dayAgg).sort(function(a,b){return a[0].localeCompare(b[0]);});var trendCtx=document.getElementById('revTrendChart');if(trendCtx){var exT=Chart.getChart('revTrendChart');if(exT)exT.destroy();new Chart(trendCtx,{type:'line',data:{labels:dayEntries.map(function(x){return x[0].replace(/^\d{4}-/,'');}),datasets:[{label:'Daily Revenue',data:dayEntries.map(function(x){return x[1];}),borderColor:ACCENT,backgroundColor:ACCENT+'22',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:ACCENT,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(26,35,64,.95)',callbacks:{label:function(c){return'Revenue: '+$m(c.raw);}}}},scales:{x:{ticks:{font:{size:9},color:'#8892a4',maxRotation:45},grid:{display:false}},y:{ticks:{callback:function(v){return'$'+(v>=1000?(v/1000).toFixed(0)+'k':v);},font:{size:10},color:'#8892a4'},grid:{color:'rgba(0,0,0,.06)'},beginAtZero:true}}}});}}
@@ -3721,6 +4120,11 @@ function fbStartListeners(){
     localStorage.setItem('expDeletes',JSON.stringify([...expDeletes]));
     fmdDeletes=new Set(d.fmdDeletes?Object.keys(d.fmdDeletes):[]);
     localStorage.setItem('fmdDeletes',JSON.stringify([...fmdDeletes]));
+    // FMD Expenses sync
+    if(d.fmdExpenses){userFMDExpenses=Object.values(d.fmdExpenses);localStorage.setItem('userFMDExpenses',JSON.stringify(userFMDExpenses));}
+    if(d.fmdExpDeletes){fmdExpDeletes=new Set(Array.isArray(d.fmdExpDeletes)?d.fmdExpDeletes:Object.keys(d.fmdExpDeletes));localStorage.setItem('fmdExpDeletes',JSON.stringify([...fmdExpDeletes]));}
+    if(d.fmdAttachments){localStorage.setItem('fmdAttachments',JSON.stringify(d.fmdAttachments));}
+    if(d.fmdExpAttachments){localStorage.setItem('fmdExpAttachments',JSON.stringify(d.fmdExpAttachments));}
     // Status & remarks & edits & attachments
     if(d.uStatus){uStatus=d.uStatus;localStorage.setItem('uStatus',JSON.stringify(uStatus));}
     if(d.uRemarks){uRemarks=d.uRemarks;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
@@ -3753,6 +4157,7 @@ function fbStartListeners(){
       renderPNL();try{renderOverview();}catch(e){}
       try{renderExpenses();}catch(e){}
       try{renderFMD();}catch(e){}
+      try{renderFMDExpenses();}catch(e){}
       try{renderQuarterlySummary();}catch(e){}
       _restoreChartAnim();window._stableRefresh=false;
       
@@ -4055,6 +4460,13 @@ var userExpenses=JSON.parse(localStorage.getItem('userExpenses')||'[]');
 var expDeletes=new Set(JSON.parse(localStorage.getItem('expDeletes')||'[]'));
 // Clean deleted from stored
 try{var _ce=userExpenses.filter(function(e){return!_isDeletedKey(expDeletes,e._key);});if(_ce.length!==userExpenses.length){userExpenses=_ce;localStorage.setItem('userExpenses',JSON.stringify(userExpenses));}}catch(e){}
+
+/* === FMD Expense Data === */
+var userFMDExpenses=JSON.parse(localStorage.getItem('userFMDExpenses')||'[]');
+var fmdExpDeletes=new Set(JSON.parse(localStorage.getItem('fmdExpDeletes')||'[]'));
+try{var _cfe=userFMDExpenses.filter(function(e){return!_isDeletedKey(fmdExpDeletes,e._key);});if(_cfe.length!==userFMDExpenses.length){userFMDExpenses=_cfe;localStorage.setItem('userFMDExpenses',JSON.stringify(userFMDExpenses));}}catch(e){}
+var _fmdBulkSet=new Set();
+var _fmdExpCatOpen={};
 
 
 // === UNIFIED FINANCIAL SYSTEM ===
@@ -4443,7 +4855,10 @@ return (document.getElementById('pnl-edit-modal')&&document.getElementById('pnl-
 (document.getElementById('ctoEditModal')&&document.getElementById('ctoEditModal').style.display==='flex')||
 (document.getElementById('addExpenseModal')&&document.getElementById('addExpenseModal').classList.contains('open'))||
 (document.getElementById('editExpenseModal')&&document.getElementById('editExpenseModal').classList.contains('open'))||
-(document.getElementById('pnl-bulk-modal')!==null);
+(document.getElementById('addFMDExpModal')&&document.getElementById('addFMDExpModal').classList.contains('open'))||
+(document.getElementById('editFMDExpModal')&&document.getElementById('editFMDExpModal').classList.contains('open'))||
+(document.getElementById('pnl-bulk-modal')!==null)||
+(document.getElementById('fmd-bulk-modal')!==null);
 }
 async function autoSyncData(){
 if(_syncLock){console.log('Auto-sync skipped: sync in progress');return;}
