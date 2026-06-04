@@ -2465,7 +2465,7 @@ qbRows.forEach(r=>{
 // Filter deleted PNL from QB additions
 for(var _qi=allPNL.length-1;_qi>=0;_qi--){var _qk=allPNL[_qi]._key||allPNL[_qi].invId||'';if(_qk&&_isDeletedKey(pnlDeletes,_qk))allPNL.splice(_qi,1);}
 // Apply pnlEdits to QB entries — QB is source of truth for amounts so skip amount overrides
-allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;}}});
+allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2._month)r._month=_pe2._month;if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;}}});
 /* Post-edit dedup: after pnlEdits may move QB entries to different months, remove QB entries
    whose doc# now collides with a non-QB entry (sheet/user) in the same month */
 (function(){var _sheetIdx={};allPNL.forEach(function(e){if(e._source!=='qb'){var d=(e.invId||'').replace('QB#','');if(d){var mk=e._month+'_'+d;_sheetIdx[mk]=true;}}});for(var _pi=allPNL.length-1;_pi>=0;_pi--){var _e=allPNL[_pi];if(_e._source==='qb'){var _d=(_e.invId||'').replace('QB#','');if(_d){var _mk=_e._month+'_'+_d;if(_sheetIdx[_mk]){allPNL.splice(_pi,1);}}}}})();
@@ -4258,8 +4258,8 @@ function savePNLEdit(){
     var sp=document.getElementById('pnl-att-'+sk);if(sp)sp.style.display='inline';
     };reader.readAsDataURL(file);
   }
-  /* QB entries: QB is source of truth for amounts and months — only allow status/remarks edits */
-  if(r._source==='qb'){edit={status:newStatus,remarks:document.getElementById('med-remarks').value,lastEditedBy:edit.lastEditedBy,lastEditedAt:edit.lastEditedAt};}
+  /* QB entries: QB is source of truth for amounts — allow status/remarks/month edits */
+  if(r._source==='qb'){edit={_month:newMonth,status:newStatus,remarks:document.getElementById('med-remarks').value,lastEditedBy:edit.lastEditedBy,lastEditedAt:edit.lastEditedAt};}
   pnlEdits[k]=edit;
   Object.assign(r,edit);
   if(r._key){
@@ -4357,8 +4357,7 @@ function bulkPNLMonth(){
       if(!m){alert('Please select a month.');return;}
       rows.forEach(function(x){
         var r=x.row;var k=r._key||r.invId||(r._idx!=null?String(r._idx):'gi'+x.gi);
-        /* QB entries: month is auto-mapped from QB date — skip month overrides */
-        if(r._source==='qb'){return;}
+        /* QB entries: allow manual month overrides via pnlEdits */
         r._month=m;
         if(!pnlEdits[k])pnlEdits[k]={};
         pnlEdits[k]._month=m;pnlEdits[k].lastEditedBy=currentUser?currentUser.email:'';pnlEdits[k].lastEditedAt=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});
