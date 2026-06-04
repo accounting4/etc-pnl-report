@@ -4246,7 +4246,7 @@ function savePNLEdit(){
   if(newStatus==='Paid'){newRcvd=total;newInvAmt=0;}
   else if(newStatus==='Unpaid'||newStatus==='Pending'||newStatus==='No Final Count'){newInvAmt=total;newRcvd=0;}
   var newMonth=document.getElementById('med-month').value||r._month||'';
-  const edit={date:document.getElementById('med-date').value,_month:newMonth,affiliate:document.getElementById('med-affiliate').value,invAmt:total,displayAmt:newInvAmt,rcvd:newRcvd,status:newStatus,remarks:document.getElementById('med-remarks').value,lastEditedBy:currentUser?currentUser.email:'',lastEditedAt:new Date().toLocaleString('en-US',{timeZone:'America/New_York'})};
+  var edit={date:document.getElementById('med-date').value,_month:newMonth,affiliate:document.getElementById('med-affiliate').value,invAmt:total,displayAmt:newInvAmt,rcvd:newRcvd,status:newStatus,remarks:document.getElementById('med-remarks').value,lastEditedBy:currentUser?currentUser.email:'',lastEditedAt:new Date().toLocaleString('en-US',{timeZone:'America/New_York'})};
   /* Handle file attachment */
   var fileInput=document.getElementById('med-file');
   if(fileInput&&fileInput.files[0]){
