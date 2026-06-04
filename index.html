@@ -2434,9 +2434,10 @@ qbRows.forEach(r=>{
     return false;
   });
   if(matchPNL){qbSkipped++;return;}
-  /* Pass 2: name-only match — same company in same month with a real amount already in PNL sheet */
+  /* Pass 2: name-only match — same company in same month with a real amount already in PNL sheet.
+     Skip user-added entries — they may be separate invoices (different amounts/IDs). */
   const nameOnlyMatch=allPNL.some(p=>{
-    if(p._isSummary||p._source==='qb')return false;
+    if(p._isSummary||p._source==='qb'||p._source==='user')return false;
     if(p._month!==monthName)return false;
     /* Skip deleted entries during dedup */
     var _dpk2=p._key||p.invId||'';if(_dpk2&&_isDeletedKey(pnlDeletes,_dpk2))return false;
