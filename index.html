@@ -2891,7 +2891,8 @@ document.getElementById('cto-ed-notes').value=row._notes||found._userNotes||'';
 document.getElementById('ctoEditModal').style.display='flex';
 }
 function getCTOKey(r){return(r._ctoType||r['Type']||'CTO')+'|'+(r['Advertiser']||'')+'|'+(r['Offers']||r['Advertiser/Offer']||'')+'|'+(r._month||'');}
-function saveCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');allCTO.forEach(function(r){if(!r._userEdited)return;var key=getCTOKey(r);edits[key]={leads:r['Current Lead Count']||'',rate:r['Rate/Lead ($)']||'',revenue:r['Total Revenue ($)']||'',type:r['Type']||r._ctoType||'',cpaType:r._cpaType||'',saleDate:r._saleDate||'',lastUpdated:r._lastUpdated||'',notes:r._userNotes||'',flat:r['Flat Fee']||'',advertiser:r['Advertiser']||'',offer:r['Offers']||'',_userEdited:true};});localStorage.setItem('ctoEdits',JSON.stringify(edits));}catch(e){console.warn('saveCTOEdits',e);}}
+function saveCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');allCTO.forEach(function(r){if(!r._userEdited)return;var key=getCTOKey(r);edits[key]={leads:r['Current Lead Count']||'',rate:r['Rate/Lead ($)']||'',revenue:r['Total Revenue ($)']||'',type:r['Type']||r._ctoType||'',cpaType:r._cpaType||'',saleDate:r._saleDate||'',lastUpdated:r._lastUpdated||'',notes:r._userNotes||'',flat:r['Flat Fee']||'',advertiser:r['Advertiser']||'',offer:r['Offers']||'',_userEdited:true};});localStorage.setItem('ctoEdits',JSON.stringify(edits));fbSyncCTOEdits();}catch(e){console.warn('saveCTOEdits',e);}}
+function fbSyncCTOEdits(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');var obj={};Object.keys(edits).forEach(function(k){obj[_safeKey(k)]=edits[k];});fbSave('ctoEdits',obj);}catch(e){console.warn('fbSyncCTOEdits',e);}}
 function loadCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');
 /* Migrate old IO keys: IO|CampaignName|CampaignName|Month → IO|Interactive Offers|CampaignName|Month */
 var migrated=false;Object.keys(edits).forEach(function(k){
@@ -3113,7 +3114,14 @@ function saveManualCTOEntries(){
 try{
 var manual=allCTO.filter(function(r){return r._manual;});
 localStorage.setItem('ctoManualEntries',JSON.stringify(manual));
+fbSyncCTOManual();
 }catch(e){}
+}
+function fbSyncCTOManual(){
+try{var manual=JSON.parse(localStorage.getItem('ctoManualEntries')||'[]');
+var obj={};manual.forEach(function(e,i){var k='m'+i+'_'+_safeKey((e['Advertiser']||'')+'_'+(e._month||''));obj[k]=e;});
+fbSave('ctoManualEntries',obj);
+}catch(e){console.warn('fbSyncCTOManual',e);}
 }
 function loadManualCTOEntries(){
 try{
@@ -4088,6 +4096,33 @@ async function fbLoadUserData(){
 
     // Load beehiiv API earnings
     if(d.beehiivEarnings){window._bhApiEarnings=d.beehiivEarnings;console.log('✅ Beehiiv API earnings loaded');}
+    // Load CTO manual entries from Firebase (merge with localStorage)
+    if(d.ctoManualEntries){
+      var fbManual=Object.values(d.ctoManualEntries);
+      var localManual=JSON.parse(localStorage.getItem('ctoManualEntries')||'[]');
+      var localKeys=new Set(localManual.map(function(e){return(e['Advertiser']||'')+'|'+(e['Offers']||'')+'|'+(e._month||'');}));
+      fbManual.forEach(function(e){
+        var k=(e['Advertiser']||'')+'|'+(e['Offers']||'')+'|'+(e._month||'');
+        if(!localKeys.has(k))localManual.push(e);
+      });
+      localStorage.setItem('ctoManualEntries',JSON.stringify(localManual));
+      console.log('✅ CTO manual entries loaded from Firebase ('+fbManual.length+')');
+    }
+    // Load CTO edits from Firebase (merge with localStorage)
+    if(d.ctoEdits){
+      var localEdits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');
+      Object.keys(d.ctoEdits).forEach(function(sk){
+        if(!localEdits[sk]||d.ctoEdits[sk].lastUpdated>(localEdits[sk].lastUpdated||''))localEdits[sk]=d.ctoEdits[sk];
+      });
+      localStorage.setItem('ctoEdits',JSON.stringify(localEdits));
+      console.log('✅ CTO edits loaded from Firebase ('+Object.keys(d.ctoEdits).length+')');
+    }
+
+    // One-time push: sync existing localStorage CTO data to Firebase
+    var _lm=JSON.parse(localStorage.getItem('ctoManualEntries')||'[]');
+    var _le=JSON.parse(localStorage.getItem('ctoEdits')||'{}');
+    if(_lm.length>0&&!d.ctoManualEntries)fbSyncCTOManual();
+    if(Object.keys(_le).length>0&&!d.ctoEdits)fbSyncCTOEdits();
 
     console.log('✅ Shared data loaded');
 
@@ -4130,6 +4165,8 @@ function fbStartListeners(){
     if(d.uStatus){uStatus=d.uStatus;localStorage.setItem('uStatus',JSON.stringify(uStatus));}
     if(d.uRemarks){uRemarks=d.uRemarks;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));}
     if(d.pnlEdits){pnlEdits={};Object.keys(d.pnlEdits).forEach(function(sk){pnlEdits[sk]=d.pnlEdits[sk];});localStorage.setItem('pnlEdits',JSON.stringify(pnlEdits));}
+    if(d.ctoManualEntries){var fbM=Object.values(d.ctoManualEntries);localStorage.setItem('ctoManualEntries',JSON.stringify(fbM));}
+    if(d.ctoEdits){var le=JSON.parse(localStorage.getItem('ctoEdits')||'{}');Object.keys(d.ctoEdits).forEach(function(sk){if(!le[sk]||d.ctoEdits[sk].lastUpdated>(le[sk].lastUpdated||''))le[sk]=d.ctoEdits[sk];});localStorage.setItem('ctoEdits',JSON.stringify(le));}
     if(d.fmdEdits){fmdEdits={};Object.keys(d.fmdEdits).forEach(function(sk){fmdEdits[sk]=d.fmdEdits[sk];});localStorage.setItem('fmdEdits',JSON.stringify(fmdEdits));}
     if(d.pnlAttachments){localStorage.setItem('pnlAttachments',JSON.stringify(d.pnlAttachments));}
     // Update beehiiv API earnings from listener
