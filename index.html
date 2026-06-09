@@ -2619,7 +2619,8 @@ if(_mtdSrc){
   var _srcItems=[
     {k:'CPA (Everflow)',v:_mtdSrc.cpa,c:'#f59e0b'},
     {k:'CTO (Perf Dashboard)',v:_mtdSrc.cto,c:'#6366f1'},
-    {k:'Interactive Offers',v:_mtdSrc.io,c:'#ec4899'},
+    {k:'Interactive Offers',v:(_mtdSrc.io||0)+(_mtdSrc.ioInv||0),c:'#ec4899'},
+    {k:'Sideways Frequency',v:_mtdSrc.sw||0,c:'#14b8a6'},
     {k:'CPC (Newsletter Ads)',v:_mtdSrc.cpc,c:'#0ea5e9'},
     {k:'IR (Investor Relations)',v:_mtdSrc.ir,c:'#8b5cf6'},
     {k:'Platform Software',v:_mtdSrc.ps,c:'#10b981'},
@@ -2979,9 +2980,9 @@ function renderCTO(){var f=getCTOFilt();var rows=f.map(getCTORow).filter(functio
 var totRev=0,totLeads=0,activeOffers=0,affRevMap={};
 rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=r._name||'Unknown';affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
 // Compute P&L source totals for synced Tracking Revenue
-var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0,_pnlBH=0;
-allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
-var syncedTotal=totRev+_pnlIR+_pnlPS+_pnlCPC+_pnlBH;
+var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0,_pnlBH=0,_pnlIO=0,_pnlSW=0;
+allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Interactive Offers')_pnlIO+=tot;else if(cat==='Sideways Frequency')_pnlSW+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
+var syncedTotal=totRev+_pnlIR+_pnlPS+_pnlCPC+_pnlBH+_pnlIO+_pnlSW;
 setStat('cto-s-rev',$m(syncedTotal));setStat('cto-s-leads',totLeads.toLocaleString());setStat('cto-s-count',activeOffers);
 var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
@@ -3864,10 +3865,12 @@ var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).
 
 // P&L sources
 var _sm=(document.getElementById('cto-month-f')||{}).value||'';
-var irRev=0,psRev=0,cpcRev=0,bhRev=0,irAffs={},psAffs={},cpcAffs={},bhAffs={};
+var irRev=0,psRev=0,cpcRev=0,bhRev=0,ioInvRev=0,swRev=0,irAffs={},psAffs={},cpcAffs={},bhAffs={},ioInvAffs={},swAffs={};
 allPNL.filter(function(r){if(r._isSummary)return false;if(_sm&&r._month!==_sm)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){
   var cat=classifyPNLSource(r.affiliate,r._month);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;var aff=r.affiliate||'Unknown';
   if(cat==='IR'){irRev+=tot;irAffs[aff]=(irAffs[aff]||0)+tot;}
+  else if(cat==='Interactive Offers'){ioInvRev+=tot;ioInvAffs[aff]=(ioInvAffs[aff]||0)+tot;}
+  else if(cat==='Sideways Frequency'){swRev+=tot;swAffs[aff]=(swAffs[aff]||0)+tot;}
   else if(cat==='Platform Softwares'){psRev+=tot;psAffs[aff]=(psAffs[aff]||0)+tot;}
   else if(cat==='Beehiiv Ads'){bhRev+=tot;bhAffs[aff]=(bhAffs[aff]||0)+tot;}
   else{cpcRev+=tot;cpcAffs[aff]=(cpcAffs[aff]||0)+tot;}
@@ -3909,18 +3912,19 @@ var bhFinalAffs=bhApiRev>0?bhApiPubs:bhAffs;
 var bhFinalMetric=bhApiRev>0?'Publications':'Invoices';
 var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
 
-var grand=ctoRev+ioRev+efRev+irRev+psRev+cpcRev+bhFinalRev;
+var grand=ctoRev+ioRev+efRev+irRev+psRev+cpcRev+bhFinalRev+ioInvRev+swRev;
 setStat('cto-s-rev',$m(grand));
 window._mtdGrandByMonth=window._mtdGrandByMonth||{};window._mtdGrandByMonth[_sm||'all']=grand;
-window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMonth[_sm||'all']={cto:ctoRev,io:ioRev,cpa:efRev,ir:irRev,ps:psRev,cpc:cpcRev,bh:bhFinalRev};
+window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMonth[_sm||'all']={cto:ctoRev,io:ioRev,cpa:efRev,ir:irRev,ps:psRev,cpc:cpcRev,bh:bhFinalRev,ioInv:ioInvRev,sw:swRev};
 
 // Sources config — MTD Revenue sources of truth (no RPP, no PerfDash CPA)
 // CTO→Performance Dashboard, IO→Interactive Offers, CPA→Everflow, IR/PS/CPC→P&L, Beehiiv→API
 var sources=[
   {id:'cto',name:'CTO',color:'#6366f1',rev:ctoRev,metric:'Leads',metricVal:ctoLeads,affs:ctoAffs},
-  {id:'io',name:'Interactive Offers',color:'#ec4899',rev:ioRev,metric:'Campaigns',metricVal:Object.keys(ioAffs).length,affs:ioAffs},
+  {id:'io',name:'Interactive Offers',color:'#ec4899',rev:ioRev+ioInvRev,metric:'Campaigns',metricVal:Object.keys(ioAffs).length+Object.keys(ioInvAffs).length,affs:Object.assign({},ioAffs,ioInvAffs)},
   {id:'cpa',name:'CPA (Everflow)',color:'#f59e0b',rev:efRev,metric:'Conversions',metricVal:efLeads,affs:efAffs},
   {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
+  {id:'sw',name:'Sideways Frequency',color:'#14b8a6',rev:swRev,metric:'Invoices',metricVal:Object.keys(swAffs).length,affs:swAffs},
   {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
   {id:'bh',name:'Beehiiv Earnings',color:'#f97316',rev:bhFinalRev,metric:bhFinalMetric,metricVal:bhFinalMetricVal,affs:bhFinalAffs,daily:bhApiRev>0?bhApiDaily:null,advs:bhApiRev>0?bhApiAdvs:null},
   {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
@@ -5445,6 +5449,8 @@ function showMoreOverviewRecords(){
 function classifyPNLSource(aff,month){
   var a=(aff||'').toUpperCase();
   if(a.startsWith('IR ')||a.startsWith('IR-')||a.startsWith('IR -')||a==='IR'||a.indexOf(' IR ')>-1||a.indexOf(' IR-')>-1||a.startsWith('NATE')||a.indexOf('3 WEEKS IR')>-1)return 'IR';
+  if(a.indexOf('INTERACTIVE')>-1)return 'Interactive Offers';
+  if(a.indexOf('SIDEWAYS')>-1)return 'Sideways Frequency';
   if(a.indexOf('PLATFORM')>-1||a.indexOf('SOFTWARE')>-1)return 'Platform Softwares';
   if(a.indexOf('BEEHIV')>-1&&a.indexOf('ADS')>-1)return 'Beehiiv Ads';
   return 'CPC';
