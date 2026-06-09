@@ -2619,7 +2619,7 @@ if(_mtdSrc){
   var _srcItems=[
     {k:'CPA (Everflow)',v:_mtdSrc.cpa,c:'#f59e0b'},
     {k:'CTO (Perf Dashboard)',v:_mtdSrc.cto,c:'#6366f1'},
-    {k:'IO (Interactive Offers)',v:_mtdSrc.io,c:'#ec4899'},
+    {k:'Interactive Offers',v:_mtdSrc.io,c:'#ec4899'},
     {k:'CPC (Newsletter Ads)',v:_mtdSrc.cpc,c:'#0ea5e9'},
     {k:'IR (Investor Relations)',v:_mtdSrc.ir,c:'#8b5cf6'},
     {k:'Platform Software',v:_mtdSrc.ps,c:'#10b981'},
@@ -3855,7 +3855,7 @@ var f=getCTOFilt();
 var ctoRev=0,ioRev=0,efRev=0,ctoLeads=0,ioLeads=0,efLeads=0;
 var ctoAffs={},ioAffs={},efAffs={};
 f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').toUpperCase();
-  if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;ioAffs[row._name]=(ioAffs[row._name]||0)+row._revenue;}
+  if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;var _ioKey=row._offer||row._name||'Interactive Offers';ioAffs[_ioKey]=(ioAffs[_ioKey]||0)+row._revenue;}
   else if(t==='CPA'||t==='EF-ETC'||t==='EF'){if(r._efDate){efRev+=row._revenue;efLeads+=row._leads;efAffs[row._name]=(efAffs[row._name]||0)+row._revenue;}}
   else if(t==='RPP'){}
   else{ctoRev+=row._revenue;ctoLeads+=row._leads;ctoAffs[row._name]=(ctoAffs[row._name]||0)+row._revenue;}
@@ -3918,13 +3918,13 @@ window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMont
 // CTO→Performance Dashboard, IO→Interactive Offers, CPA→Everflow, IR/PS/CPC→P&L, Beehiiv→API
 var sources=[
   {id:'cto',name:'CTO',color:'#6366f1',rev:ctoRev,metric:'Leads',metricVal:ctoLeads,affs:ctoAffs},
-  {id:'io',name:'IO (Interactive Offers)',color:'#ec4899',rev:ioRev,metric:'Clicks',metricVal:ioLeads,affs:ioAffs},
+  {id:'io',name:'Interactive Offers',color:'#ec4899',rev:ioRev,metric:'Campaigns',metricVal:Object.keys(ioAffs).length,affs:ioAffs},
   {id:'cpa',name:'CPA (Everflow)',color:'#f59e0b',rev:efRev,metric:'Conversions',metricVal:efLeads,affs:efAffs},
   {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
   {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
   {id:'bh',name:'Beehiiv Earnings',color:'#f97316',rev:bhFinalRev,metric:bhFinalMetric,metricVal:bhFinalMetricVal,affs:bhFinalAffs,daily:bhApiRev>0?bhApiDaily:null,advs:bhApiRev>0?bhApiAdvs:null},
   {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
-].filter(function(s){return s.rev>0||s.id==='bh';}).sort(function(a,b){return b.rev-a.rev;});
+].filter(function(s){return s.rev>0||s.id==='bh'||s.id==='io';}).sort(function(a,b){return b.rev-a.rev;});
 
 function affTbl(map,daily,advs){
   var s=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
