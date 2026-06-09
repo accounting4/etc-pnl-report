@@ -2613,10 +2613,29 @@ if(selM===_rtCurMonth&&window._mtdGrandByMonth&&window._mtdGrandByMonth[_rtCurMo
 }
 bEl.style.display='block';
 var lbl=selM||'All Months';
+var _brkHtml='';
+var _mtdSrc=(selM===_rtCurMonth&&window._mtdSourcesByMonth)?window._mtdSourcesByMonth[_rtCurMonth]:null;
+if(_mtdSrc){
+  var _srcItems=[
+    {k:'CPA (Everflow)',v:_mtdSrc.cpa,c:'#f59e0b'},
+    {k:'CTO (Perf Dashboard)',v:_mtdSrc.cto,c:'#6366f1'},
+    {k:'IO (Interactive Offers)',v:_mtdSrc.io,c:'#ec4899'},
+    {k:'CPC (Newsletter Ads)',v:_mtdSrc.cpc,c:'#0ea5e9'},
+    {k:'IR (Investor Relations)',v:_mtdSrc.ir,c:'#8b5cf6'},
+    {k:'Platform Software',v:_mtdSrc.ps,c:'#10b981'},
+    {k:'Beehiiv Earnings',v:_mtdSrc.bh,c:'#f97316'}
+  ];
+  _srcItems.sort(function(a,b){return b.v-a.v;});
+  _srcItems.forEach(function(s){
+    if(s.v>0)_brkHtml+='<div class="psb-line"><span class="psb-key" style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:'+s.c+';display:inline-block"></span>'+s.k+'</span><span class="psb-value gold">'+$m(s.v)+'</span></div>';
+  });
+} else {
+  _brkHtml='<div class="psb-line"><span class="psb-key">P&L Revenue</span><span class="psb-value gold">'+$m(pnlRev)+'</span></div>'+
+  (qbPaid+qbUnpaid>0?'<div class="psb-line"><span class="psb-key">QB Invoices</span><span class="psb-value gold">'+$m(qbPaid+qbUnpaid)+'</span></div>':'')+
+  (trackRev>0?'<div class="psb-line"><span class="psb-key">CTO / CPA / IO</span><span class="psb-value gold">'+$m(trackRev)+'</span></div>':'');
+}
 cEl.innerHTML='<div class="psb-group"><div class="psb-group-title">'+lbl+' — Revenue Breakdown</div>'+
-'<div class="psb-line"><span class="psb-key">P&L Revenue</span><span class="psb-value gold">'+$m(pnlRev)+'</span></div>'+
-(qbPaid+qbUnpaid>0?'<div class="psb-line"><span class="psb-key">QB Invoices</span><span class="psb-value gold">'+$m(qbPaid+qbUnpaid)+'</span></div>':'')+
-(trackRev>0?'<div class="psb-line"><span class="psb-key">CTO / CPA / IO</span><span class="psb-value gold">'+$m(trackRev)+'</span></div>':'')+
+_brkHtml+
 '</div>'+
 '<div class="psb-group"><div class="psb-group-title">Collections</div>'+
 '<div class="psb-line"><span class="psb-key">Payment Received</span><span class="psb-value green">'+$m(totalPaid)+'</span></div>'+
@@ -3893,6 +3912,7 @@ var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
 var grand=ctoRev+ioRev+efRev+irRev+psRev+cpcRev+bhFinalRev;
 setStat('cto-s-rev',$m(grand));
 window._mtdGrandByMonth=window._mtdGrandByMonth||{};window._mtdGrandByMonth[_sm||'all']=grand;
+window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMonth[_sm||'all']={cto:ctoRev,io:ioRev,cpa:efRev,ir:irRev,ps:psRev,cpc:cpcRev,bh:bhFinalRev};
 
 // Sources config — MTD Revenue sources of truth (no RPP, no PerfDash CPA)
 // CTO→Performance Dashboard, IO→Interactive Offers, CPA→Everflow, IR/PS/CPC→P&L, Beehiiv→API
