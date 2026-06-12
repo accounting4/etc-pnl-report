@@ -4628,14 +4628,22 @@ pnlSummaries[m].totalExpenses+=amt;
 var field=_expCatToField(e.category);
 pnlSummaries[m][field]+=amt;
 });
-/* Step 3: For months with NO individual entries, fall back to PNL sheet snapshot */
+/* Step 3: Ensure PNL sheet expenses are always included.
+   Use MAX(sheet total, manual total) so the Monthly Financial Summary
+   and Quarterly P&L reflect whichever source has the higher total. */
 var snap=window._sheetExpenseSnapshot||{};
 for(var sm in snap){
-if(!monthsWithEntries[sm]&&snap[sm].totalExpenses>0){
 if(!pnlSummaries[sm])pnlSummaries[sm]={grossRevenue:0,paymentRcvd:0,balance:0,totalExpenses:0,salary:0,ads:0,beehiiv:0,software:0,contractors:0,office:0,otherExp:0};
-pnlSummaries[sm].totalExpenses=snap[sm].totalExpenses||0;
-pnlSummaries[sm].salary=snap[sm].salary||0;
-pnlSummaries[sm].ads=snap[sm].ads||0;
+var sheetTotal=snap[sm].totalExpenses||0;
+var manualTotal=pnlSummaries[sm].totalExpenses||0;
+if(sheetTotal>manualTotal){
+/* Sheet has higher total — use sheet values as base */
+pnlSummaries[sm].totalExpenses=sheetTotal;
+pnlSummaries[sm].salary=Math.max(pnlSummaries[sm].salary||0,snap[sm].salary||0);
+pnlSummaries[sm].ads=Math.max(pnlSummaries[sm].ads||0,snap[sm].ads||0);
+/* Distribute remaining into otherExp so categories + totalExpenses stay consistent */
+var catSum=(pnlSummaries[sm].salary||0)+(pnlSummaries[sm].ads||0)+(pnlSummaries[sm].beehiiv||0)+(pnlSummaries[sm].software||0)+(pnlSummaries[sm].contractors||0)+(pnlSummaries[sm].office||0)+(pnlSummaries[sm].otherExp||0);
+if(catSum<sheetTotal)pnlSummaries[sm].otherExp+=(sheetTotal-catSum);
 }
 }
 }
