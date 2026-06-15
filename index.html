@@ -3863,7 +3863,7 @@ f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').
   if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;var _ioKey=row._offer||row._name||'Interactive Offers';ioAffs[_ioKey]=(ioAffs[_ioKey]||0)+row._revenue;}
   else if(t==='CPA'||t==='EF-ETC'||t==='EF'){if(r._efDate){efRev+=row._revenue;efLeads+=row._leads;efAffs[row._name]=(efAffs[row._name]||0)+row._revenue;}}
   else if(t==='RPP'){}
-  else{ctoRev+=row._revenue;ctoLeads+=row._leads;ctoAffs[row._name]=(ctoAffs[row._name]||0)+row._revenue;}
+  else{var _ctoBasis=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;if(_ctoBasis>0){ctoRev+=_ctoBasis;ctoLeads+=row._leads;ctoAffs[row._name]=(ctoAffs[row._name]||0)+_ctoBasis;}}
 });
 var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length;
 
