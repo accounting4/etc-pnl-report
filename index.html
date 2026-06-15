@@ -2341,12 +2341,8 @@ const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gi
 for(const t of ctoPerf){const rows=await fetchCSV(gvg(CTO_ID,t.gid));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType=t.type||'CTO';if(t.type)r['Type']=t.type;});var _fetchStamp=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});rows.filter(r=>Object.values(r).some(v=>v)).forEach(r=>{
 var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();
 if(adv==='interactive offers'){
-/* Keep IO entries from CTO sheet - tag as IO, use Offers as package name */
-r._ctoType='IO';r['Type']='IO';
-if(!r['Offers']||r['Offers'].toLowerCase()==='interactive offers'){
-r['Offers']=r['Advertiser/Offer']||r['Advertiser']||'Interactive Offers';
-}
-r['Advertiser']='Interactive Offers';
+/* IO revenue is sourced from IO Daily sheet — skip Perf Dash IO entries to avoid double-counting */
+return;
 }
 allCTO.push(r);
 });}
@@ -2489,7 +2485,9 @@ allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
 var rate=parseFloat((r['Rate/Lead ($)']||r['Rate per lead/conversion ($)']||r['Rate/Lead']||'0').replace(/[\$,]/g,''))||0;
 var flat=parseFloat((r['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
-var totalCol=parseFloat((r['Total Revenue ($)']||r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
+var _trA=parseFloat((r['Total Revenue ($)']||'0').replace(/[\$,]/g,''))||0;
+var _trB=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
+var totalCol=_trA>0?_trA:_trB;
 var amt=totalCol>0?totalCol:(leads*rate+flat);
 if(amt<=0)return;
 var advertiser=r['Advertiser']||r['Advertiser/Offer']||'';
@@ -2872,7 +2870,9 @@ if(!offer&&r['Advertiser/Offer']){var parts=(r['Advertiser/Offer']||'').match(/^
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
 var rate=parseFloat((r['Rate/Lead ($)']||r['Rate per lead/conversion ($)']||'0').replace(/[\$,]/g,''))||0;
 var flat=parseFloat((r['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
-var totalCol=parseFloat((r['Total Revenue ($)']||r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
+var _trA2=parseFloat((r['Total Revenue ($)']||'0').replace(/[\$,]/g,''))||0;
+var _trB2=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
+var totalCol=_trA2>0?_trA2:_trB2;
 var revenue=totalCol>0?totalCol:(leads*rate+flat);
 var rank=r['Rank']||'';
 var type=r['Type']||r._ctoType||'';
