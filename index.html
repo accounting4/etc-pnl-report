@@ -172,6 +172,8 @@ textarea.remarks-edit:focus{outline:none;border-color:var(--navy3)}
 .source-badge.everflow,.source-badge.ef-etc,.source-badge.cpa{background:#d1fae5;color:#065f46}
 .source-badge.cto{background:#ede9fe;color:#5b21b6}
 .source-badge.rpp{background:#fee2e2;color:#dc2626}
+.source-badge.cpc{background:#fff7ed;color:#9a3412}
+.source-badge.ir{background:#f0fdf4;color:#166534}
 .source-badge.pink,.source-badge.io{background:#fce7f3;color:#9d174d}
 .source-badge.io{background:#fce7f3;color:#9d174d}
 .source-badge.forecast{background:#dbeafe;color:#1e40af}
@@ -1310,12 +1312,12 @@ Secured with Firebase Authentication
 <div class="chart-card"><h3>&#127942; Affiliate Rankings</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRankChart"></canvas></div></div>
 </div>
 </div>
-<div class="section-header section-collapsible" onclick="toggleSection('sec-cto-table')"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CPA / CTO / RPP / CPL / IR <div id="sync-status" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);margin-left:12px"><span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span><span id="sync-text">Synced</span></div> <span class="collapse-icon">&#9660;</span></div><div style="display:flex;gap:8px;align-items:center" onclick="event.stopPropagation()"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
+<div class="section-header section-collapsible" onclick="toggleSection('sec-cto-table')"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CTO / CPA / CPC / IR / IO <div id="sync-status" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);margin-left:12px"><span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span><span id="sync-text">Synced</span></div> <span class="collapse-icon">&#9660;</span></div><div style="display:flex;gap:8px;align-items:center" onclick="event.stopPropagation()"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
 <div id="sec-cto-table" class="section-body">
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
 <div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="June">June</option><option value="May">May</option><option value="April">April</option><option value="March">March</option><option value="February">February</option><option value="January">January</option><option value="">All Months</option></select></div>
-<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>IO</option><option value="CPA">CPA</option><option>RPP</option><option>CPL</option></select></div>
+<div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>IO</option><option value="CPA">CPA</option><option>CPC</option><option>IR</option><option>CPL</option></select></div>
 <div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="10">10</option></select></div>
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
 </div>
@@ -2484,6 +2486,16 @@ if(_ioTotalRev>0){window._ioAffiliateData={name:'Interactive Offers',revenue:_io
 ss('Loading ETC Everflow CPA data...');
 const etcEfRows=await fetchCSV(gv(EF_ID,'Everflow CPA'));
 etcEfRows.forEach(r=>{var adv=(r['Advertiser']||'').trim();var offer=(r['Offer']||'').trim();var revStr=(r['Revenue']||'').replace(/[\$,]/g,'').trim();var rev=parseFloat(revStr)||0;var cv=parseInt(r['Conversions']||'0')||0;var dt=(r['Date']||'').trim();if(!adv||rev<=0)return;var mm=dt.split('/')[0]||'';var monthName=mNames[mm]||'';allCTO.push({'Advertiser':adv,'Offers':offer,'Advertiser/Offer':adv+' - '+offer,'Current Lead Count':cv.toString(),'Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':rev.toString(),'TOTAL REVENUE':'','Type':'CPA','_month':monthName,'_source':'sheet','_ctoType':'CPA','_efDate':dt,'_lastUpdated':dt||new Date().toLocaleString('en-US',{timeZone:'America/New_York'})});});
+/* Push CPC & IR entries from P&L into allCTO so they appear in Tracking Dashboard */
+ss('Adding CPC/IR from P&L...');
+allPNL.forEach(function(r){
+if(r._isSummary)return;
+var amt=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):(r.rcvd||0);
+if(amt<=0)return;
+var cat=classifyPNLSource(r.affiliate,r._month,r._key||r.invId);
+if(cat!=='CPC'&&cat!=='IR')return;
+allCTO.push({'Advertiser':r.affiliate||'Unknown','Offers':r.invId||'','Advertiser/Offer':(r.affiliate||'Unknown')+(r.invId?' ('+r.invId+')':''),'Current Lead Count':'0','Rate/Lead ($)':'','Flat Fee':'','Total Revenue ($)':amt.toString(),'TOTAL REVENUE':'','Type':cat,'_month':r._month||'','_source':r._source||'pnl','_ctoType':cat,'_pnlKey':r._key||r.invId||'','_pnlStatus':r.status||'','_lastUpdated':r.date||'','_saleDate':r.date||''});
+});
 ss('Building CTO revenue...');
 allCTO.forEach(function(r){
 var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
@@ -3051,7 +3063,7 @@ setStat('cto-s-rev',$m(syncedTotal));setStat('cto-s-leads',totLeads.toLocaleStri
 var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
 showCTOSummary(totRev,totLeads,activeOffers,affRevMap);
-var typeColors={CTO:'purple',IO:'pink',CPA:'everflow',CPL:'accent',RPP:'red'};
+var typeColors={CTO:'purple',IO:'pink',CPA:'everflow',CPL:'accent',RPP:'red',CPC:'cpc',IR:'ir'};
 /* === GROUPED VIEW (with canonical name dedup) === */
 var grouped={};
 rows.forEach(function(r){
@@ -3934,7 +3946,7 @@ var ctoAffs={},ioAffs={},efAffs={};
 f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').toUpperCase();
   if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;var _ioKey=row._offer||row._name||'Interactive Offers';ioAffs[_ioKey]=(ioAffs[_ioKey]||0)+row._revenue;}
   else if(t==='CPA'||t==='EF-ETC'||t==='EF'){if(r._efDate){efRev+=row._revenue;efLeads+=row._leads;var _efCan=_canonicalAdvName(row._name);efAffs[_efCan]=(efAffs[_efCan]||0)+row._revenue;}}
-  else if(t==='RPP'){}
+  else if(t==='RPP'||t==='CPC'||t==='IR'){}
   else{var _ctoBasis=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;if(_ctoBasis>0){ctoRev+=_ctoBasis;ctoLeads+=row._leads;var _ctoCan=_canonicalAdvName(row._name);ctoAffs[_ctoCan]=(ctoAffs[_ctoCan]||0)+_ctoBasis;}}
 });
 var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length;
