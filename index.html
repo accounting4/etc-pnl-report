@@ -2984,9 +2984,63 @@ return yr+'-'+mo+'-'+dy+' '+hr+':'+mn+' '+ampm;
 }
 }catch(e){return d;}
 }
+/* === Canonical Advertiser Name Mapping (dedup for grouped view) === */
+var _advAliases={
+'BTM':'Behind the Markets','BEHIND THE MARKETS':'Behind the Markets',
+'BANYAN':'Banyan Hill','BANYAN HILL PUBLISHING':'Banyan Hill','BANYAN HILL':'Banyan Hill',
+'BROWNSTONE':'Brownstone Research','BROWNSTONE RESEARCH LLC':'Brownstone Research','BROWNSTONE RESEARCH':'Brownstone Research',
+'OXFORD':'Oxford','OXFORD FINANCIAL GROUP':'Oxford',
+'MILL PUB':'Millionaire Publishing','MILLIONAIRE PUBLISHING, LLC':'Millionaire Publishing','MILLIONAIRE PUBLISHING LLC':'Millionaire Publishing','MILLIONAIRE PUBLISHING':'Millionaire Publishing',
+'SELLET':'Sellet','SELLET LLC':'Sellet',
+'SECCO':'Secco','SECCO SQUARED':'Secco',
+'PARADIGM':'Paradigm','PARADIGM PRESS':'Paradigm',
+'KARMAHOLIC':'Karmaholic','KARMAHOLIC MEDIA LLC':'Karmaholic','KARMAHOLIC MEDIA':'Karmaholic',
+'STT':'StocksToTrade','STOCKSTOTRADE':'StocksToTrade',
+'1729 RESEARCH, LLC':'1729 Research','1729 RESEARCH LLC':'1729 Research','1729 RESEARCH':'1729 Research',
+'WEISS':'Weiss','WEISS RATINGS':'Weiss',
+'WEALTH DAILY':'Wealth Daily',
+'FIRST BALLOT':'First Ballot','FIRSTBALLOT':'First Ballot',
+'CAJ RESEARCH':'CAJ Research',
+"ZACK'S":"Zacks","ZACKS":"Zacks",
+'MEDIA INTERCEPT':'Media Intercept',
+'INVESTING MEDIA SOLUTIONS':'Investing Media Solutions',
+'MAGNIFI COMMUNITIES':'Magnifi','MAGNIFI':'Magnifi',
+'RESPOND':'Respond',
+'AWESOMELY':'Awesomely',
+'TRENDLABS':'TrendLabs',
+'MARKETWISE':'Marketwise',
+'DAILY H.E.A.T.':'Daily H.E.A.T.'
+};
+/* Parenthetical base-name patterns: "Marketbeat (10 AI)" → "Marketbeat" */
+var _advBaseNames=['MARKETBEAT','TRADING TIPS','GUYSTOCKS','LWM','MARKETJAR','MEZA','T3LIVE','T3 LIVE','STOCK NEWS','STOCK EARNINGS','CRYPTO BOOM','DAILY H.E.A.T.','INVESTORS ALLEY'];
+function _canonicalAdvName(name){
+if(!name)return'Unknown';
+var up=name.trim().toUpperCase();
+/* Direct alias match first */
+if(_advAliases[up])return _advAliases[up];
+/* IO campaign entries from older CTO sheets → Interactive Offers */
+if(up.indexOf('IO -')===0||up.indexOf('IO -')===0)return'Interactive Offers';
+/* Strip parenthetical variant and check base name */
+var baseMatch=up.replace(/\s*\(.*$/, '').replace(/\s*(CPL|SMS|DEDI|NL|EMAIL)(\s.*)?$/i,'').trim();
+if(_advAliases[baseMatch])return _advAliases[baseMatch];
+/* Check if base name (before parenthesis) matches a known base */
+for(var bi=0;bi<_advBaseNames.length;bi++){
+if(baseMatch===_advBaseNames[bi]||up.indexOf(_advBaseNames[bi]+'(')===0||up.indexOf(_advBaseNames[bi]+' (')===0||up.indexOf(_advBaseNames[bi]+' ')===0){
+/* Return the matched base name in its original case from the input */
+var _bn=_advBaseNames[bi];
+var _bnLen=_bn.length;
+var proper=name.trim().substring(0,_bnLen);
+/* Preserve original casing but trim trailing whitespace */
+return proper.trim();
+}}
+/* Strip LLC/Inc suffix */
+var cleaned=name.trim().replace(/,?\s*(LLC|Inc\.?|Ltd\.?|Corp\.?)$/i,'').trim();
+if(cleaned!==name.trim()&&_advAliases[cleaned.toUpperCase()])return _advAliases[cleaned.toUpperCase()];
+return name.trim();
+}
 function renderCTO(){var f=getCTOFilt();var rows=f.map(getCTORow).filter(function(r){return r._name||r._offer;});var pp=parseInt(document.getElementById('cto-entries').value)||25;var tp=Math.max(1,Math.ceil(rows.length/pp));ctoPage=Math.min(ctoPage,tp);
 var totRev=0,totLeads=0,activeOffers=0,affRevMap={};
-rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=r._name||'Unknown';affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
+rows.forEach(function(r){totRev+=r._revenue;totLeads+=r._leads;if(r._revenue>0)activeOffers++;var aff=_canonicalAdvName(r._name||'Unknown');affRevMap[aff]=(affRevMap[aff]||0)+r._revenue;});
 // Compute P&L source totals for synced Tracking Revenue
 var _pnlMF=(document.getElementById('cto-month-f')||{}).value||'';var _pnlIR=0,_pnlPS=0,_pnlCPC=0,_pnlBH=0;
 allPNL.filter(function(r){if(r._isSummary)return false;if(_pnlMF&&r._month!==_pnlMF)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){var cat=classifyPNLSource(r.affiliate,r._month,r._key||r.invId);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;if(cat==='IR')_pnlIR+=tot;else if(cat==='Platform Softwares')_pnlPS+=tot;else if(cat==='Beehiiv Ads')_pnlBH+=tot;else _pnlCPC+=tot;});
@@ -2996,10 +3050,10 @@ var topAff=Object.entries(affRevMap).sort(function(a,b){return b[1]-a[1];});
 setStat('cto-s-top',topAff.length?topAff[0][0]:'—');
 showCTOSummary(totRev,totLeads,activeOffers,affRevMap);
 var typeColors={CTO:'purple',IO:'pink',CPA:'everflow',CPL:'accent',RPP:'red'};
-/* === GROUPED VIEW === */
+/* === GROUPED VIEW (with canonical name dedup) === */
 var grouped={};
 rows.forEach(function(r){
-var key=r._name||'Unknown';
+var key=_canonicalAdvName(r._name||'Unknown');
 if(!grouped[key])grouped[key]={name:key,rows:[],totalRev:0,totalLeads:0,types:{},cpaTypes:{},latestUpdate:''};
 grouped[key].rows.push(r);
 grouped[key].totalRev+=r._revenue;
@@ -3175,7 +3229,7 @@ var advFilter=(document.getElementById('cto-adv-filter')||{}).value||'';
 var srcFilter=(document.getElementById('cto-adv-source')||{}).value||'';
 var grouped={};
 rows.forEach(function(r){
-var key=r._name;
+var key=_canonicalAdvName(r._name);
 if(advFilter&&key!==advFilter)return;
 if(srcFilter&&(r._type||'').toUpperCase()!==srcFilter.toUpperCase())return;
 if(!grouped[key])grouped[key]={rev:0,leads:0,count:0,types:{}};
@@ -3189,7 +3243,7 @@ var entries=Object.entries(grouped).sort(function(a,b){return b[1].rev-a[1].rev;
 // Update dropdown
 var dd=document.getElementById('cto-adv-filter');
 if(dd){
-var allAdvs=[...new Set(rows.map(function(r){return r._name;}))].sort();
+var allAdvs=[...new Set(rows.map(function(r){return _canonicalAdvName(r._name);}))].sort();
 var curVal=dd.value;
 dd.innerHTML='<option value="">All Advertisers ('+allAdvs.length+')</option>';
 allAdvs.forEach(function(a){dd.innerHTML+='<option value="'+a+'"'+(a===curVal?' selected':'')+'>'+a+'</option>';});
@@ -3877,9 +3931,9 @@ var ctoRev=0,ioRev=0,efRev=0,ctoLeads=0,ioLeads=0,efLeads=0;
 var ctoAffs={},ioAffs={},efAffs={};
 f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').toUpperCase();
   if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;var _ioKey=row._offer||row._name||'Interactive Offers';ioAffs[_ioKey]=(ioAffs[_ioKey]||0)+row._revenue;}
-  else if(t==='CPA'||t==='EF-ETC'||t==='EF'){if(r._efDate){efRev+=row._revenue;efLeads+=row._leads;efAffs[row._name]=(efAffs[row._name]||0)+row._revenue;}}
+  else if(t==='CPA'||t==='EF-ETC'||t==='EF'){if(r._efDate){efRev+=row._revenue;efLeads+=row._leads;var _efCan=_canonicalAdvName(row._name);efAffs[_efCan]=(efAffs[_efCan]||0)+row._revenue;}}
   else if(t==='RPP'){}
-  else{var _ctoBasis=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;if(_ctoBasis>0){ctoRev+=_ctoBasis;ctoLeads+=row._leads;ctoAffs[row._name]=(ctoAffs[row._name]||0)+_ctoBasis;}}
+  else{var _ctoBasis=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;if(_ctoBasis>0){ctoRev+=_ctoBasis;ctoLeads+=row._leads;var _ctoCan=_canonicalAdvName(row._name);ctoAffs[_ctoCan]=(ctoAffs[_ctoCan]||0)+_ctoBasis;}}
 });
 var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length;
 
