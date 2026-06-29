@@ -6968,6 +6968,7 @@ renderAll=function(){_r3RenderAll();try{checkScheduledReports();renderYoYCompari
    ═══════════════════════════════════════════════════════════════ */
 
 var emTransactions=[];var emReviewQueue=[];var emSortField='date';var emSortDir=-1;var emPage=1;var emPageSize=15;
+var emSelectedKeys=new Set();
 var EM_CATEGORIES=['Salary','Software and Subscription','Dues and Subscriptions','Marketing','Office Supplies','Meals and Entertainment','Other'];
 var EM_CAT_COLORS={'Salary':'#2563eb','Software and Subscription':'#0ea5e9','Dues and Subscriptions':'#6366f1','Marketing':'#ec4899','Office Supplies':'#14b8a6','Meals and Entertainment':'#f59e0b','Other':'#64748b'};
 /* Migrate old category names to new ones */
@@ -7402,10 +7403,17 @@ document.getElementById('em-tx-count').textContent=filtered.length;
 var tb=document.getElementById('em-tx-tbody');
 tb.innerHTML=sl.length?sl.map(function(tx,i){
 var gi=start+i;
+var isChecked=emSelectedKeys.has(tx._key);
 var catBadge='<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:600;background:'+(EM_CAT_COLORS[tx.category]||'#64748b')+'22;color:'+(EM_CAT_COLORS[tx.category]||'#64748b')+'">'+tx.category+'</span>';
 var srcBadge=tx.source==='Manual'?'<span style="font-size:9px;background:var(--green);color:#fff;padding:1px 5px;border-radius:4px">Manual</span>':'<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px">Import</span>';
-return'<tr><td>'+tx.date+'</td><td><strong>'+escH(tx.merchant)+'</strong></td><td style="font-size:.82rem">'+escH(tx.payee||'—')+'</td><td style="font-weight:700;color:var(--red)">$'+tx.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td style="font-size:.82rem;color:var(--text3)">'+escH(tx.reference||'—')+'</td><td>'+catBadge+'</td><td>'+srcBadge+'</td><td class="action-cell"><button class="btn-edit" onclick="emEditTx(\''+tx._key+'\')">✎</button> <button class="btn-del" onclick="emDeleteTx(\''+tx._key+'\')">🗑</button></td></tr>';
-}).join(''):'<tr><td colspan="8" class="empty-state">No transactions. Upload bank statements to get started!</td></tr>';
+return'<tr style="'+(isChecked?'background:var(--accent-bg,rgba(99,102,241,.08))':'')+'">'
++'<td style="text-align:center"><input type="checkbox" onchange="emToggleSelect(\''+tx._key+'\')" '+(isChecked?'checked ':'')+' style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent)"></td>'
++'<td>'+tx.date+'</td><td><strong>'+escH(tx.merchant)+'</strong></td><td style="font-size:.82rem">'+escH(tx.payee||'—')+'</td><td style="font-weight:700;color:var(--red)">$'+tx.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td style="font-size:.82rem;color:var(--text3)">'+escH(tx.reference||'—')+'</td><td>'+catBadge+'</td><td>'+srcBadge+'</td><td class="action-cell"><button class="btn-edit" onclick="emEditTx(\''+tx._key+'\')">✎</button> <button class="btn-del" onclick="emDeleteTx(\''+tx._key+'\')">🗑</button></td></tr>';
+}).join(''):'<tr><td colspan="9" class="empty-state">No transactions. Upload bank statements to get started!</td></tr>';
+/* Update select-all checkbox state */
+var _allOnPage=sl.length>0&&sl.every(function(tx){return emSelectedKeys.has(tx._key);});
+var _selAll=document.getElementById('em-select-all');if(_selAll)_selAll.checked=_allOnPage&&sl.length>0;
+emUpdateMultiBar();
 /* Pagination */
 var pEl=document.getElementById('em-tx-pagination');
 if(tp<=1){pEl.innerHTML='';return;}
@@ -7457,7 +7465,81 @@ emRenderAll();
 function emDeleteTx(key){
 if(!confirm('Delete this transaction?'))return;
 emTransactions=emTransactions.filter(function(t){return t._key!==key;});
+emSelectedKeys.delete(key);
 emSaveTransactions();emRenderAll();
+}
+
+/* ── Multi-Select & Multi-Edit ── */
+function emToggleSelect(key){
+if(emSelectedKeys.has(key))emSelectedKeys.delete(key);else emSelectedKeys.add(key);
+emRenderTransactions();
+}
+function emToggleSelectAll(checked){
+var filtered=emGetFiltered();
+filtered.sort(function(a,b){var va=a[emSortField]||'',vb=b[emSortField]||'';if(emSortField==='amount')return(a.amount-b.amount)*emSortDir;if(emSortField==='date')return((a.date||'')>(b.date||'')?1:-1)*emSortDir;return(va>vb?1:-1)*emSortDir;});
+var start=(emPage-1)*emPageSize;
+var sl=filtered.slice(start,start+emPageSize);
+sl.forEach(function(tx){if(checked)emSelectedKeys.add(tx._key);else emSelectedKeys.delete(tx._key);});
+emRenderTransactions();
+}
+function emClearSelection(){emSelectedKeys.clear();emRenderTransactions();}
+function emUpdateMultiBar(){
+var bar=document.getElementById('em-multi-bar');
+var lbl=document.getElementById('em-sel-label');
+if(!bar)return;
+var n=emSelectedKeys.size;
+if(n>0){bar.style.display='flex';if(lbl)lbl.textContent=n+' selected';}
+else{bar.style.display='none';}
+}
+function emMultiEdit(){
+if(emSelectedKeys.size===0)return;
+var n=emSelectedKeys.size;
+var html='<div class="modal-overlay" id="em-multi-modal" style="display:flex" onclick="if(event.target===this){this.remove()}">'
++'<div class="modal-box">'
++'<h3 style="margin:0 0 6px;color:var(--navy)">✎ Edit '+n+' Transaction'+(n>1?'s':'')+'</h3>'
++'<p style="font-size:.82rem;color:var(--text3);margin:0 0 18px">Only fields you change will be applied. Leave blank to keep existing values.</p>'
++'<div class="modal-row"><label>Category</label><select id="em-me-cat"><option value="">— Keep existing —</option>'+EM_CATEGORIES.map(function(c){return'<option>'+c+'</option>';}).join('')+'</select></div>'
++'<div class="modal-row"><label>Date</label><input id="em-me-date" type="date" placeholder="Leave blank to keep existing"></div>'
++'<div class="modal-row"><label>Merchant</label><input id="em-me-merchant" type="text" placeholder="Leave blank to keep existing"></div>'
++'<div class="modal-row"><label>Payee Name</label><input id="em-me-payee" type="text" placeholder="Leave blank to keep existing"></div>'
++'<div style="display:flex;gap:8px;margin-top:18px"><button class="btn-accent" onclick="emSaveMultiEdit()" style="flex:1">💾 Apply to '+n+' Transaction'+(n>1?'s':'')+'</button><button class="btn-accent" style="background:var(--text3);flex:1" onclick="document.getElementById(\'em-multi-modal\').remove()">Cancel</button></div>'
++'</div></div>';
+document.body.insertAdjacentHTML('beforeend',html);
+}
+function emSaveMultiEdit(){
+var newCat=document.getElementById('em-me-cat').value;
+var newDate=document.getElementById('em-me-date').value;
+var newMerchant=(document.getElementById('em-me-merchant').value||'').trim();
+var newPayee=(document.getElementById('em-me-payee').value||'').trim();
+if(!newCat&&!newDate&&!newMerchant&&!newPayee){alert('No changes to apply.');return;}
+var count=0;
+emTransactions.forEach(function(tx){
+if(!emSelectedKeys.has(tx._key))return;
+if(newCat)tx.category=newCat;
+if(newDate)tx.date=newDate;
+if(newMerchant)tx.merchant=newMerchant;
+if(newPayee)tx.payee=newPayee;
+count++;
+});
+var modal=document.getElementById('em-multi-modal');if(modal)modal.remove();
+emSelectedKeys.clear();
+emSaveTransactions();emRenderAll();
+_emToast(count+' transaction'+(count>1?'s':'')+' updated');
+}
+function emMultiDelete(){
+var n=emSelectedKeys.size;
+if(n===0)return;
+if(!confirm('Delete '+n+' transaction'+(n>1?'s':'')+'? This cannot be undone.'))return;
+emTransactions=emTransactions.filter(function(t){return!emSelectedKeys.has(t._key);});
+emSelectedKeys.clear();
+emSaveTransactions();emRenderAll();
+_emToast(n+' transaction'+(n>1?'s':'')+' deleted');
+}
+function _emToast(msg){
+var t=document.createElement('div');
+t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy,#1a2340);color:#fff;padding:10px 24px;border-radius:10px;font-size:.88rem;font-weight:600;z-index:2000;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:fadeIn .3s';
+t.textContent=msg;document.body.appendChild(t);
+setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(function(){t.remove();},400);},2400);
 }
 
 /* ── Analytics ── */
@@ -7743,8 +7825,17 @@ if(!_emInitDone){_emInitDone=true;setTimeout(emLoadTransactions,500);}
 <button class="btn-accent" onclick="emExportExcel()" style="background:var(--green);font-size:.78rem">📊 Excel</button>
 </div>
 </div>
+<!-- Multi-action toolbar (hidden until items selected) -->
+<div id="em-multi-bar" style="display:none;margin-top:10px;padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,var(--navy),var(--navy3));color:#fff;display:none;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+<span style="font-weight:700;font-size:.88rem" id="em-sel-label">0 selected</span>
+<div style="flex:1"></div>
+<button onclick="emMultiEdit()" style="padding:6px 14px;border:none;border-radius:7px;cursor:pointer;font-weight:600;font-size:.82rem;background:#fff;color:var(--navy)">✎ Edit Selected</button>
+<button onclick="emMultiDelete()" style="padding:6px 14px;border:none;border-radius:7px;cursor:pointer;font-weight:600;font-size:.82rem;background:#fee2e2;color:#b91c1c">🗑 Delete Selected</button>
+<button onclick="emClearSelection()" style="padding:6px 14px;border:none;border-radius:7px;cursor:pointer;font-weight:600;font-size:.82rem;background:rgba(255,255,255,.2);color:#fff">✕ Clear</button>
+</div>
 <div style="overflow-x:auto;margin-top:10px">
 <table class="data-table"><thead><tr>
+<th style="width:36px;text-align:center"><input type="checkbox" id="em-select-all" onchange="emToggleSelectAll(this.checked)" title="Select all on page" style="cursor:pointer;width:16px;height:16px;accent-color:var(--accent)"></th>
 <th style="cursor:pointer" onclick="emSort('date')">Date ⇅</th>
 <th style="cursor:pointer" onclick="emSort('merchant')">Merchant ⇅</th>
 <th style="cursor:pointer" onclick="emSort('payee')">Payee ⇅</th>
