@@ -2544,12 +2544,13 @@ if(liveEl){liveEl.title='Click to refresh data';liveEl.textContent='↻ Refresh'
 }
 function buildMonthButtons(){
 const c=document.getElementById('pnl-month-buttons');if(!c)return;
+var _prevActive='';var _prevBtn=c.querySelector('.month-btn.active');if(_prevBtn)_prevActive=_prevBtn.textContent;
 c.innerHTML='';
-const ab=document.createElement('button');ab.className='month-btn active';ab.textContent='All Months';
+const ab=document.createElement('button');ab.className='month-btn'+(!_prevActive||_prevActive==='All Months'?' active':'');ab.textContent='All Months';
 ab.onclick=()=>{c.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('active'));ab.classList.add('active');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-summary-banner').style.display='none';if(_syncLock){return;}applyPNLFilters();};
 c.appendChild(ab);
 _getPNLMonths().forEach(m=>{
-const b=document.createElement('button');b.className='month-btn';b.textContent=m;
+const b=document.createElement('button');b.className='month-btn'+(m===_prevActive?' active':'');b.textContent=m;
 b.onclick=()=>{c.querySelectorAll('.month-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('pnl-month-f').value=m;if(_syncLock){return;}showMonthlySummary(m);applyPNLFilters();};
 c.appendChild(b);
 });
@@ -3462,6 +3463,7 @@ function renderAll(){
 mergeUserInvoices();
 mergeUserExpenses();
 try{mergeEMExpenses();}catch(e){}
+buildMonthButtons();buildFMDMonthButtons();
 renderCTO();renderRevenue();renderPNL();renderFC();renderFMD();try{renderFMDExpenses();}catch(e){}try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
 /* Re-apply month summary banner for currently selected month (ensures correct values after sync) */
 try{var _raMonthBtn=document.querySelector('#pnl-month-buttons button.active');if(_raMonthBtn&&_raMonthBtn.textContent!=='All Months')showMonthlySummary(_raMonthBtn.textContent);}catch(e){}
@@ -4288,6 +4290,8 @@ function fbStartListeners(){
     // Clean deleted
     userPNL=userPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!_isDeletedKey(pnlDeletes,k);});
     userExpenses=userExpenses.filter(function(e){return!_isDeletedKey(expDeletes,e._key);});
+    // Re-apply pnlEdits to QB entries after listener sync (month overrides etc.)
+    allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2._month)r._month=_pe2._month;if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;if(_pe2.invAmt!=null){r.invAmt=_pe2.invAmt;r.displayAmt=_pe2.displayAmt!=null?_pe2.displayAmt:_pe2.invAmt;r.rcvd=_pe2.rcvd!=null?_pe2.rcvd:0;}if(_pe2.affiliate)r.affiliate=_pe2.affiliate;if(_pe2.date)r.date=_pe2.date;}}});
     // Re-apply fmdEdits to FMD entries after listener sync
     allFMD.forEach(function(r){var fk=r._key||r.invId||'';var _fe=fmdEdits[fk]||fmdEdits[_safeKey(fk)];if(_fe){if(_fe._month)r._month=_fe._month;if(_fe.date)r.date=_fe.date;if(_fe.affiliate)r.affiliate=_fe.affiliate;if(_fe.invAmt!=null){r.invAmt=_fe.invAmt;r.displayAmt=_fe.displayAmt!=null?_fe.displayAmt:r.displayAmt;r.rcvd=_fe.rcvd!=null?_fe.rcvd:r.rcvd;}if(_fe.status)r.status=_fe.status;if(_fe.remarks!=null)r.remarks=_fe.remarks;}});
     // Skip re-render if edit modal is open (prevents stale index issues)
@@ -4303,6 +4307,7 @@ function fbStartListeners(){
       for(var di=allPNL.length-1;di>=0;di--){var dk=allPNL[di]._key||allPNL[di].invId||'';if(dk&&_isDeletedKey(pnlDeletes,dk))allPNL.splice(di,1);}
       _injectFMDBhEntries();
       mergeUserInvoices();mergeUserExpenses();
+      buildMonthButtons();buildFMDMonthButtons();
       window._stableRefresh=true;_suppressChartAnim();
       renderCTO();
       try{renderRevenue();}catch(e){}
@@ -4423,6 +4428,7 @@ function savePNLEdit(){
   fbSyncStatus();fbSyncRemarks();
   closePNLModal();
   mergeUserInvoices();mergeUserExpenses();
+  buildMonthButtons();buildFMDMonthButtons();
   renderPNL();
   try{renderOverview();}catch(e){}
   const curMonth=document.getElementById('pnl-month-f').value||document.querySelector('#pnl-month-buttons button.active')?.dataset?.month||'';
