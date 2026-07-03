@@ -2535,8 +2535,7 @@ var revMonthF=document.getElementById('rev-month-f');
 if(revMonthF){revMonthF.value=curMonthName;}
 _injectFMDBhEntries();
 if(!window._deferRender){renderAll();buildCharts();}
-else{/* When deferred, parent (loadAllData/manualSync/autoSync) calls renderAll which includes buildMonthButtons */
-buildMonthButtons();buildFMDMonthButtons();}
+/* When deferred, parent (loadAllData/manualSync/autoSync) calls renderAll() → mergeUserInvoices() → buildMonthButtons() in the correct order */
 startAutoRefresh();
 }
 function startAutoRefresh(){
