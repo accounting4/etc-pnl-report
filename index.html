@@ -2530,12 +2530,13 @@ allRev.push(...userRev.map(r=>({...r,_week:getWeekLabel(r.date)||'Manual'})));
 document.getElementById('loadingOverlay').style.display='none';
 const pf=document.getElementById('fc-period-f');
 [...new Set(allFC.map(r=>r._period))].filter(Boolean).forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;pf.appendChild(o);});
-buildMonthButtons();buildFMDMonthButtons();
 var curMonthName=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
 var revMonthF=document.getElementById('rev-month-f');
 if(revMonthF){revMonthF.value=curMonthName;}
 _injectFMDBhEntries();
 if(!window._deferRender){renderAll();buildCharts();}
+else{/* When deferred, parent (loadAllData/manualSync/autoSync) calls renderAll which includes buildMonthButtons */
+buildMonthButtons();buildFMDMonthButtons();}
 startAutoRefresh();
 }
 function startAutoRefresh(){
@@ -4344,6 +4345,8 @@ fbLoadUserData().then(function(){return fetchAllData();}).then(function(){
 try{loadManualCTOEntries();loadCTOEditsLocal();}catch(e){}
 window._deferRender=false;_fbSuppressListener=false;_syncLock=false;
 renderAll();buildCharts();
+/* Safety: ensure month buttons reflect all months after full data load (including QB pnlEdits) */
+setTimeout(function(){buildMonthButtons();buildFMDMonthButtons();},800);
 }).catch(function(e){console.error(e);window._deferRender=false;_fbSuppressListener=false;_syncLock=false;document.getElementById('loadingOverlay').style.display='none';});
 }
 initAuth();
