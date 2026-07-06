@@ -5252,7 +5252,11 @@ function toggleDarkMode(){
 function parseMoney(v){if(typeof v==='number')return v;if(!v)return 0;return parseFloat(String(v).replace(/[$,]/g,''))||0;}
 function renderOverview(){
   try{
-    var curMonth=new Date().toLocaleString('en',{month:'long'});
+    /* Smart month: latest with >$5K P&L revenue, else current calendar month */
+    var _calMonth=new Date().toLocaleString('en',{month:'long'});
+    var curMonth=_calMonth;
+    var _ovAllM=['July','June','May','April','March','February','January'];
+    for(var _oi=0;_oi<_ovAllM.length;_oi++){var _ops=pnlSummaries[_ovAllM[_oi]];if(_ops&&_ops.grossRevenue>5000){curMonth=_ovAllM[_oi];break;}}
     // Update TOTAL REVENUE label with current month
     var revLabel=document.getElementById('ov-revenue-label');
     if(revLabel)revLabel.textContent='TOTAL REVENUE ('+curMonth.toUpperCase()+')';
