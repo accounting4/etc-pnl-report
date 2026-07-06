@@ -4772,7 +4772,7 @@ return true;
 }
 
 var _expCatOpen={};/* Track which categories are expanded */
-function toggleExpCat(cat){_expCatOpen[cat]=!_expCatOpen[cat];var el=document.getElementById('ecg-'+CSS.escape(cat));if(el)el.classList.toggle('open',!!_expCatOpen[cat]);}
+function toggleExpCat(cat){_expCatOpen[cat]=!_expCatOpen[cat];var el=document.getElementById('ecg-'+cat);if(el)el.classList.toggle('open',!!_expCatOpen[cat]);}
 function renderExpenses(){
 var f=getExpFilt();
 var allExp=_getAllExpenses();
