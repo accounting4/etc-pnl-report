@@ -3969,9 +3969,13 @@ var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).
 
 // P&L sources
 var _sm=(document.getElementById('cto-month-f')||{}).value||'';
-var irRev=0,psRev=0,cpcRev=0,bhRev=0,irAffs={},psAffs={},cpcAffs={},bhAffs={};
+var irRev=0,psRev=0,cpcRev=0,bhRev=0,lsRev=0,irAffs={},psAffs={},cpcAffs={},bhAffs={},lsAffs={};
 allPNL.filter(function(r){if(r._isSummary)return false;if(_sm&&r._month!==_sm)return false;return(r.displayAmt||0)>0||(r.rcvd||0)>0;}).forEach(function(r){
-  var cat=classifyPNLSource(r.affiliate,r._month,r._key||r.invId);var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;var aff=r.affiliate||'Unknown';
+  var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;var aff=r.affiliate||'Unknown';
+  /* Check remarks for LeadShare before normal classification */
+  var _rmk=((r.remarks||'')+'').toUpperCase();
+  if(_rmk.indexOf('LEADSHARE')>-1||_rmk.indexOf('LEAD SHARE')>-1){lsRev+=tot;lsAffs[aff]=(lsAffs[aff]||0)+tot;return;}
+  var cat=classifyPNLSource(r.affiliate,r._month,r._key||r.invId);
   if(cat==='IR'){irRev+=tot;irAffs[aff]=(irAffs[aff]||0)+tot;}
   else if(cat==='CTO'){ctoRev+=tot;ctoAffs[aff]=(ctoAffs[aff]||0)+tot;}
   else if(cat==='IO'){ioRev+=tot;ioAffs[aff]=(ioAffs[aff]||0)+tot;}
@@ -4024,7 +4028,7 @@ else{for(var _pgm in pnlSummaries){_pnlGrand+=(pnlSummaries[_pgm].grossRevenue||
 var grand=_pnlGrand;
 setStat('cto-s-rev',$m(grand));
 window._mtdGrandByMonth=window._mtdGrandByMonth||{};window._mtdGrandByMonth[_sm||'all']=grand;
-window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMonth[_sm||'all']={cto:ctoRev,io:ioRev,cpa:efRev,ir:irRev,ps:psRev,cpc:cpcRev,bh:bhFinalRev};
+window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMonth[_sm||'all']={cto:ctoRev,io:ioRev,cpa:efRev,ir:irRev,ps:psRev,cpc:cpcRev,bh:bhFinalRev,ls:lsRev};
 
 // Sources config — MTD Revenue sources of truth (no RPP, no PerfDash CPA)
 // CTO→Performance Dashboard, IO→Interactive Offers, CPA→Everflow, IR/PS/CPC→P&L, Beehiiv→API
@@ -4035,7 +4039,8 @@ var sources=[
   {id:'ir',name:'IR (Investor Relations)',color:'#8b5cf6',rev:irRev,metric:'Invoices',metricVal:Object.keys(irAffs).length,affs:irAffs},
   {id:'ps',name:'Platform Softwares',color:'#10b981',rev:psRev,metric:'Invoices',metricVal:Object.keys(psAffs).length,affs:psAffs},
   {id:'bh',name:'Beehiiv Earnings',color:'#f97316',rev:bhFinalRev,metric:bhFinalMetric,metricVal:bhFinalMetricVal,affs:bhFinalAffs,daily:bhApiRev>0?bhApiDaily:null,advs:bhApiRev>0?bhApiAdvs:null},
-  {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs}
+  {id:'cpc',name:'CPC (Newsletter Ads)',color:'#0ea5e9',rev:cpcRev,metric:'Invoices',metricVal:Object.keys(cpcAffs).length,affs:cpcAffs},
+  {id:'ls',name:'LeadShare',color:'#14b8a6',rev:lsRev,metric:'Invoices',metricVal:Object.keys(lsAffs).length,affs:lsAffs}
 ].filter(function(s){return s.rev>0||s.id==='bh'||s.id==='io';}).sort(function(a,b){return b.rev-a.rev;});
 
 function affTbl(map,daily,advs){
