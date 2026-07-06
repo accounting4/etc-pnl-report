@@ -1312,7 +1312,7 @@ Secured with Firebase Authentication
 <div class="chart-card"><h3>&#127942; Affiliate Rankings</h3><div class="chart-wrap" style="height:300px"><canvas id="ctoRankChart"></canvas></div></div>
 </div>
 </div>
-<div class="section-header section-collapsible" onclick="toggleSection('sec-cto-table')"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CTO / CPA / CPC / IR / IO <div id="sync-status" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);margin-left:12px"><span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span><span id="sync-text">Synced</span></div> <span class="collapse-icon">&#9660;</span></div><div style="display:flex;gap:8px;align-items:center" onclick="event.stopPropagation()"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
+<div class="section-header section-collapsible" onclick="toggleSection('sec-cto-table')"><div class="section-title"><div class="icon-circle">&#128202;</div> Tracking Dashboard — CTO / CPA / CPC / IR / IO / LeadShare <div id="sync-status" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);margin-left:12px"><span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span><span id="sync-text">Synced</span></div> <span class="collapse-icon">&#9660;</span></div><div style="display:flex;gap:8px;align-items:center" onclick="event.stopPropagation()"><div class="view-toggle" style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden"><button id="btn-view-grouped" class="view-btn active" onclick="setCTOView('grouped')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:#6366f1;color:#fff">&#128193; Grouped</button><button id="btn-view-flat" class="view-btn" onclick="setCTOView('flat')" style="padding:7px 16px;font-size:.82rem;font-weight:600;border:none;cursor:pointer;background:var(--surface2);color:var(--text2)">&#128203; Flat</button></div><button class="btn-export" style="background:#6366f1;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem" onclick="openAddCTOModal()">&#43; Add Entry</button></div></div>
 <div id="sec-cto-table" class="section-body">
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
@@ -3603,7 +3603,12 @@ months.forEach(function(m){html+='<option value="'+m+'">'+m+'</option>';});
 html+='<option value="">All Months</option>';
 sel.innerHTML=html;
 if(cur&&months.indexOf(cur)>=0)sel.value=cur;
-else if(months.length)sel.value=months[0];
+else if(months.length){
+/* Default to latest month with significant P&L revenue (>$5K), to avoid defaulting to an early-stage current month */
+var _bestDefault=months[0];
+for(var _di=0;_di<months.length;_di++){var _ps=pnlSummaries[months[_di]];if(_ps&&_ps.grossRevenue>5000){_bestDefault=months[_di];break;}}
+sel.value=_bestDefault;
+}
 }
 function clearCTOFilters(){document.getElementById('cto-search').value='';_buildCTOMonthDropdown();var tf=document.getElementById('cto-type-f');if(tf)tf.value='';document.getElementById('cto-entries').value='25';applyCTOFilters();}
 function applyFcFilters(){fcPage=1;renderFC();}
