@@ -1316,7 +1316,7 @@ Secured with Firebase Authentication
 <div id="sec-cto-table" class="section-body">
 <div class="filter-bar">
 <div class="fg"><label>Search</label><input id="cto-search" type="search" placeholder="Search..." oninput="applyCTOFilters()"></div>
-<div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="June">June</option><option value="May">May</option><option value="April">April</option><option value="March">March</option><option value="February">February</option><option value="January">January</option><option value="">All Months</option></select></div>
+<div class="fg"><label>Month</label><select id="cto-month-f" onchange="applyCTOFilters()"><option value="">All Months</option></select></div>
 <div class="fg"><label>Type</label><select id="cto-type-f" onchange="applyCTOFilters()"><option value="">All Types</option><option>CTO</option><option>IO</option><option value="CPA">CPA</option><option>CPC</option><option>IR</option><option>CPL</option></select></div>
 <div class="fg"><label>Show</label><select id="cto-entries" onchange="applyCTOFilters()"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="10">10</option></select></div>
 <button class="btn-clear" onclick="clearCTOFilters()">Clear</button>
@@ -3464,7 +3464,7 @@ mergeUserInvoices();
 mergeUserExpenses();
 try{mergeEMExpenses();}catch(e){}
 buildMonthButtons();buildFMDMonthButtons();
-renderCTO();renderRevenue();renderPNL();renderFC();renderFMD();try{renderFMDExpenses();}catch(e){}try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
+try{_buildCTOMonthDropdown();}catch(e){}renderCTO();renderRevenue();renderPNL();renderFC();renderFMD();try{renderFMDExpenses();}catch(e){}try{renderAudit();}catch(e){}try{renderQuarterlySummary();}catch(e){}try{renderExpenses();}catch(e){}try{renderCTOPnlSummary();}catch(e){}
 /* Re-apply month summary banner for currently selected month (ensures correct values after sync) */
 try{var _raMonthBtn=document.querySelector('#pnl-month-buttons button.active');if(_raMonthBtn&&_raMonthBtn.textContent!=='All Months')showMonthlySummary(_raMonthBtn.textContent);}catch(e){}
 try{var _raFmdBtn=document.querySelector('#fmd-month-buttons button.active');if(_raFmdBtn&&_raFmdBtn.textContent!=='All Months')showFMDMonthlySummary(_raFmdBtn.textContent);}catch(e){}
@@ -3579,7 +3579,21 @@ function clearRevFilters(){['rev-search','rev-date-from','rev-date-to'].forEach(
 function applyPNLFilters(){pnlPage=1;clearPNLSelection();renderPNL();var smb=document.querySelector('#pnl-month-buttons button.active');if(smb&&smb.textContent!=='All Months')showMonthlySummary(smb.textContent);}
 function clearPNLFilters(){['pnl-search'].forEach(id=>document.getElementById(id).value='');document.getElementById('pnl-month-f').value='';document.getElementById('pnl-status-f').value='';document.getElementById('pnl-entries').value='10';document.querySelectorAll('#pnl-month-buttons .month-btn').forEach((b,i)=>b.classList.toggle('active',i===0));document.getElementById('pnl-summary-banner').style.display='none';applyPNLFilters();}
 function applyCTOFilters(){ctoPage=1;renderCTO();try{renderCTOPnlSummary();}catch(e){}}
-function clearCTOFilters(){document.getElementById('cto-search').value='';var mf=document.getElementById('cto-month-f');if(mf)mf.value='June';var tf=document.getElementById('cto-type-f');if(tf)tf.value='';document.getElementById('cto-entries').value='25';applyCTOFilters();}
+function _buildCTOMonthDropdown(){
+var sel=document.getElementById('cto-month-f');if(!sel)return;
+var cur=sel.value;
+var months=_getPNLMonths();
+var allM=['January','February','March','April','May','June','July','August','September','October','November','December'];
+allCTO.forEach(function(r){var m=r._month;if(m&&months.indexOf(m)<0&&allM.indexOf(m)>=0)months.push(m);});
+months.sort(function(a,b){return allM.indexOf(b)-allM.indexOf(a);});
+var html='';
+months.forEach(function(m){html+='<option value="'+m+'">'+m+'</option>';});
+html+='<option value="">All Months</option>';
+sel.innerHTML=html;
+if(cur&&months.indexOf(cur)>=0)sel.value=cur;
+else if(months.length)sel.value=months[0];
+}
+function clearCTOFilters(){document.getElementById('cto-search').value='';_buildCTOMonthDropdown();var tf=document.getElementById('cto-type-f');if(tf)tf.value='';document.getElementById('cto-entries').value='25';applyCTOFilters();}
 function applyFcFilters(){fcPage=1;renderFC();}
 function clearFcFilters(){document.getElementById('fc-search').value='';document.getElementById('fc-period-f').value='';document.getElementById('fc-entries').value='10';applyFcFilters();}
 function applyFMDFilters(){fmdPage=1;renderFMD();}
@@ -4003,7 +4017,11 @@ var bhFinalAffs=bhApiRev>0?bhApiPubs:bhAffs;
 var bhFinalMetric=bhApiRev>0?'Publications':'Invoices';
 var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
 
-var grand=ctoRev+ioRev+efRev+irRev+psRev+cpcRev+bhFinalRev;
+/* Use P&L as source of truth for the grand total so Tracking Dashboard matches P&L tab */
+var _pnlGrand=0;
+if(_sm){var _ps=pnlSummaries[_sm]||{};_pnlGrand=_ps.grossRevenue||0;}
+else{for(var _pgm in pnlSummaries){_pnlGrand+=(pnlSummaries[_pgm].grossRevenue||0);}}
+var grand=_pnlGrand;
 setStat('cto-s-rev',$m(grand));
 window._mtdGrandByMonth=window._mtdGrandByMonth||{};window._mtdGrandByMonth[_sm||'all']=grand;
 window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMonth[_sm||'all']={cto:ctoRev,io:ioRev,cpa:efRev,ir:irRev,ps:psRev,cpc:cpcRev,bh:bhFinalRev};
