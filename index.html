@@ -2343,7 +2343,7 @@ for(var _fi0=allFMD.length-1;_fi0>=0;_fi0--){var _fk0=allFMD[_fi0]._key||allFMD[
 ss('Loading CTO Performance Dashboard...');
 /* CTO Perf Dash CPA tab (866430952) REMOVED — CPA source of truth is Everflow CPA sheet (per Riena 2026-06-18) */
 /* RPP tab (1357482024) REMOVED per Riena 2026-06-18 */
-const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'},{gid:'1746952935',m:'June',type:'CTO'},{sheet:'JULY',m:'July',type:'CTO'}];
+const ctoPerf=[{gid:'379371558',m:'January'},{gid:'1172861891',m:'February'},{gid:'1125133104',m:'March'},{gid:'1674324523',m:'April'},{gid:'395665584',m:'May'},{gid:'1746952935',m:'June',type:'CTO'},{gid:'1742286490',m:'July',type:'CTO'}];
 for(const t of ctoPerf){const rows=await fetchCSV(t.gid?gvg(CTO_ID,t.gid):gv(CTO_ID,t.sheet));rows.forEach(r=>{r._month=t.m;r._source='sheet';r._ctoType=t.type||'CTO';if(t.type)r['Type']=t.type;});var _fetchStamp=new Date().toLocaleString('en-US',{timeZone:'America/New_York'});rows.forEach(r=>{if(!r['Since Last Update']&&!r['Since Last Updated'])r._lastUpdated=_fetchStamp;});rows.filter(r=>Object.values(r).some(v=>v)).forEach(r=>{
 var adv=(r['Advertiser']||r['Advertiser/Offer']||r['Offers']||'').trim().toLowerCase();
 if(adv==='interactive offers'){
