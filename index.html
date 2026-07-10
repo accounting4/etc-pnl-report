@@ -4042,11 +4042,8 @@ var bhFinalAffs=bhApiRev>0?bhApiPubs:bhAffs;
 var bhFinalMetric=bhApiRev>0?'Publications':'Invoices';
 var bhFinalMetricVal=Object.keys(bhFinalAffs).length;
 
-/* Use P&L as source of truth for the grand total so Tracking Dashboard matches P&L tab */
-var _pnlGrand=0;
-if(_sm){var _ps=pnlSummaries[_sm]||{};_pnlGrand=_ps.grossRevenue||0;}
-else{for(var _pgm in pnlSummaries){_pnlGrand+=(pnlSummaries[_pgm].grossRevenue||0);}}
-var grand=_pnlGrand;
+/* Grand total: sum all Tracking Dashboard sources (CTO + IO + CPA + IR + PS + CPC + Beehiiv + LeadShare) */
+var grand=ctoRev+ioRev+efRev+irRev+psRev+cpcRev+bhFinalRev+lsRev;
 setStat('cto-s-rev',$m(grand));
 window._mtdGrandByMonth=window._mtdGrandByMonth||{};window._mtdGrandByMonth[_sm||'all']=grand;
 window._mtdSourcesByMonth=window._mtdSourcesByMonth||{};window._mtdSourcesByMonth[_sm||'all']={cto:ctoRev,io:ioRev,cpa:efRev,ir:irRev,ps:psRev,cpc:cpcRev,bh:bhFinalRev,ls:lsRev};
