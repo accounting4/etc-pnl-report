@@ -3492,7 +3492,7 @@ _lastDataFP=_dataFingerprint();}
 function getRevSorted(){return sortArr(getRevFilt(),revSort);}
 function getPNLSorted(){return sortArr(getPNLFilt(),pnlSort);}
 function getFMDSorted(){return sortArr(getFMDFilt(),fmdSort);}
-function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;if(r.status==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}if(r._key){uStatus[r._key]=sel.value;uStatus[_safeKey(r._key)]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();try{mergeEMExpenses();}catch(e){}renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();try{renderOverview();}catch(e){}var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else{renderRevenue();try{renderOverview();}catch(e){}}}
+function updStatus(sel,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.status=sel.value;var _stTotal=r.invAmt||r.displayAmt||r.rcvd||0;if(r.status==='Paid'){r.rcvd=_stTotal;r.displayAmt=_stTotal;r.invAmt=_stTotal;}else if(r.status==='Unpaid'||r.status==='Pending'||r.status==='No Final Count'){r.invAmt=_stTotal;r.displayAmt=_stTotal;r.rcvd=0;}if(r._key){uStatus[r._key]=sel.value;uStatus[_safeKey(r._key)]=sel.value;localStorage.setItem('uStatus',JSON.stringify(uStatus));fbSyncStatus();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].status=sel.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}if(tab==='pnl'){mergeUserInvoices();mergeUserExpenses();try{mergeEMExpenses();}catch(e){}renderPNL();try{renderOverview();}catch(e){}var sm2=document.querySelector('#pnl-month-buttons button.active');if(sm2&&sm2.textContent!=='All Months')showMonthlySummary(sm2.textContent);}else if(tab==='fmd'){renderFMD();try{renderOverview();}catch(e){}var sm3=document.querySelector('#fmd-month-buttons button.active');if(sm3&&sm3.textContent!=='All Months')showFMDMonthlySummary(sm3.textContent);}else{renderRevenue();try{renderOverview();}catch(e){}}}
 function updRemark(ta,tab,gi){let r;if(tab==='pnl')r=getPNLSorted()[gi];else if(tab==='fmd')r=getFMDSorted()[gi];else r=getRevSorted()[gi];if(!r)return;r.remarks=ta.value;if(r._key){uRemarks[r._key]=ta.value;localStorage.setItem('uRemarks',JSON.stringify(uRemarks));fbSyncRemarks();}else if(r._source==='user'){const ua=tab==='pnl'?userPNL:(tab==='fmd'?userFMD:userRev);const idx=ua.findIndex(x=>x===r);if(idx>-1){ua[idx].remarks=ta.value;localStorage.setItem(tab==='pnl'?'uPNL':(tab==='fmd'?'uFMD':'uRev'),JSON.stringify(ua));if(tab==='pnl')fbSyncAllPNL();}}}
 function savePNLRecord(){
 var amt=parseFloat(document.getElementById('f-invAmt').value)||0;
@@ -3541,8 +3541,15 @@ function editFMDRow(e,gi){
   document.getElementById('fmed-date').value=r.date||'';
   document.getElementById('fmed-month').value=r._month||'';
   document.getElementById('fmed-affiliate').value=r.affiliate||'';
-  document.getElementById('fmed-invamt').value=r.displayAmt!=null?r.displayAmt:(r.invAmt||0);
-  document.getElementById('fmed-rcvd').value=r.rcvd||0;
+  /* Show the total invoice value in the Invoice Amount field.
+     For Paid entries (invAmt=0, rcvd=X): total value = rcvd.
+     For Unpaid entries (invAmt=X, rcvd=0): total value = invAmt.
+     Use invAmt||displayAmt||rcvd to find the real total, then split based on status. */
+  var _editTotal=r.invAmt||r.displayAmt||r.rcvd||0;
+  var _editSt=(r.status||'').toLowerCase();
+  if(_editSt==='paid'){document.getElementById('fmed-invamt').value=0;document.getElementById('fmed-rcvd').value=_editTotal;}
+  else if(_editSt==='unpaid'||_editSt==='pending'||_editSt==='no final count'){document.getElementById('fmed-invamt').value=_editTotal;document.getElementById('fmed-rcvd').value=0;}
+  else{document.getElementById('fmed-invamt').value=r.invAmt||r.displayAmt||0;document.getElementById('fmed-rcvd').value=r.rcvd||0;}
   document.getElementById('fmed-status').value=r.status||'Unpaid';
   document.getElementById('fmed-remarks').value=r.remarks||'';
   document.getElementById('fmd-edit-modal').style.display='flex';
@@ -3562,10 +3569,13 @@ function saveFMDEdit(){
   const newStatus=document.getElementById('fmed-status').value;
   let newInvAmt=parseFloat(document.getElementById('fmed-invamt').value)||0;
   let newRcvd=parseFloat(document.getElementById('fmed-rcvd').value)||0;
-  const total=newInvAmt+newRcvd;
-  if(newStatus==='Paid'){newRcvd=total;newInvAmt=0;}
-  else if(newStatus==='Unpaid'||newStatus==='Pending'||newStatus==='No Final Count'){newInvAmt=total;newRcvd=0;}
-  const edit={date:document.getElementById('fmed-date').value,_month:document.getElementById('fmed-month').value,affiliate:document.getElementById('fmed-affiliate').value,invAmt:total,displayAmt:newInvAmt,rcvd:newRcvd,status:newStatus,remarks:document.getElementById('fmed-remarks').value};
+  /* FIX: Don't add invAmt+rcvd — they're two views of the same money.
+     The "total value" is whichever the user filled in, not their sum. */
+  var invoiceTotal=newInvAmt>0?newInvAmt:newRcvd;
+  if(newStatus==='Paid'){newRcvd=invoiceTotal;newInvAmt=0;}
+  else if(newStatus==='Unpaid'||newStatus==='Pending'||newStatus==='No Final Count'){newInvAmt=invoiceTotal;newRcvd=0;}
+  /* displayAmt always = invoiceTotal for aggregation; table rendering handles Paid/$0 display separately */
+  const edit={date:document.getElementById('fmed-date').value,_month:document.getElementById('fmed-month').value,affiliate:document.getElementById('fmed-affiliate').value,invAmt:invoiceTotal,displayAmt:invoiceTotal,rcvd:newRcvd,status:newStatus,remarks:document.getElementById('fmed-remarks').value};
   fmdEdits[k]=edit;
   Object.assign(r,edit);
   if(r._key){
@@ -3711,8 +3721,9 @@ function bulkFMDStatus(){
       var newSt=document.getElementById('fmd-bulk-status').value;
       rows.forEach(function(x){
         var r=x.row;r.status=newSt;
-        if(newSt==='Paid'){var fa=r.invAmt||r.displayAmt||r.rcvd||0;r.rcvd=fa;r.displayAmt=0;r.invAmt=fa;}
-        else if(newSt==='Unpaid'||newSt==='Pending'||newSt==='No Final Count'){var tot2=(r.invAmt||0)+(r.rcvd||0);if(tot2>0){r.invAmt=tot2;r.displayAmt=tot2;r.rcvd=0;}}
+        var _bkTotal=r.invAmt||r.displayAmt||r.rcvd||0;
+        if(newSt==='Paid'){r.rcvd=_bkTotal;r.displayAmt=_bkTotal;r.invAmt=_bkTotal;}
+        else if(newSt==='Unpaid'||newSt==='Pending'||newSt==='No Final Count'){r.invAmt=_bkTotal;r.displayAmt=_bkTotal;r.rcvd=0;}
         var k=r._key||r.invId||('fgi'+x.gi);
         if(r._key){uStatus[r._key]=newSt;uStatus[_safeKey(r._key)]=newSt;}
         if(!fmdEdits[k])fmdEdits[k]={};
