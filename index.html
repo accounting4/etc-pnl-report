@@ -2502,9 +2502,8 @@ var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
 var rate=parseFloat((r['Rate/Lead ($)']||r['Rate per lead/conversion ($)']||r['Rate/Lead']||'0').replace(/[\$,]/g,''))||0;
 var flat=parseFloat((r['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
 var _trA=parseFloat((r['Total Revenue ($)']||'0').replace(/[\$,]/g,''))||0;
-var _trB=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
-var totalCol=_trA>0?_trA:_trB;
-var amt=totalCol>0?totalCol:(leads*rate+flat);
+/* TOTAL REVENUE column is a sheet grand-total formula — skip it */
+var amt=_trA>0?_trA:(leads*rate+flat);
 if(amt<=0)return;
 var advertiser=r['Advertiser']||r['Advertiser/Offer']||'';
 var offer=r['Offers']||r['Advertiser/Offer']||'';
@@ -2908,9 +2907,8 @@ var leads=parseInt((r['Current Lead Count']||r['CV']||'0').replace(/,/g,''))||0;
 var rate=parseFloat((r['Rate/Lead ($)']||r['Rate per lead/conversion ($)']||'0').replace(/[\$,]/g,''))||0;
 var flat=parseFloat((r['Flat Fee']||'0').replace(/[\$,]/g,''))||0;
 var _trA2=parseFloat((r['Total Revenue ($)']||'0').replace(/[\$,]/g,''))||0;
-var _trB2=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;
-var totalCol=_trA2>0?_trA2:_trB2;
-var revenue=totalCol>0?totalCol:(leads*rate+flat);
+/* TOTAL REVENUE column is a grand-total formula on the sheet — never use it as per-row revenue */
+var revenue=_trA2>0?_trA2:(leads*rate+flat);
 var rank=r['Rank']||'';
 var type=r['Type']||r._ctoType||'';
 var growth=r['Growth']||'';
@@ -3995,7 +3993,7 @@ f.forEach(function(r){var row=getCTORow(r);var t=(r._ctoType||r['Type']||'CTO').
   if(t==='IO'){ioRev+=row._revenue;ioLeads+=row._leads;var _ioKey=row._offer||row._name||'Interactive Offers';ioAffs[_ioKey]=(ioAffs[_ioKey]||0)+row._revenue;}
   else if(t==='CPA'||t==='EF-ETC'||t==='EF'){if(r._efDate){efRev+=row._revenue;efLeads+=row._leads;var _efCan=_canonicalAdvName(row._name);efAffs[_efCan]=(efAffs[_efCan]||0)+row._revenue;}}
   else if(t==='RPP'||t==='CPC'||t==='IR'){}
-  else{var _ctoBasis=parseFloat((r['TOTAL REVENUE']||'0').replace(/[\$,]/g,''))||0;if(_ctoBasis>0){ctoRev+=_ctoBasis;ctoLeads+=row._leads;var _ctoCan=_canonicalAdvName(row._name);ctoAffs[_ctoCan]=(ctoAffs[_ctoCan]||0)+_ctoBasis;}}
+  else{if(row._revenue>0){ctoRev+=row._revenue;ctoLeads+=row._leads;var _ctoCan=_canonicalAdvName(row._name);ctoAffs[_ctoCan]=(ctoAffs[_ctoCan]||0)+row._revenue;}}
 });
 var ioCamps=f.filter(function(r){return(r._ctoType||'').toUpperCase()==='IO';}).length;
 
