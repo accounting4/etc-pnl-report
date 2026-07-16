@@ -2199,7 +2199,7 @@ function parseD(s){if(!s)return null;try{const d=new Date(s);return isNaN(d.getT
 function statusOpts(c){return['Paid','Partially Paid','Unpaid','Pending','No Final Count'].map(o=>'<option'+(o===c?' selected':'')+'>'+o+'</option>').join('');}
 function catOpts(cur,aff,month){var auto=classifyPNLSource(aff,month);var cats=[{v:'',l:'Auto ('+auto+')'},{v:'IR',l:'IR'},{v:'CPC',l:'CPC'},{v:'CTO',l:'CTO'},{v:'IO',l:'IO'},{v:'CPA',l:'CPA'},{v:'Platform Softwares',l:'Platform Softwares'},{v:'Beehiiv Ads',l:'Beehiiv Ads'}];return cats.map(function(c){return'<option value="'+c.v+'"'+(c.v===cur?' selected':'')+'>'+c.l+'</option>';}).join('');}
 function updCategory(sel,gi){var r=getPNLSorted()[gi];if(!r)return;var rk=_safeKey(r._key||r.invId||'');if(!rk)return;var val=sel.value;if(val){invoiceCategories[rk]=val;}else{delete invoiceCategories[rk];}localStorage.setItem('invoiceCategories',JSON.stringify(invoiceCategories));fbSyncCategories();renderCTO();renderPNL();try{renderOverview();}catch(e){}}
-function fbSyncCategories(){fbSave('invoiceCategories',invoiceCategories);}
+function fbSyncCategories(){fbUpdate('invoiceCategories',invoiceCategories);}
 function parseAmt(v){return parseFloat((v||'0').replace(/[\$,]/g,''))||0;}
 function isFMD(a){const s=(a||'').toLowerCase();return s.includes('five minute daily')||s.includes('fmd')||s.includes('5 minute daily');}
 function getWeekLabel(ds){if(!ds)return null;const d=new Date(ds);if(isNaN(d.getTime()))return null;const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];return mn+' Week '+Math.ceil(d.getDate()/7)+', '+d.getFullYear();}
@@ -2951,7 +2951,7 @@ document.getElementById('ctoEditModal').style.display='flex';
 }
 function getCTOKey(r){return(r._ctoType||r['Type']||'CTO')+'|'+(r['Advertiser']||'')+'|'+(r['Offers']||r['Advertiser/Offer']||'')+'|'+(r._month||'');}
 function saveCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');allCTO.forEach(function(r){if(!r._userEdited)return;var key=getCTOKey(r);edits[key]={leads:r['Current Lead Count']||'',rate:r['Rate/Lead ($)']||'',revenue:r['Total Revenue ($)']||'',type:r['Type']||r._ctoType||'',cpaType:r._cpaType||'',saleDate:r._saleDate||'',lastUpdated:r._lastUpdated||'',notes:r._userNotes||'',flat:r['Flat Fee']||'',advertiser:r['Advertiser']||'',offer:r['Offers']||'',_userEdited:true};});localStorage.setItem('ctoEdits',JSON.stringify(edits));fbSyncCTOEdits();}catch(e){console.warn('saveCTOEdits',e);}}
-function fbSyncCTOEdits(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');var obj={};Object.keys(edits).forEach(function(k){obj[_safeKey(k)]=edits[k];});fbSave('ctoEdits',obj);}catch(e){console.warn('fbSyncCTOEdits',e);}}
+function fbSyncCTOEdits(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');var obj={};Object.keys(edits).forEach(function(k){obj[_safeKey(k)]=edits[k];});fbUpdate('ctoEdits',obj);}catch(e){console.warn('fbSyncCTOEdits',e);}}
 function loadCTOEditsLocal(){try{var edits=JSON.parse(localStorage.getItem('ctoEdits')||'{}');
 /* Migrate old IO keys: IO|CampaignName|CampaignName|Month → IO|Interactive Offers|CampaignName|Month */
 var migrated=false;Object.keys(edits).forEach(function(k){
@@ -4188,6 +4188,13 @@ function fbRemoveKey(sub,key){
   return fbDb.ref(p).remove().catch(function(e){console.warn('FB remove:',e.message);});
 }
 
+/* Merge-update: only adds/modifies keys — never removes others (safe for multi-user) */
+function fbUpdate(sub,data){
+  var p=fbPath(sub);if(!p)return Promise.resolve();
+  _fbSuppressListener=true;
+  return fbDb.ref(p).update(data).then(function(){setTimeout(function(){_fbSuppressListener=false;},500);}).catch(function(e){_fbSuppressListener=false;console.warn('FB update ('+sub+'):',e.message);});
+}
+
 async function fbLoadUserData(){
   if(!fbDb||!fbAuth||!fbAuth.currentUser)return;
   try{
@@ -4340,8 +4347,8 @@ function fbStartListeners(){
     // Clean deleted
     userPNL=userPNL.filter(function(r){var k=r._key||r.invId||'';return!k||!_isDeletedKey(pnlDeletes,k);});
     userExpenses=userExpenses.filter(function(e){return!_isDeletedKey(expDeletes,e._key);});
-    // Re-apply pnlEdits to QB entries after listener sync (month overrides etc.)
-    allPNL.forEach(function(r){if(r._source==='qb'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2._month)r._month=_pe2._month;if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;if(_pe2.invAmt!=null){r.invAmt=_pe2.invAmt;r.displayAmt=_pe2.displayAmt!=null?_pe2.displayAmt:_pe2.invAmt;r.rcvd=_pe2.rcvd!=null?_pe2.rcvd:0;}if(_pe2.affiliate)r.affiliate=_pe2.affiliate;if(_pe2.date)r.date=_pe2.date;}}});
+    // Re-apply pnlEdits to ALL entries (QB + sheet) after listener sync
+    allPNL.forEach(function(r){if(r._source==='qb'||r._source==='sheet'){var _pe2=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe2){if(_pe2._month)r._month=_pe2._month;if(_pe2.status)r.status=_pe2.status;if(_pe2.remarks!=null)r.remarks=_pe2.remarks;if(_pe2.invAmt!=null){r.invAmt=_pe2.invAmt;r.displayAmt=_pe2.displayAmt!=null?_pe2.displayAmt:_pe2.invAmt;r.rcvd=_pe2.rcvd!=null?_pe2.rcvd:0;}if(_pe2.affiliate)r.affiliate=_pe2.affiliate;if(_pe2.date)r.date=_pe2.date;}}});
     // Re-apply fmdEdits to FMD entries after listener sync
     allFMD.forEach(function(r){var fk=r._key||r.invId||'';var _fe=fmdEdits[fk]||fmdEdits[_safeKey(fk)];if(_fe){if(_fe._month)r._month=_fe._month;if(_fe.date)r.date=_fe.date;if(_fe.affiliate)r.affiliate=_fe.affiliate;if(_fe.invAmt!=null){r.invAmt=_fe.invAmt;r.displayAmt=_fe.displayAmt!=null?_fe.displayAmt:r.displayAmt;r.rcvd=_fe.rcvd!=null?_fe.rcvd:r.rcvd;}if(_fe.status)r.status=_fe.status;if(_fe.remarks!=null)r.remarks=_fe.remarks;}});
     // Skip re-render if edit modal is open (prevents stale index issues)
@@ -4355,6 +4362,8 @@ function fbStartListeners(){
       allPNL=allPNL.filter(function(r){return r._source!=='user';});
       allPNL.push(...userPNL.map(function(r){return Object.assign({},r,{displayAmt:r.invAmt>0?r.invAmt:r.rcvd});}));
       for(var di=allPNL.length-1;di>=0;di--){var dk=allPNL[di]._key||allPNL[di].invId||'';if(dk&&_isDeletedKey(pnlDeletes,dk))allPNL.splice(di,1);}
+      /* Re-apply pnlEdits to QB+sheet entries after rebuild */
+      allPNL.forEach(function(r){if(r._source==='qb'||r._source==='sheet'){var _pe3=pnlEdits[r._key]||pnlEdits[_safeKey(r._key)];if(_pe3){if(_pe3._month)r._month=_pe3._month;if(_pe3.status)r.status=_pe3.status;if(_pe3.remarks!=null)r.remarks=_pe3.remarks;if(_pe3.invAmt!=null){r.invAmt=_pe3.invAmt;r.displayAmt=_pe3.displayAmt!=null?_pe3.displayAmt:_pe3.invAmt;r.rcvd=_pe3.rcvd!=null?_pe3.rcvd:0;}if(_pe3.affiliate)r.affiliate=_pe3.affiliate;if(_pe3.date)r.date=_pe3.date;}}});
       _injectFMDBhEntries();
       mergeUserInvoices();mergeUserExpenses();
       buildMonthButtons();buildFMDMonthButtons();
@@ -4380,13 +4389,13 @@ function fbSyncAllPNL(){fbSave('pnl',userPNL.reduce(function(o,r){if(r._key)o[_s
 function fbSyncAllExpenses(){fbSave('expenses',userExpenses.reduce(function(o,e){if(e._key)o[_safeKey(e._key)]=e;return o;},{}));}
 function fbSyncAllRev(){fbSave('rev',userRev.reduce(function(o,r){if(r._key)o[_safeKey(r._key)]=r;return o;},{}));}
 function fbSyncAllFMD(){fbSave('fmd',userFMD.reduce(function(o,r){if(r._key)o[_safeKey(r._key)]=r;return o;},{}));}
-function fbSyncDeletes(){fbSave('pnlDeletes',[...pnlDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
-function fbSyncExpDeletes(){fbSave('expDeletes',[...expDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
-function fbSyncFmdDeletes(){fbSave('fmdDeletes',[...fmdDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
-function fbSyncStatus(){var o={};for(var k in uStatus){o[_safeKey(k)]=uStatus[k];}fbSave('uStatus',o);}
-function fbSyncRemarks(){var o={};for(var k in uRemarks){o[_safeKey(k)]=uRemarks[k];}fbSave('uRemarks',o);}
-function fbSyncEdits(){fbSave('pnlEdits',Object.keys(pnlEdits).reduce(function(o,k){o[_safeKey(k)]=pnlEdits[k];return o;},{}));}
-function fbSyncFMDEdits(){fbSave('fmdEdits',Object.keys(fmdEdits).reduce(function(o,k){o[_safeKey(k)]=fmdEdits[k];return o;},{}));}
+function fbSyncDeletes(){fbUpdate('pnlDeletes',[...pnlDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
+function fbSyncExpDeletes(){fbUpdate('expDeletes',[...expDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
+function fbSyncFmdDeletes(){fbUpdate('fmdDeletes',[...fmdDeletes].reduce(function(o,k){o[_safeKey(k)]=true;return o;},{}));}
+function fbSyncStatus(){var o={};for(var k in uStatus){o[_safeKey(k)]=uStatus[k];}fbUpdate('uStatus',o);}
+function fbSyncRemarks(){var o={};for(var k in uRemarks){o[_safeKey(k)]=uRemarks[k];}fbUpdate('uRemarks',o);}
+function fbSyncEdits(){fbUpdate('pnlEdits',Object.keys(pnlEdits).reduce(function(o,k){o[_safeKey(k)]=pnlEdits[k];return o;},{}));}
+function fbSyncFMDEdits(){fbUpdate('fmdEdits',Object.keys(fmdEdits).reduce(function(o,k){o[_safeKey(k)]=fmdEdits[k];return o;},{}));}
 function fbSyncAttachments(){var att=JSON.parse(localStorage.getItem('pnlAttachments')||'{}');var meta={};for(var k in att){meta[_safeKey(k)]={name:att[k].name,uploadedBy:att[k].uploadedBy||'',uploadedAt:att[k].uploadedAt||'',hasData:true};}fbSave('pnlAttachmentsMeta',meta);var data={};for(var k in att){data[_safeKey(k)]=att[k];}fbSave('pnlAttachments',data);}
 function loadAllData(){
 _syncLock=true;_fbSuppressListener=true;window._deferRender=true;
