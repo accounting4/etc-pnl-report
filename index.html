@@ -1009,7 +1009,6 @@ Secured with Firebase Authentication
 <button class="nav-tab" onclick="showTab('analytics')" id="btn-analytics">📊 Analytics</button>
 <button class="nav-tab" onclick="showTab('tools')" id="btn-tools">🛠️ Tools</button>
 <button class="nav-tab" onclick="showTab('expmgr')" id="btn-expmgr">💳 Expense Manager</button>
-<button class="nav-tab" onclick="showTab('qreport')" id="btn-qreport">📋 Quarterly Report</button>
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
 <!-- Global Sync Status Bar -->
@@ -1876,7 +1875,7 @@ function applyRolePermissions() {
   // Manager: sees everything except Admin tab
   // Viewer: only Overview + Revenue & Forecast (customize below)
   var viewerTabs = ['overview','revenue']; // tabs Viewers can see
-  var allTabIds = ['overview','revenue','pnl','cto','fmd','analytics','tools','qreport'];
+  var allTabIds = ['overview','revenue','pnl','cto','fmd','analytics','tools'];
   allTabIds.forEach(function(t) {
     var btn = document.getElementById('btn-' + t);
     if (!btn) return;
@@ -1914,7 +1913,7 @@ async function handleSignOut() {
 }
 
 // ===== ADMIN PANEL =====
-var ALL_TABS = ['overview','revenue','pnl','cto','fmd','analytics','tools','qreport'];
+var ALL_TABS = ['overview','revenue','pnl','cto','fmd','analytics','tools'];
 var TAB_LABELS = {'overview':'🏠 Overview','revenue':'📈 Revenue','pnl':'💵 P&L','cto':'📊 Tracking','fmd':'⏳ FMD','analytics':'📊 Analytics','tools':'🛠️ Tools'};
 
 async function loadAdminPanel() {
@@ -2172,12 +2171,11 @@ function showTab(t){
   document.getElementById('btn-'+t).classList.add('active');
   /* Re-render Expense Manager when tab becomes visible (fixes Chart.js 0-dimension bug) */
   if(t==='expmgr'&&typeof emRenderAll==='function'){setTimeout(emRenderAll,50);}
-  if(t==='qreport'&&typeof renderQuarterlyReport==='function'){setTimeout(renderQuarterlyReport,50);}
 }
 function applyTabPermissions(){
   // Hide tabs the user doesn't have access to
   if(currentUserRole==='admin')return; // admins see all
-  var allTabs=['overview','revenue','pnl','cto','fmd','analytics','tools','expmgr','qreport'];
+  var allTabs=['overview','revenue','pnl','cto','fmd','analytics','tools','expmgr'];
   allTabs.forEach(function(t){
     var btn=document.getElementById('btn-'+t);
     if(!btn)return;
@@ -3439,411 +3437,6 @@ if(card&&card.classList.contains('expanded')&&d.hasData){
 renderQChart(d.qi);
 }
 });
-}
-
-/* ═══════ QUARTERLY REPORT TAB — rendering + export ═══════ */
-var _qrSelectedQ='Q2';
-var _qrCharts={};
-var _qrQuarters={
-  Q1:{name:'Q1',full:'Q1 — January to March',months:['January','February','March'],labels:['Jan','Feb','Mar']},
-  Q2:{name:'Q2',full:'Q2 — April to June',months:['April','May','June'],labels:['Apr','May','Jun']},
-  Q3:{name:'Q3',full:'Q3 — July to September',months:['July','August','September'],labels:['Jul','Aug','Sep']},
-  Q4:{name:'Q4',full:'Q4 — October to December',months:['October','November','December'],labels:['Oct','Nov','Dec']}
-};
-function selectQR(q){
-  _qrSelectedQ=q;
-  document.querySelectorAll('#tab-qreport .month-btn').forEach(function(b){b.classList.remove('active');});
-  var btn=document.getElementById('qr-btn-'+q);if(btn)btn.classList.add('active');
-  renderQuarterlyReport();
-}
-function _qrRevForMonth(m){
-  var curMonth=new Date().toLocaleString('en-US',{timeZone:'America/New_York',month:'long'});
-  if(m===curMonth&&window._mtdGrandByMonth&&window._mtdGrandByMonth[m])return window._mtdGrandByMonth[m];
-  return (pnlSummaries[m]||{}).grossRevenue||0;
-}
-function _qrGetQuarterData(qKey){
-  var q=_qrQuarters[qKey];if(!q)return null;
-  var totalRev=0,totalExp=0,totalBh=0,totalPaid=0,totalBal=0,invoiceCount=0;
-  var monthData=[];
-  q.months.forEach(function(m,i){
-    var ps=pnlSummaries[m]||{};
-    var rev=_qrRevForMonth(m);
-    var exp=ps.totalExpenses||0;
-    var bh=ps.beehiivRev||0;
-    var paid=ps.paymentRcvd||0;
-    var bal=ps.balance||0;
-    totalRev+=rev;totalExp+=exp;totalBh+=bh;totalPaid+=paid;totalBal+=bal;
-    // Count invoices for this month
-    var mInv=allPNL.filter(function(r){return r._month===m&&!r._isSummary;}).length;
-    invoiceCount+=mInv;
-    monthData.push({name:q.labels[i],full:m,rev:rev,exp:exp,bh:bh,net:rev-exp,paid:paid,bal:bal,invoices:mInv});
-  });
-  // Revenue by source
-  var sources={};
-  q.months.forEach(function(m){
-    allPNL.filter(function(r){return r._month===m&&!r._isSummary&&((r.displayAmt||0)>0||(r.rcvd||0)>0);}).forEach(function(r){
-      var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
-      var cat=classifyPNLSource(r.affiliate,r._month,r._key||r.invId);
-      if(!sources[cat])sources[cat]={rev:0,count:0};
-      sources[cat].rev+=tot;sources[cat].count++;
-    });
-  });
-  // Beehiiv API earnings (if available, for May+ months)
-  if(window._bhApiEarnings&&window._bhApiEarnings.publications){
-    var bhSkip={'January':1,'February':1,'March':1,'April':1};
-    for(var pubName in window._bhApiEarnings.publications){
-      if(pubName.toLowerCase().indexOf('five minute')>-1||pubName.toLowerCase().indexOf('fmd')>-1)continue;
-      var pubMonths=window._bhApiEarnings.publications[pubName];
-      q.months.forEach(function(m){
-        if(bhSkip[m])return;
-        var md=pubMonths[m];
-        if(md&&md.total>0){
-          if(!sources['Beehiiv Ads'])sources['Beehiiv Ads']={rev:0,count:0};
-          sources['Beehiiv Ads'].rev+=md.total;
-          sources['Beehiiv Ads'].count++;
-        }
-      });
-    }
-  }
-  // Top affiliates
-  var affiliates={};
-  q.months.forEach(function(m){
-    allPNL.filter(function(r){return r._month===m&&!r._isSummary&&((r.displayAmt||0)>0||(r.rcvd||0)>0);}).forEach(function(r){
-      var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
-      var aff=r.affiliate||'Unknown';
-      var cat=classifyPNLSource(r.affiliate,r._month,r._key||r.invId);
-      if(!affiliates[aff])affiliates[aff]={rev:0,cat:cat};
-      affiliates[aff].rev+=tot;
-    });
-  });
-  // Payment status
-  var payStatus={Paid:{count:0,amt:0},'Partially Paid':{count:0,amt:0},Unpaid:{count:0,amt:0},Pending:{count:0,amt:0},'No Final Count':{count:0,amt:0}};
-  q.months.forEach(function(m){
-    allPNL.filter(function(r){return r._month===m&&!r._isSummary;}).forEach(function(r){
-      var s=r.status||'Pending';
-      var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
-      if(!payStatus[s])payStatus[s]={count:0,amt:0};
-      payStatus[s].count++;payStatus[s].amt+=tot;
-    });
-  });
-  return {q:q,totalRev:totalRev,totalExp:totalExp,totalBh:totalBh,totalNet:totalRev-totalExp,totalPaid:totalPaid,totalBal:totalBal,invoiceCount:invoiceCount,monthData:monthData,sources:sources,affiliates:affiliates,payStatus:payStatus};
-}
-function renderQuarterlyReport(){
-  var d=_qrGetQuarterData(_qrSelectedQ);
-  if(!d){return;}
-  // Timestamp
-  var genEl=document.getElementById('qr-generated');
-  if(genEl)genEl.textContent='Generated: '+new Date().toLocaleString('en-US',{timeZone:'America/New_York'})+' ET';
-  // KPIs
-  setStat('qr-revenue',$m(d.totalRev));
-  setStat('qr-expenses',$m(d.totalExp));
-  setStat('qr-net',$m(d.totalNet));
-  var netEl=document.getElementById('qr-net');
-  if(netEl)netEl.style.color=d.totalNet>=0?'var(--green)':'var(--red)';
-  var margin=d.totalRev>0?Math.round(d.totalNet/d.totalRev*100):0;
-  setStat('qr-margin',margin+'%');
-  var marginEl=document.getElementById('qr-margin');
-  if(marginEl)marginEl.style.color=margin>=0?'var(--green)':'var(--red)';
-  // QoQ
-  var prevQMap={Q2:'Q1',Q3:'Q2',Q4:'Q3',Q1:'Q4'};
-  var prevD=_qrGetQuarterData(prevQMap[_qrSelectedQ]);
-  if(prevD&&prevD.totalRev>0){
-    var qoqPct=Math.round((d.totalRev-prevD.totalRev)/prevD.totalRev*100);
-    setStat('qr-qoq',(qoqPct>=0?'+':'')+qoqPct+'%');
-    var qoqEl=document.getElementById('qr-qoq');
-    if(qoqEl)qoqEl.style.color=qoqPct>=0?'var(--green)':'var(--red)';
-    var subEl=document.getElementById('qr-qoq-sub');
-    if(subEl)subEl.textContent='vs '+prevD.q.name+' ($'+Math.round(prevD.totalRev).toLocaleString()+')';
-  }else{
-    setStat('qr-qoq','—');
-    var subEl2=document.getElementById('qr-qoq-sub');
-    if(subEl2)subEl2.textContent='No prior quarter data';
-  }
-  document.getElementById('qr-revenue-sub').textContent=d.invoiceCount+' invoices across '+d.monthData.filter(function(m){return m.rev>0;}).length+' months';
-  // Monthly Breakdown Table
-  var tbody=document.getElementById('qr-monthly-tbody');
-  var tfoot=document.getElementById('qr-monthly-tfoot');
-  var rows='';
-  d.monthData.forEach(function(m){
-    var mg=m.rev>0?Math.round(m.net/m.rev*100):0;
-    var cls=m.net>=0?'green':'red';
-    rows+='<tr><td><strong>'+m.full+'</strong></td><td>'+$m(m.rev)+'</td><td style="color:#f97316;font-weight:600">'+$m(m.bh)+'</td><td style="color:var(--red)">'+$m(m.exp)+'</td><td style="color:var(--'+cls+');font-weight:700">'+$m(m.net)+'</td><td style="color:var(--'+(mg>=0?'green':'red')+')">'+mg+'%</td></tr>';
-  });
-  tbody.innerHTML=rows||'<tr><td colspan="6" class="empty-state">No data for this quarter</td></tr>';
-  var qMargin=d.totalRev>0?Math.round(d.totalNet/d.totalRev*100):0;
-  tfoot.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>QUARTER TOTAL</td><td>'+$m(d.totalRev)+'</td><td style="color:#f97316">'+$m(d.totalBh)+'</td><td style="color:var(--red)">'+$m(d.totalExp)+'</td><td style="color:var(--'+(d.totalNet>=0?'green':'red')+')">'+$m(d.totalNet)+'</td><td>'+qMargin+'%</td></tr>';
-  // Monthly Bar Chart
-  _qrDestroyChart('qrMonthlyChart');
-  var mCtx=document.getElementById('qrMonthlyChart');
-  if(mCtx){
-    _qrCharts['qrMonthlyChart']=new Chart(mCtx,{type:'bar',data:{labels:d.monthData.map(function(m){return m.name;}),datasets:[
-      {label:'Revenue',data:d.monthData.map(function(m){return m.rev;}),backgroundColor:'#6366f1cc',borderColor:'#6366f1',borderWidth:2,borderRadius:10,borderSkipped:false},
-      {label:'Beehiiv',data:d.monthData.map(function(m){return m.bh;}),backgroundColor:'#f97316cc',borderColor:'#f97316',borderWidth:2,borderRadius:10,borderSkipped:false},
-      {label:'Expenses',data:d.monthData.map(function(m){return m.exp;}),backgroundColor:'#ef4444cc',borderColor:'#ef4444',borderWidth:2,borderRadius:10,borderSkipped:false},
-      {label:'Net P&L',data:d.monthData.map(function(m){return m.net;}),backgroundColor:'#10b981cc',borderColor:'#10b981',borderWidth:2,borderRadius:10,borderSkipped:false}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});
-  }
-  // Revenue by Source Table
-  var srcEntries=Object.entries(d.sources).sort(function(a,b){return b[1].rev-a[1].rev;});
-  var srcTbody=document.getElementById('qr-source-tbody');
-  var srcTfoot=document.getElementById('qr-source-tfoot');
-  var srcColors={CTO:'#7c3aed',IO:'#ec4899',CPA:'#10b981',IR:'#22c55e',CPC:'#f97316','Platform Softwares':'#3b82f6','Beehiiv Ads':'#f59e0b'};
-  var srcTotal=srcEntries.reduce(function(a,e){return a+e[1].rev;},0);
-  srcTbody.innerHTML=srcEntries.length?srcEntries.map(function(e){
-    var pct=srcTotal>0?Math.round(e[1].rev/srcTotal*100):0;
-    var badgeCls=e[0]==='IO'?'io':(e[0]==='CPA'?'cpa':(e[0]==='IR'?'ir':(e[0]==='CPC'?'cpc':(e[0]==='CTO'?'cto':(e[0]==='Platform Softwares'?'purple':'accent')))));
-    return'<tr><td><span class="source-badge '+badgeCls+'">'+e[0]+'</span></td><td><strong>'+$m(e[1].rev)+'</strong></td><td>'+pct+'%</td><td>'+e[1].count+'</td></tr>';
-  }).join(''):'<tr><td colspan="4" class="empty-state">No data</td></tr>';
-  srcTfoot.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+$m(srcTotal)+'</td><td>100%</td><td>'+srcEntries.reduce(function(a,e){return a+e[1].count;},0)+'</td></tr>';
-  // Source Pie Chart
-  _qrDestroyChart('qrSourcePie');
-  var pieCtx=document.getElementById('qrSourcePie');
-  if(pieCtx&&srcEntries.length){
-    var pieColors=srcEntries.map(function(e){return srcColors[e[0]]||'#94a3b8';});
-    _qrCharts['qrSourcePie']=new Chart(pieCtx,{type:'doughnut',data:{labels:srcEntries.map(function(e){return e[0];}),datasets:[{data:srcEntries.map(function(e){return e[1].rev;}),backgroundColor:pieColors,borderWidth:2,borderColor:'var(--surface)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},usePointStyle:true,pointStyle:'circle',padding:12}},tooltip:{callbacks:{label:function(c){return c.label+': '+$m(c.raw)+' ('+(srcTotal>0?Math.round(c.raw/srcTotal*100):0)+'%)';}}}}}} );
-  }
-  // Top Affiliates Table
-  var affEntries=Object.entries(d.affiliates).sort(function(a,b){return b[1].rev-a[1].rev;}).slice(0,15);
-  var affTotal=Object.values(d.affiliates).reduce(function(a,v){return a+v.rev;},0);
-  var topTbody=document.getElementById('qr-top-tbody');
-  topTbody.innerHTML=affEntries.length?affEntries.map(function(e,i){
-    var pct=affTotal>0?(e[1].rev/affTotal*100).toFixed(1):0;
-    var badgeCls=e[1].cat==='IO'?'io':(e[1].cat==='CPA'?'cpa':(e[1].cat==='IR'?'ir':(e[1].cat==='CPC'?'cpc':(e[1].cat==='CTO'?'cto':'accent'))));
-    return'<tr><td style="font-weight:700;color:var(--accent)">'+(i+1)+'</td><td><strong>'+e[0]+'</strong></td><td>'+$m(e[1].rev)+'</td><td>'+pct+'%</td><td><span class="source-badge '+badgeCls+'">'+e[1].cat+'</span></td></tr>';
-  }).join(''):'<tr><td colspan="5" class="empty-state">No data</td></tr>';
-  // QoQ Comparison Chart
-  _qrDestroyChart('qrQoQChart');
-  var qoqCtx=document.getElementById('qrQoQChart');
-  if(qoqCtx){
-    var qKeys=['Q1','Q2','Q3','Q4'];
-    var qRevs=[],qExps=[],qNets=[],qLabels=[];
-    qKeys.forEach(function(qk){
-      var qd=_qrGetQuarterData(qk);
-      if(qd&&(qd.totalRev>0||qd.totalExp>0)){
-        qLabels.push(qk);qRevs.push(qd.totalRev);qExps.push(qd.totalExp);qNets.push(qd.totalNet);
-      }
-    });
-    _qrCharts['qrQoQChart']=new Chart(qoqCtx,{type:'bar',data:{labels:qLabels,datasets:[
-      {label:'Revenue',data:qRevs,backgroundColor:'#6366f1cc',borderColor:'#6366f1',borderWidth:2,borderRadius:10,borderSkipped:false},
-      {label:'Expenses',data:qExps,backgroundColor:'#ef4444cc',borderColor:'#ef4444',borderWidth:2,borderRadius:10,borderSkipped:false},
-      {label:'Net P&L',data:qNets,backgroundColor:'#10b981cc',borderColor:'#10b981',borderWidth:2,borderRadius:10,borderSkipped:false}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});
-  }
-  // Payment Status Table
-  var payTbody=document.getElementById('qr-payment-tbody');
-  var payTfoot=document.getElementById('qr-payment-tfoot');
-  var payEntries=Object.entries(d.payStatus).filter(function(e){return e[1].count>0;});
-  var payTotal=payEntries.reduce(function(a,e){return a+e[1].amt;},0);
-  var payTotalCount=payEntries.reduce(function(a,e){return a+e[1].count;},0);
-  payTbody.innerHTML=payEntries.length?payEntries.map(function(e){
-    var pct=payTotal>0?Math.round(e[1].amt/payTotal*100):0;
-    var color=e[0]==='Paid'?'var(--green)':(e[0]==='Unpaid'?'var(--red)':'var(--yellow)');
-    return'<tr><td><strong style="color:'+color+'">'+e[0]+'</strong></td><td>'+e[1].count+'</td><td>'+$m(e[1].amt)+'</td><td>'+pct+'%</td></tr>';
-  }).join(''):'<tr><td colspan="4" class="empty-state">No payment data</td></tr>';
-  payTfoot.innerHTML='<tr style="font-weight:700;background:var(--surface2)"><td>TOTAL</td><td>'+payTotalCount+'</td><td>'+$m(payTotal)+'</td><td>100%</td></tr>';
-  // Collection Chart
-  _qrDestroyChart('qrCollectionChart');
-  var collCtx=document.getElementById('qrCollectionChart');
-  if(collCtx){
-    _qrCharts['qrCollectionChart']=new Chart(collCtx,{type:'bar',data:{labels:d.monthData.map(function(m){return m.name;}),datasets:[
-      {label:'Received',data:d.monthData.map(function(m){return m.paid;}),backgroundColor:'#10b981cc',borderColor:'#10b981',borderWidth:2,borderRadius:10,borderSkipped:false},
-      {label:'Outstanding',data:d.monthData.map(function(m){return m.bal;}),backgroundColor:'#f59e0bcc',borderColor:'#f59e0b',borderWidth:2,borderRadius:10,borderSkipped:false}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});
-  }
-  // Expense Breakdown Table
-  var expTbody=document.getElementById('qr-expense-tbody');
-  var expRows='';
-  d.monthData.forEach(function(m,i){
-    var pctOfRev=m.rev>0?Math.round(m.exp/m.rev*100):0;
-    var change='—';
-    if(i>0&&d.monthData[i-1].exp>0){
-      var chg=Math.round((m.exp-d.monthData[i-1].exp)/d.monthData[i-1].exp*100);
-      change='<span style="color:'+(chg>=0?'var(--red)':'var(--green)')+'">'+(chg>=0?'▲ +':'▼ ')+chg+'%</span>';
-    }
-    expRows+='<tr><td><strong>'+m.full+'</strong></td><td style="color:var(--red)">'+$m(m.exp)+'</td><td>'+pctOfRev+'%</td><td>'+change+'</td></tr>';
-  });
-  expTbody.innerHTML=expRows||'<tr><td colspan="4" class="empty-state">No expense data</td></tr>';
-  // Expense Trend Chart
-  _qrDestroyChart('qrExpenseChart');
-  var expCtx=document.getElementById('qrExpenseChart');
-  if(expCtx){
-    _qrCharts['qrExpenseChart']=new Chart(expCtx,{type:'line',data:{labels:d.monthData.map(function(m){return m.name;}),datasets:[
-      {label:'Expenses',data:d.monthData.map(function(m){return m.exp;}),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.1)',fill:true,tension:.3,pointRadius:6,pointBackgroundColor:'#ef4444',borderWidth:3},
-      {label:'Revenue',data:d.monthData.map(function(m){return m.rev;}),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.05)',fill:false,tension:.3,pointRadius:6,pointBackgroundColor:'#6366f1',borderWidth:3,borderDash:[5,5]}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'circle'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+$m(c.raw);}}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return '$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}}}});
-  }
-  // YTD Context Banner
-  var ytdEl=document.getElementById('qr-ytd-content');
-  if(ytdEl){
-    var ytdRev=0,ytdExp=0;
-    ['Q1','Q2','Q3','Q4'].forEach(function(qk){
-      var qd=_qrGetQuarterData(qk);
-      if(qd){ytdRev+=qd.totalRev;ytdExp+=qd.totalExp;}
-    });
-    var ytdNet=ytdRev-ytdExp;
-    var qPctOfYtd=ytdRev>0?Math.round(d.totalRev/ytdRev*100):0;
-    ytdEl.innerHTML=
-      '<div class="psb-group"><div class="psb-group-title">Year-to-Date</div>'+
-      '<div class="psb-line"><span class="psb-key">YTD Revenue</span><span class="psb-value green">'+$m(ytdRev)+'</span></div>'+
-      '<div class="psb-line"><span class="psb-key">YTD Expenses</span><span class="psb-value red">'+$m(ytdExp)+'</span></div>'+
-      '<div class="psb-line"><span class="psb-key">YTD Net P&L</span><span class="psb-value" style="color:'+(ytdNet>=0?'#4ade80':'#f87171')+'">'+$m(ytdNet)+'</span></div></div>'+
-      '<div class="psb-group"><div class="psb-group-title">'+d.q.name+' Share</div>'+
-      '<div class="psb-line"><span class="psb-key">'+d.q.name+' % of YTD Revenue</span><span class="psb-value gold">'+qPctOfYtd+'%</span></div>'+
-      '<div class="psb-line"><span class="psb-key">'+d.q.name+' Revenue</span><span class="psb-value green">'+$m(d.totalRev)+'</span></div>'+
-      '<div class="psb-line"><span class="psb-key">'+d.q.name+' Net</span><span class="psb-value" style="color:'+(d.totalNet>=0?'#4ade80':'#f87171')+'">'+$m(d.totalNet)+'</span></div></div>';
-  }
-}
-function _qrDestroyChart(id){
-  if(_qrCharts[id]){_qrCharts[id].destroy();delete _qrCharts[id];}
-  var ex=Chart.getChart(id);if(ex)ex.destroy();
-}
-function exportQuarterlyPDF(){
-  var d=_qrGetQuarterData(_qrSelectedQ);if(!d)return;
-  var pdf=new jspdf.jsPDF('l','mm','a4');
-  var pw=pdf.internal.pageSize.getWidth();
-  var ph=pdf.internal.pageSize.getHeight();
-  // Header
-  pdf.setFillColor(26,35,64);pdf.rect(0,0,pw,28,'F');
-  pdf.setFontSize(20);pdf.setTextColor(255);
-  pdf.text('ETC '+d.q.name+' Financial Report',14,18);
-  pdf.setFontSize(10);pdf.setTextColor(200);
-  pdf.text(d.q.full+'  |  Generated: '+new Date().toLocaleString('en-US',{timeZone:'America/New_York'})+' ET',14,25);
-  // KPI Summary
-  pdf.setFontSize(12);pdf.setTextColor(40);
-  var margin=d.totalRev>0?Math.round(d.totalNet/d.totalRev*100):0;
-  pdf.text('Revenue: '+$m(d.totalRev)+'   |   Expenses: '+$m(d.totalExp)+'   |   Net P&L: '+$m(d.totalNet)+'   |   Margin: '+margin+'%',14,38);
-  // QoQ comparison
-  var prevQMap={Q2:'Q1',Q3:'Q2',Q4:'Q3',Q1:'Q4'};
-  var prevD=_qrGetQuarterData(prevQMap[_qrSelectedQ]);
-  if(prevD&&prevD.totalRev>0){
-    var qoqPct=Math.round((d.totalRev-prevD.totalRev)/prevD.totalRev*100);
-    pdf.setFontSize(10);pdf.setTextColor(80);
-    pdf.text('vs '+prevD.q.name+': '+(qoqPct>=0?'+':'')+qoqPct+'% revenue change  ('+prevD.q.name+' was '+$m(prevD.totalRev)+')',14,44);
-  }
-  // Monthly Breakdown Table
-  pdf.setFontSize(14);pdf.setTextColor(99,102,241);
-  pdf.text('Monthly Breakdown',14,54);
-  var monthRows=d.monthData.map(function(m){
-    var mg=m.rev>0?Math.round(m.net/m.rev*100)+'%':'0%';
-    return[m.full,'$'+m.rev.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+m.bh.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+m.exp.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+m.net.toLocaleString(undefined,{minimumFractionDigits:2}),mg];
-  });
-  monthRows.push(['QUARTER TOTAL','$'+d.totalRev.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+d.totalBh.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+d.totalExp.toLocaleString(undefined,{minimumFractionDigits:2}),'$'+d.totalNet.toLocaleString(undefined,{minimumFractionDigits:2}),margin+'%']);
-  pdf.autoTable({
-    startY:58,head:[['Month','Gross Revenue','Beehiiv Ads','Expenses','Net P&L','Margin']],body:monthRows,
-    styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[99,102,241],textColor:255,fontStyle:'bold'},
-    columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right'},5:{halign:'right'}},
-    margin:{left:14,right:14},
-    didParseCell:function(data){if(data.row.index===monthRows.length-1&&data.section==='body'){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[240,242,250];}}
-  });
-  // Revenue by Source Table
-  var srcY=pdf.lastAutoTable.finalY+14;
-  if(srcY>ph-60){pdf.addPage();srcY=20;}
-  pdf.setFontSize(14);pdf.setTextColor(99,102,241);
-  pdf.text('Revenue by Source',14,srcY);
-  var srcEntries=Object.entries(d.sources).sort(function(a,b){return b[1].rev-a[1].rev;});
-  var srcTotal2=srcEntries.reduce(function(a,e){return a+e[1].rev;},0);
-  var srcRows=srcEntries.map(function(e){return[e[0],'$'+e[1].rev.toLocaleString(undefined,{minimumFractionDigits:2}),(srcTotal2>0?Math.round(e[1].rev/srcTotal2*100):0)+'%',e[1].count.toString()];});
-  srcRows.push(['TOTAL','$'+srcTotal2.toLocaleString(undefined,{minimumFractionDigits:2}),'100%',srcEntries.reduce(function(a,e){return a+e[1].count;},0).toString()]);
-  pdf.autoTable({
-    startY:srcY+4,head:[['Source','Revenue','% of Total','Invoices']],body:srcRows,
-    styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[16,185,129],textColor:255,fontStyle:'bold'},
-    columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right'}},margin:{left:14,right:14},
-    didParseCell:function(data){if(data.row.index===srcRows.length-1&&data.section==='body'){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[240,242,250];}}
-  });
-  // Top Affiliates
-  var topY=pdf.lastAutoTable.finalY+14;
-  if(topY>ph-60){pdf.addPage();topY=20;}
-  pdf.setFontSize(14);pdf.setTextColor(99,102,241);
-  pdf.text('Top 15 Affiliates',14,topY);
-  var affEntries2=Object.entries(d.affiliates).sort(function(a,b){return b[1].rev-a[1].rev;}).slice(0,15);
-  var affTotal2=Object.values(d.affiliates).reduce(function(a,v){return a+v.rev;},0);
-  var affRows=affEntries2.map(function(e,i){return[(i+1).toString(),e[0],'$'+e[1].rev.toLocaleString(undefined,{minimumFractionDigits:2}),(affTotal2>0?(e[1].rev/affTotal2*100).toFixed(1):0)+'%',e[1].cat];});
-  pdf.autoTable({
-    startY:topY+4,head:[['#','Affiliate','Revenue','% of Total','Source']],body:affRows,
-    styles:{fontSize:8.5,cellPadding:2.5},headStyles:{fillColor:[124,58,237],textColor:255,fontStyle:'bold'},
-    columnStyles:{0:{halign:'center',cellWidth:10},2:{halign:'right'},3:{halign:'right'}},margin:{left:14,right:14}
-  });
-  // Payment Status
-  var payY=pdf.lastAutoTable.finalY+14;
-  if(payY>ph-50){pdf.addPage();payY=20;}
-  pdf.setFontSize(14);pdf.setTextColor(99,102,241);
-  pdf.text('Payment Collection Status',14,payY);
-  var payEntries2=Object.entries(d.payStatus).filter(function(e){return e[1].count>0;});
-  var payTotal2=payEntries2.reduce(function(a,e){return a+e[1].amt;},0);
-  var payRows=payEntries2.map(function(e){return[e[0],e[1].count.toString(),'$'+e[1].amt.toLocaleString(undefined,{minimumFractionDigits:2}),(payTotal2>0?Math.round(e[1].amt/payTotal2*100):0)+'%'];});
-  payRows.push(['TOTAL',payEntries2.reduce(function(a,e){return a+e[1].count;},0).toString(),'$'+payTotal2.toLocaleString(undefined,{minimumFractionDigits:2}),'100%']);
-  pdf.autoTable({
-    startY:payY+4,head:[['Status','Count','Amount','% of Total']],body:payRows,
-    styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[245,158,11],textColor:255,fontStyle:'bold'},
-    columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right'}},margin:{left:14,right:14},
-    didParseCell:function(data){if(data.row.index===payRows.length-1&&data.section==='body'){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[240,242,250];}}
-  });
-  // Footer on each page
-  var totalPages=pdf.internal.getNumberOfPages();
-  for(var p=1;p<=totalPages;p++){
-    pdf.setPage(p);
-    pdf.setFontSize(7);pdf.setTextColor(150);
-    pdf.text('ETC '+d.q.name+' Quarterly Report — Page '+p+' of '+totalPages+'  |  Confidential',pw/2,ph-6,{align:'center'});
-  }
-  pdf.save('ETC_'+d.q.name+'_Quarterly_Report_'+new Date().toISOString().split('T')[0]+'.pdf');
-}
-function exportQuarterlyExcel(){
-  var d=_qrGetQuarterData(_qrSelectedQ);if(!d)return;
-  var wb=XLSX.utils.book_new();
-  // Summary sheet
-  var summaryData=[
-    ['ETC '+d.q.name+' Quarterly Financial Report'],
-    [d.q.full],
-    ['Generated: '+new Date().toLocaleString('en-US',{timeZone:'America/New_York'})+' ET'],
-    [],
-    ['EXECUTIVE SUMMARY'],
-    ['Quarterly Revenue','$'+d.totalRev.toFixed(2)],
-    ['Quarterly Expenses','$'+d.totalExp.toFixed(2)],
-    ['Net Profit/Loss','$'+d.totalNet.toFixed(2)],
-    ['Profit Margin',(d.totalRev>0?Math.round(d.totalNet/d.totalRev*100):0)+'%'],
-    ['Total Invoices',d.invoiceCount],
-    [],
-    ['MONTHLY BREAKDOWN'],
-    ['Month','Gross Revenue','Beehiiv Ads','Expenses','Net P&L','Margin']
-  ];
-  d.monthData.forEach(function(m){
-    var mg=m.rev>0?Math.round(m.net/m.rev*100)+'%':'0%';
-    summaryData.push([m.full,m.rev,m.bh,m.exp,m.net,mg]);
-  });
-  summaryData.push(['QUARTER TOTAL',d.totalRev,d.totalBh,d.totalExp,d.totalNet,(d.totalRev>0?Math.round(d.totalNet/d.totalRev*100):0)+'%']);
-  var ws1=XLSX.utils.aoa_to_sheet(summaryData);
-  ws1['!cols']=[{wch:20},{wch:16},{wch:14},{wch:14},{wch:14},{wch:10}];
-  XLSX.utils.book_append_sheet(wb,ws1,'Summary');
-  // Revenue by Source sheet
-  var srcData=[['Source','Revenue','% of Total','Invoices']];
-  var srcEntries=Object.entries(d.sources).sort(function(a,b){return b[1].rev-a[1].rev;});
-  var srcTotal=srcEntries.reduce(function(a,e){return a+e[1].rev;},0);
-  srcEntries.forEach(function(e){srcData.push([e[0],e[1].rev,(srcTotal>0?Math.round(e[1].rev/srcTotal*100):0)+'%',e[1].count]);});
-  srcData.push(['TOTAL',srcTotal,'100%',srcEntries.reduce(function(a,e){return a+e[1].count;},0)]);
-  var ws2=XLSX.utils.aoa_to_sheet(srcData);
-  ws2['!cols']=[{wch:22},{wch:16},{wch:12},{wch:10}];
-  XLSX.utils.book_append_sheet(wb,ws2,'Revenue by Source');
-  // Top Affiliates sheet
-  var affData=[['#','Affiliate','Revenue','% of Total','Source']];
-  var affEntries=Object.entries(d.affiliates).sort(function(a,b){return b[1].rev-a[1].rev;}).slice(0,15);
-  var affTotal=Object.values(d.affiliates).reduce(function(a,v){return a+v.rev;},0);
-  affEntries.forEach(function(e,i){affData.push([i+1,e[0],e[1].rev,(affTotal>0?(e[1].rev/affTotal*100).toFixed(1):0)+'%',e[1].cat]);});
-  var ws3=XLSX.utils.aoa_to_sheet(affData);
-  ws3['!cols']=[{wch:4},{wch:30},{wch:16},{wch:12},{wch:12}];
-  XLSX.utils.book_append_sheet(wb,ws3,'Top Affiliates');
-  // All Invoices sheet
-  var invData=[['Invoice #','Date','Month','Affiliate','Amount','Received','Status','Category','Remarks']];
-  var q=_qrQuarters[_qrSelectedQ];
-  q.months.forEach(function(m){
-    allPNL.filter(function(r){return r._month===m&&!r._isSummary;}).forEach(function(r){
-      var tot=(r.invAmt||r.displayAmt||0)>0?(r.invAmt||r.displayAmt):r.rcvd;
-      invData.push([r.invId||'—',r.date||'—',r._month||'—',r.affiliate||'—',tot,r.rcvd||0,r.status||'—',classifyPNLSource(r.affiliate,r._month,r._key||r.invId),r.remarks||'']);
-    });
-  });
-  var ws4=XLSX.utils.aoa_to_sheet(invData);
-  ws4['!cols']=[{wch:12},{wch:12},{wch:12},{wch:28},{wch:14},{wch:14},{wch:14},{wch:14},{wch:20}];
-  XLSX.utils.book_append_sheet(wb,ws4,'All Invoices');
-  XLSX.writeFile(wb,'ETC_'+d.q.name+'_Quarterly_Report_'+new Date().toISOString().split('T')[0]+'.xlsx');
 }
 
 /* Inject FMD Beehiiv API earnings into allFMD for May+ months */
@@ -5393,7 +4986,6 @@ renderExpenses();
 renderPNL();
 try{var _smb=document.querySelector('#pnl-month-buttons button.active');if(_smb&&_smb.textContent!=='All Months')showMonthlySummary(_smb.textContent);}catch(e){}
 try{renderQuarterlySummary();}catch(e){}
-try{renderQuarterlyReport();}catch(e){}
 try{renderOverview();}catch(e){}
 try{renderExpenseCategories();}catch(e){}
 
@@ -8205,107 +7797,6 @@ if(!_emInitDone){_emInitDone=true;setTimeout(emLoadTransactions,500);}
 
 
 
-<!-- ═══════ QUARTERLY REPORT TAB ═══════ -->
-<div id="tab-qreport" class="tab-content">
-<div class="export-bar">
-<button class="btn-export pdf" onclick="exportQuarterlyPDF()">📄 Export Quarterly PDF</button>
-<button class="btn-export excel" onclick="exportQuarterlyExcel()">📊 Export Excel</button>
-</div>
-
-<!-- Quarter Selector -->
-<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">
-<h3 style="margin:0;font-size:1.15rem;color:var(--text);display:flex;align-items:center;gap:8px"><span style="font-size:1.4rem">📋</span> Quarterly Financial Report</h3>
-<div style="display:flex;gap:6px;flex-wrap:wrap">
-<button class="month-btn active" onclick="selectQR('Q2')" id="qr-btn-Q2">Q2 (Apr–Jun)</button>
-<button class="month-btn" onclick="selectQR('Q1')" id="qr-btn-Q1">Q1 (Jan–Mar)</button>
-<button class="month-btn" onclick="selectQR('Q3')" id="qr-btn-Q3">Q3 (Jul–Sep)</button>
-<button class="month-btn" onclick="selectQR('Q4')" id="qr-btn-Q4">Q4 (Oct–Dec)</button>
-</div>
-<span style="font-size:.78rem;color:var(--text3);margin-left:auto" id="qr-generated">Generated: —</span>
-</div>
-
-<!-- Executive Summary KPI Cards -->
-<div id="qr-report-content">
-<div class="stats-row" id="qr-kpi-row">
-<div class="stat-card green"><div class="sc-label">QUARTERLY REVENUE</div><div class="sc-value" id="qr-revenue">$0</div><div class="sc-sub" id="qr-revenue-sub">All sources</div></div>
-<div class="stat-card red"><div class="sc-label">QUARTERLY EXPENSES</div><div class="sc-value" id="qr-expenses">$0</div><div class="sc-sub" id="qr-expenses-sub">Total costs</div></div>
-<div class="stat-card purple"><div class="sc-label">NET PROFIT / LOSS</div><div class="sc-value" id="qr-net">$0</div><div class="sc-sub" id="qr-net-sub">Bottom line</div></div>
-<div class="stat-card"><div class="sc-label">PROFIT MARGIN</div><div class="sc-value" id="qr-margin">0%</div><div class="sc-sub" id="qr-margin-sub">Revenue efficiency</div></div>
-<div class="stat-card"><div class="sc-label">vs PREVIOUS QUARTER</div><div class="sc-value" id="qr-qoq">—</div><div class="sc-sub" id="qr-qoq-sub">Revenue change</div></div>
-</div>
-
-<!-- Monthly Breakdown Table -->
-<div class="two-col" style="margin-bottom:20px;align-items:stretch">
-<div class="table-card" style="margin-bottom:0">
-<div class="section-title" style="padding:14px 16px 0;margin-bottom:10px"><div class="icon-circle">📅</div> Monthly Breakdown</div>
-<table id="qr-monthly-table">
-<thead><tr><th>Month</th><th>Gross Revenue</th><th>Beehiiv Ads</th><th>Expenses</th><th>Net P&L</th><th>Margin</th></tr></thead>
-<tbody id="qr-monthly-tbody"></tbody>
-<tfoot id="qr-monthly-tfoot"></tfoot>
-</table>
-</div>
-<div class="chart-card" style="margin-bottom:0"><h3 style="font-size:.9rem">📊 Revenue vs Expenses by Month</h3><div class="chart-wrap" style="height:300px"><canvas id="qrMonthlyChart"></canvas></div></div>
-</div>
-
-<!-- Revenue by Source -->
-<div class="two-col" style="margin-bottom:20px;align-items:stretch">
-<div class="table-card" style="margin-bottom:0">
-<div class="section-title" style="padding:14px 16px 0;margin-bottom:10px"><div class="icon-circle">💰</div> Revenue by Source</div>
-<table id="qr-source-table">
-<thead><tr><th>Source</th><th>Revenue</th><th>% of Total</th><th>Invoices</th></tr></thead>
-<tbody id="qr-source-tbody"></tbody>
-<tfoot id="qr-source-tfoot"></tfoot>
-</table>
-</div>
-<div class="chart-card" style="margin-bottom:0"><h3 style="font-size:.9rem">🥧 Revenue Distribution</h3><div class="chart-wrap" style="height:300px"><canvas id="qrSourcePie"></canvas></div></div>
-</div>
-
-<!-- Top Affiliates & Quarter Comparison -->
-<div class="two-col" style="margin-bottom:20px;align-items:stretch">
-<div class="table-card" style="margin-bottom:0">
-<div class="section-title" style="padding:14px 16px 0;margin-bottom:10px"><div class="icon-circle">🏆</div> Top 15 Affiliates</div>
-<table id="qr-top-table">
-<thead><tr><th>#</th><th>Affiliate</th><th>Revenue</th><th>% of Total</th><th>Source</th></tr></thead>
-<tbody id="qr-top-tbody"></tbody>
-</table>
-</div>
-<div class="chart-card" style="margin-bottom:0"><h3 style="font-size:.9rem">📈 Quarter-over-Quarter Comparison</h3><div class="chart-wrap" style="height:300px"><canvas id="qrQoQChart"></canvas></div></div>
-</div>
-
-<!-- Payment Status & Collection Summary -->
-<div class="two-col" style="margin-bottom:20px;align-items:stretch">
-<div class="table-card" style="margin-bottom:0">
-<div class="section-title" style="padding:14px 16px 0;margin-bottom:10px"><div class="icon-circle">💳</div> Payment Collection Status</div>
-<table id="qr-payment-table">
-<thead><tr><th>Status</th><th>Count</th><th>Amount</th><th>% of Total</th></tr></thead>
-<tbody id="qr-payment-tbody"></tbody>
-<tfoot id="qr-payment-tfoot"></tfoot>
-</table>
-</div>
-<div class="chart-card" style="margin-bottom:0"><h3 style="font-size:.9rem">📊 Collection Rate by Month</h3><div class="chart-wrap" style="height:300px"><canvas id="qrCollectionChart"></canvas></div></div>
-</div>
-
-<!-- Expense Breakdown -->
-<div class="two-col" style="margin-bottom:20px;align-items:stretch">
-<div class="table-card" style="margin-bottom:0">
-<div class="section-title" style="padding:14px 16px 0;margin-bottom:10px"><div class="icon-circle">📋</div> Expense Breakdown by Month</div>
-<table id="qr-expense-table">
-<thead><tr><th>Month</th><th>Expenses</th><th>% of Revenue</th><th>Change</th></tr></thead>
-<tbody id="qr-expense-tbody"></tbody>
-</table>
-</div>
-<div class="chart-card" style="margin-bottom:0"><h3 style="font-size:.9rem">📉 Expense Trend</h3><div class="chart-wrap" style="height:300px"><canvas id="qrExpenseChart"></canvas></div></div>
-</div>
-
-<!-- YTD Context -->
-<div class="pnl-summary-banner" id="qr-ytd-banner">
-<div class="psb-title">📅 Year-to-Date Context</div>
-<div class="psb-row" id="qr-ytd-content"></div>
-</div>
-
-</div><!-- /qr-report-content -->
-</div><!-- /tab-qreport -->
-
 <!-- ═══════ EXPENSE MANAGER TAB ═══════ -->
 <div id="tab-expmgr" class="tab-content">
 <div class="stats-row">
@@ -8493,4 +7984,3 @@ Setup: Go to <a href="https://www.emailjs.com" target="_blank" style="color:var(
 </div><!-- /app-container -->
 
 </body></html>
-
