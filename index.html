@@ -47,10 +47,11 @@ body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;backgroun
 .header-info p{font-size:.72rem;color:rgba(255,255,255,.5);margin-top:1px}
 #currentDate{font-size:.72rem;color:rgba(255,255,255,.7);margin-top:2px;font-weight:500}
 .header-badge{background:rgba(37,99,235,.2);border:1px solid rgba(37,99,235,.3);border-radius:20px;padding:3px 10px;color:#93c5fd;font-size:.7rem;font-weight:600}
-.nav-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0;overflow-x:auto}
+.nav-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:2px;overflow-x:visible}
 .nav-tab{padding:12px 20px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:.82rem;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap;letter-spacing:-.01em}
 .nav-tab:hover{color:var(--text);background:var(--surface2)}
 .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+  .nav-group-label{font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 10px 4px 14px;white-space:nowrap;position:relative}
 .tab-content{display:none;padding:24px 28px;max-width:1440px;margin:0 auto}
 .tab-content.active{display:block}
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
@@ -1002,13 +1003,17 @@ Secured with Firebase Authentication
 </div>
 <div class="nav-tabs">
 <button class="nav-tab active" onclick="showTab('overview')" id="btn-overview">🏠 Overview</button>
+<span class="nav-group-label">Revenue</span>
 <button class="nav-tab" onclick="showTab('revenue')" id="btn-revenue">&#128200; Revenue &amp; Forecast</button>
-<button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
 <button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; Tracking Dashboard</button>
+<span class="nav-group-label">Financials</span>
+<button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
-<button class="nav-tab" onclick="showTab('analytics')" id="btn-analytics">📊 Analytics</button>
-<button class="nav-tab" onclick="showTab('tools')" id="btn-tools">🛠️ Tools</button>
 <button class="nav-tab" onclick="showTab('expmgr')" id="btn-expmgr">💳 Expense Manager</button>
+<span class="nav-group-label">Insights</span>
+<button class="nav-tab" onclick="showTab('analytics')" id="btn-analytics">📊 Analytics</button>
+<span class="nav-group-label">Manage</span>
+<button class="nav-tab" onclick="showTab('tools')" id="btn-tools">🛠️ Tools</button>
 <button class="nav-tab" id="btn-admin" onclick="showTab('admin')" style="display:none">👥 Admin</button>
 </div>
 <!-- Global Sync Status Bar -->
