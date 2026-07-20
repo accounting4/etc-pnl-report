@@ -1031,7 +1031,32 @@ Secured with Firebase Authentication
 <button onclick="manualSync()" id="gsync-btn" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s">⟳ Sync Now</button>
 </div>
 </div>
-<div id="tab-overview" class="tab-content active">
+<!-- Persistent Top KPI Strip (Step 2: centralized KPIs visible on every tab) -->
+  <div id="global-kpi-strip" style="display:flex;gap:18px;padding:10px 16px;flex-wrap:wrap;align-items:center;background:var(--card,#fff);border-bottom:1px solid var(--border)">
+  <div style="display:flex;flex-direction:column;min-width:100px"><span style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Revenue</span><span id="gkpi-revenue" style="font-size:1.05rem;font-weight:700;color:#2563eb">–</span></div>
+  <div style="display:flex;flex-direction:column;min-width:100px"><span style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Expenses</span><span id="gkpi-expenses" style="font-size:1.05rem;font-weight:700;color:#ef4444">–</span></div>
+  <div style="display:flex;flex-direction:column;min-width:100px"><span style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Net Profit</span><span id="gkpi-net" style="font-size:1.05rem;font-weight:700;color:#10b981">–</span></div>
+  <div style="display:flex;flex-direction:column;min-width:100px"><span style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Cash Balance</span><span id="gkpi-cash" style="font-size:1.05rem;font-weight:700;color:#6366f1">–</span></div>
+  <div style="display:flex;flex-direction:column;min-width:130px"><span style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Accounts Receivable</span><span id="gkpi-ar" style="font-size:1.05rem;font-weight:700;color:#f59e0b">–</span></div>
+  </div>
+  <script>
+  (function(){
+    function syncGlobalKpiStrip(){
+      var map = [['pnl-s-total','gkpi-revenue'],['pnl-s-count','gkpi-expenses'],['pnl-s-net','gkpi-net'],['pnl-s-pend','gkpi-cash'],['fmd-s-pend','gkpi-ar']];
+      map.forEach(function(pair){
+        var src = document.getElementById(pair[0]);
+        var dst = document.getElementById(pair[1]);
+        if(src && dst && src.textContent.trim()) dst.textContent = src.textContent.trim();
+      });
+    }
+    window.syncGlobalKpiStrip = syncGlobalKpiStrip;
+    setInterval(syncGlobalKpiStrip, 1500);
+    setTimeout(syncGlobalKpiStrip, 400);
+    setTimeout(syncGlobalKpiStrip, 1500);
+    setTimeout(syncGlobalKpiStrip, 3000);
+  })();
+  </script>
+  <div id="tab-overview" class="tab-content active">
 <div class="export-bar">
 <button class="btn-export pdf" onclick="exportPDF('overview')">📄 Export PDF</button>
 <button class="btn-export email" onclick="shareReport()">📧 Email Report</button>
