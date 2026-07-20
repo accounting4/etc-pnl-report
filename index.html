@@ -1005,7 +1005,6 @@ Secured with Firebase Authentication
 <button class="nav-tab active" onclick="showTab('overview')" id="btn-overview">🏠 Overview</button>
 <span class="nav-group-label">Revenue</span>
 <button class="nav-tab" onclick="showTab('revenue')" id="btn-revenue">&#128200; Revenue &amp; Forecast</button>
-<button class="nav-tab" onclick="showTab('cto')" id="btn-cto">&#128202; Tracking Dashboard</button>
 <span class="nav-group-label">Financials</span>
 <button class="nav-tab" onclick="showTab('pnl')" id="btn-pnl">&#128181; Profit &amp; Loss</button>
 <button class="nav-tab" onclick="showTab('fmd')" id="btn-fmd">&#9203; Five Minute Daily</button>
@@ -1056,6 +1055,99 @@ Secured with Firebase Authentication
     setTimeout(syncGlobalKpiStrip, 3000);
   })();
   </script>
+<!-- Revenue Hub Sub-Navigation (Step 3: merge Revenue & Forecast + Tracking Dashboard) -->
+  <div id="rev-hub-subnav" style="display:none;gap:8px;margin:0 0 16px 0;flex-wrap:wrap">
+  <button id="revview-btn-source" class="revview-tab active" onclick="showRevView('source')" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border,#ddd);background:var(--surface,#fff);cursor:pointer;font-weight:600;color:inherit">By Source</button>
+  <button id="revview-btn-affiliate" class="revview-tab" onclick="showRevView('affiliate')" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border,#ddd);background:var(--surface,#fff);cursor:pointer;font-weight:600;color:inherit">By Affiliate</button>
+  <button id="revview-btn-forecast" class="revview-tab" onclick="showRevView('forecast')" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border,#ddd);background:var(--surface,#fff);cursor:pointer;font-weight:600;color:inherit">Forecast</button>
+  </div>
+  <style>
+  #rev-hub-subnav .revview-tab.active{background:var(--accent,#4f7cff);color:#fff;border-color:transparent}
+  </style>
+  <script>
+  (function(){
+  function tagRevViewElements(){
+  if (window.__revViewTagged) return;
+  var revTab = document.getElementById('tab-revenue');
+  if (!revTab) return;
+  var subnav = document.getElementById('rev-hub-subnav');
+  if (subnav && subnav.parentElement !== revTab){ revTab.insertBefore(subnav, revTab.firstChild); }
+  function tag(el, view){ if(el) el.setAttribute('data-revview', view); }
+  var affiliateChart = revTab.querySelector('.chart-card');
+  tag(affiliateChart, 'affiliate');
+  var bigCard = null;
+  for (var i=0;i<revTab.children.length;i++){
+  var el = revTab.children[i];
+  if (el !== subnav && el.tagName==='DIV' && el.className && el.className.split(' ').indexOf('card')>=0){ bigCard = el; break; }
+  }
+  if (bigCard && bigCard.children.length>=4){
+  tag(bigCard.querySelector('h3'), 'forecast');
+  tag(bigCard.children[1], 'forecast');
+  tag(bigCard.children[2], 'forecast');
+  }
+  var secRevRecords = document.getElementById('sec-rev-records');
+  if (secRevRecords && secRevRecords.children.length>=2){
+  tag(secRevRecords.children[0], 'source');
+  var wrap = secRevRecords.children[1];
+  if (wrap && wrap.children.length>=3){
+  tag(wrap.children[0], 'source');
+  tag(wrap.children[1], 'source');
+  tag(wrap.children[2], 'forecast');
+  }
+  }
+  window.__revViewTagged = true;
+  }
+  window.showRevView = function(view){
+  tagRevViewElements();
+  var revTab = document.getElementById('tab-revenue');
+  var ctoTab = document.getElementById('tab-cto');
+  if (!revTab) return;
+  ['source','affiliate','forecast'].forEach(function(v){
+  var btn = document.getElementById('revview-btn-'+v);
+  if (btn) btn.classList.toggle('active', v===view);
+  });
+  revTab.querySelectorAll('[data-revview]').forEach(function(el){
+  el.style.display = (el.getAttribute('data-revview') === view) ? '' : 'none';
+  });
+  if (ctoTab){
+  if (view === 'affiliate'){
+  ctoTab.classList.add('cto-as-affiliate-panel');
+  ctoTab.style.display = 'block';
+  } else {
+  ctoTab.classList.remove('cto-as-affiliate-panel');
+  if (!ctoTab.classList.contains('active')) ctoTab.style.display = 'none';
+  }
+  }
+  setTimeout(function(){ window.dispatchEvent(new Event('resize')); }, 60);
+  };
+  window.openRevAffiliateView = function(){
+  if (typeof showTab === 'function') showTab('revenue');
+  setTimeout(function(){ showRevView('affiliate'); }, 50);
+  };
+  function checkRevenueTabActive(){
+  var revTab = document.getElementById('tab-revenue');
+  var ctoTab = document.getElementById('tab-cto');
+  var subnav = document.getElementById('rev-hub-subnav');
+  if (!revTab || !ctoTab || !subnav) return;
+  var revActive = revTab.classList.contains('active');
+  if (revActive){
+  if (subnav.style.display === 'none'){
+  subnav.style.display = 'flex';
+  showRevView('source');
+  }
+  } else {
+  subnav.style.display = 'none';
+  if (!ctoTab.classList.contains('active')){
+  ctoTab.classList.remove('cto-as-affiliate-panel');
+  ctoTab.style.display = 'none';
+  }
+  }
+  }
+  setInterval(checkRevenueTabActive, 500);
+  document.addEventListener('DOMContentLoaded', function(){ tagRevViewElements(); checkRevenueTabActive(); });
+  if (document.readyState !== 'loading'){ tagRevViewElements(); checkRevenueTabActive(); }
+  })();
+  </script>
   <div id="tab-overview" class="tab-content active">
 <div class="export-bar">
 <button class="btn-export pdf" onclick="exportPDF('overview')">📄 Export PDF</button>
@@ -1070,9 +1162,9 @@ Secured with Firebase Authentication
 <div class="stat-card green" onclick="showTab('revenue')" style="cursor:pointer" title="Click to view Forecast"><div class="sc-label">MONTH-END FORECAST</div><div class="sc-value" id="ov-forecast">$0</div><div class="sc-sub">Projected total →</div></div>
 <div class="stat-card purple" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view Profit & Loss"><div class="sc-label">TOTAL INVOICED (PNL)</div><div class="sc-value" id="ov-pnl">$0</div><div class="sc-sub">All invoices →</div></div>
 <div class="stat-card red" onclick="showTab('pnl')" style="cursor:pointer" title="Click to view P&L expenses"><div class="sc-label">TOTAL EXPENSES</div><div class="sc-value" id="ov-expenses">$0</div><div class="sc-sub">From P&L summary →</div></div>
-<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">MTD REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">All sources →</div></div>
+<div class="stat-card" onclick="openRevAffiliateView()" style="cursor:pointer;border-left:3px solid #6366f1" title="Click to view Tracking Dashboard"><div class="sc-label">MTD REVENUE</div><div class="sc-value" id="ov-tracking">$0</div><div class="sc-sub">All sources →</div></div>
 <div class="stat-card" style="border-left:3px solid #14b8a6"><div class="sc-label">COLLECTION RATE</div><div class="sc-value" id="ov-collection">0%</div><div class="sc-sub">Paid vs Total (QB)</div></div>
-<div class="stat-card" onclick="showTab('cto')" style="cursor:pointer;border-left:3px solid #f97316" title="Click to view Beehiiv Revenue"><div class="sc-label">BEEHIIV EARNINGS</div><div class="sc-value" id="ov-beehiiv">$0</div><div class="sc-sub">Daily earnings →</div></div>
+<div class="stat-card" onclick="openRevAffiliateView()" style="cursor:pointer;border-left:3px solid #f97316" title="Click to view Beehiiv Revenue"><div class="sc-label">BEEHIIV EARNINGS</div><div class="sc-value" id="ov-beehiiv">$0</div><div class="sc-sub">Daily earnings →</div></div>
 
 <div class="stat-card" style="border-left:3px solid #8b5cf6"><div class="sc-label">ACTIVE AFFILIATES</div><div class="sc-value" id="ov-affiliates">0</div><div class="sc-sub">This month</div></div>
 </div>
